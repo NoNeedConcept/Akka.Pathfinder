@@ -1,0 +1,17 @@
+{
+	"name": "Akka.Pathfinder",
+	"image": "mcr.microsoft.com/devcontainers/dotnet:0-7.0",
+	"remoteUser": "root",
+	"features": {
+		"ghcr.io/devcontainers/features/dotnet:2.0.1": {}
+	  },
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-dotnettools.csharp",
+				"ms-dotnettools.csdevkit",
+				"mhutchie.git-graph"
+			]
+		}
+	}
+}

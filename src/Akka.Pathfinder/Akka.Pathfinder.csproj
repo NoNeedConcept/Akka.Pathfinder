@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka" Version="1.5.*" />
+    <PackageReference Include="Akka.HealthCheck.Hosting" Version="1.5.*" />
+    <PackageReference Include="Akka.HealthCheck.Cluster" Version="1.5.*" />
+    <PackageReference Include="Akka.HealthCheck.Hosting.Web" Version="1.5.*" />
+    <PackageReference Include="Akka.HealthCheck" Version="1.5.*" />
+    <PackageReference Include="Akka.Cluster.Sharding" Version="1.5.*" />
+    <PackageReference Include="Akka.Cluster.Hosting" Version="1.5.*" />
+    <PackageReference Include="Akka.Cluster" Version="1.5.13" />
+    <PackageReference Include="Akka.DependencyInjection" Version="1.5.13" />
+    <PackageReference Include="Akka.Hosting" Version="1.5.13" />
+    <PackageReference Include="Akka.Logger.Extensions.Logging" Version="1.4.22" />
+    <PackageReference Include="Akka.Logger.Serilog" Version="1.5.12.1" />
+    <PackageReference Include="Akka.Persistence.Hosting" Version="1.5.*" />
+    <PackageReference Include="Akka.Persistence.MongoDb.Hosting" Version="1.5.*" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0-dev-00923" />
+    <PackageReference Include="Serilog.AspNetCore" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Pathfinder.Core\Akka.Pathfinder.Core.csproj" />
+  </ItemGroup>
+
+</Project>
