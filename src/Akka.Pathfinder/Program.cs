@@ -6,8 +6,8 @@ using Akka.Pathfinder;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Services;
-using Akka.Persistence.Hosting;
-using Akka.Persistence.MongoDb.Hosting;
+using Akka.Persistence.Sql.Config;
+using Akka.Persistence.Sql.Hosting;
 using Akka.Remote.Hosting;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using MongoDB.Driver;
@@ -16,10 +16,9 @@ using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 
 Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .Enrich.FromLogContext()
             .WriteTo.Console()
             .WriteTo.Debug()
-            .CreateBootstrapLogger();
+            .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,21 +38,19 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.Cluster)
 .AddScoped<IPointConfigReader, PointConfigReader>()
 .AddAkka("Zeus", (builder, sp) =>
     {
-        var connectionStringMongoDb = AkkaPathfinder.GetEnvironmentVariable("mongodb")! + "/pathfinder";
-        var shardingJournalOptions = new MongoDbJournalOptions(true)
+        var connectionString = AkkaPathfinder.GetEnvironmentVariable("postgre");
+        var shardingJournalOptions = new SqlJournalOptions(true)
         {
-            ConnectionString = connectionStringMongoDb,
-            Collection = "EventJournal",
-            MetadataCollection = "Metadata",
-            UseWriteTransaction = false,
+            ConnectionString = connectionString,
+            ProviderName = LinqToDB.ProviderName.PostgreSQL15,
+            TagStorageMode = TagMode.TagTable,
             AutoInitialize = true
         };
 
-        var shardingSnapshotOptions = new MongoDbSnapshotOptions(true)
+        var shardingSnapshotOptions = new SqlSnapshotOptions(true)
         {
-            ConnectionString = connectionStringMongoDb,
-            Collection = "SnapshotStore",
-            UseWriteTransaction = false,
+            ConnectionString = connectionString,
+            ProviderName = LinqToDB.ProviderName.PostgreSQL15,
             AutoInitialize = true
         };
 
@@ -72,8 +69,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.Cluster)
                 Roles = new[] { "KEKW" },
                 SeedNodes = new[] { "akka.tcp://Zeus@127.0.0.1:42000" }
             })
-            .WithMongoDbPersistence(connectionStringMongoDb, PersistenceMode.Both, true)
-            .WithJournalAndSnapshot(shardingJournalOptions, shardingSnapshotOptions)
+            .WithSqlPersistence(shardingJournalOptions, shardingSnapshotOptions)
             .WithShardRegion<PointWorker>("PointWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PointWorker>(x), new MessageExtractor(), new ShardOptions()
             {
                 JournalOptions = shardingJournalOptions,

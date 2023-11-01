@@ -108,4 +108,3 @@ public class MongoDbContainer : IAsyncLifetime
 
     public IMongoDatabase GetMongoDatabase() => CreateMongoClient().GetDatabase(MongoDatabase);
 }
-

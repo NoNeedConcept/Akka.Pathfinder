@@ -12,6 +12,7 @@ namespace Akka.Pathfinder.AcceptanceTests.Hooks;
 public class EnvironmentSetupHooks
 {
     public static MongoDbContainer MongoDbContainer = null!;
+    public static PostgreContainer PostgreContainer = null!;
     public static LighthouseNodeContainer SeedNodeContainer = null!;
     public static PathfinderApplicationFactory PathfinderApplicationFactory = null!;
     public static AkkaDriver AkkaDriver = null!;
@@ -24,20 +25,26 @@ public class EnvironmentSetupHooks
         Log.Information("[TEST][EnvironmentSetupHooks][BeforeTestRun]");
         Serilog.Log.Logger = CreateLogger();
         MongoDbContainer = new MongoDbContainer();
+        PostgreContainer = new PostgreContainer();
 
         SeedNodeContainer = new();
         var lighthouseTask = SeedNodeContainer.InitializeAsync();
         var mongoTask = MongoDbContainer.InitializeAsync();
+        var postgreTask = PostgreContainer.InitializeAsync();
 
         await lighthouseTask;
 
         await mongoTask;
+        await postgreTask;
         AkkaDriver = new AkkaDriver();
         await AkkaDriver.InitializeAsync();
         var mongoDBString = MongoDbContainer.GetConnectionString();
+        var postgreSQLString = PostgreContainer.GetConnectionString();
 
         Log.Debug("[TEST][EnvironmentSetupHooks] - MongoDb: {ConnectionString}", mongoDBString);
+        Log.Debug("[TEST][EnvironmentSetupHooks] - Postgre: {ConnectionString}", postgreSQLString);
         AkkaPathfinder.SetEnvironmentVariable("mongodb", mongoDBString);
+        AkkaPathfinder.SetEnvironmentVariable("postgre", postgreSQLString);
 
         PointConfigDriver = new(MongoDbContainer);
 
@@ -51,8 +58,7 @@ public class EnvironmentSetupHooks
     public static async Task AfterScenario()
     {
         Log.Information("[TEST][EnvironmentSetupHooks][AfterScenario]");
-        var mongoDbClient = new MongoClient(MongoDbContainer.GetConnectionString());
-        await mongoDbClient.DropDatabaseAsync("pathfinder");
+        await MongoDbContainer.DropDataAsync();
     }
 
     [AfterTestRun]
@@ -63,6 +69,7 @@ public class EnvironmentSetupHooks
         // todo: Dispose all containers
         await SeedNodeContainer.DisposeAsync();
         await MongoDbContainer.DisposeAsync();
+        await PostgreContainer.DisposeAsync();
         await PathfinderApplicationFactory.DisposeAsync();
     }
 
