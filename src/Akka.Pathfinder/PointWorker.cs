@@ -23,9 +23,12 @@ public partial class PointWorker : ReceivePersistentActor
         EntityId = entityId;
         _serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
         _pointWorkerClient = Context.System.GetRegistry().Get<PointWorkerProxy>();
-        _pathfinderClient = Context.System.GetRegistry().Get<PathfinderProxy>();
 
-        Context.System.EventStream.Subscribe(Context.Self, typeof(PathfinderDeactivated));
+        var result = Context.System.EventStream.Subscribe(Self, typeof(PathfinderDeactivated));
+        if (!result)
+        {
+            _logger.Error("[{PointId}] Subscribe [PathfinderDeactivated] failed", entityId);
+        }
 
         Recover<SnapshotOffer>(RecoverSnapshotOffer);
         Recover<PointConfig>(RecoverPointConfig);

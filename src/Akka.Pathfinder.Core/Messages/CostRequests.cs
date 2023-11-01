@@ -11,7 +11,6 @@ public record UpdateCostResponse(int PointId, bool Success);
 
 public abstract record CostRequest(int PointId, uint Value, ChangeMethod ChangeMethod) : IPointId;
 
-
 public abstract record PointCostRequest(int PointId, uint Value, ChangeMethod ChangeMethod) : CostRequest(PointId, Value, ChangeMethod);
 
 public abstract record IncreasePointCostRequest(int PointId, uint Value) : PointCostRequest(PointId, Value, ChangeMethod.Increase);
@@ -20,12 +19,10 @@ public abstract record DecreasePointCostRequest(int PointId, uint Value) : Point
 public record OccupiedPoint(int PointId) : IncreasePointCostRequest(PointId, CostConstants.OccupiedCost);
 public record ReleasedPoint(int PointId) : DecreasePointCostRequest(PointId, CostConstants.OccupiedCost);
 
-
 public abstract record DirectionCostRequest(int PointId, uint Value, Direction Direction, ChangeMethod ChangeMethod) : CostRequest(PointId, Value, ChangeMethod);
 
 public abstract record IncreaseDirectionCostRequest(int PointId, uint Value, Direction Direction) : DirectionCostRequest(PointId, Value, Direction, ChangeMethod.Increase);
 public abstract record DecreaseDirectionCostRequest(int PointId, uint Value, Direction Direction) : DirectionCostRequest(PointId, Value, Direction, ChangeMethod.Decrease);
-
 
 public abstract record PointCommandRequest(int PointId) : IPointId;
 

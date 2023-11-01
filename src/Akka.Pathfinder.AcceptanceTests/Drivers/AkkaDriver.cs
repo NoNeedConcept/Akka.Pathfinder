@@ -45,10 +45,16 @@ public class AkkaDriver : Hosting.TestKit.TestKit
         builder.WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor());
     }
 
-    public void RequestPathfinder(PathfinderStartRequest msg)
+    public void TellPathfinder(object request)
     {
         var pathfinderClient = Host.Services.GetRequiredService<IActorRegistry>().Get<PathfinderProxy>();
-        pathfinderClient.Tell(msg, TestActor);
+        pathfinderClient.Tell(request, TestActor);
+    }
+
+    public void TellPointWorker(object request)
+    {
+        var pointWorkerClient = Host.Services.GetRequiredService<IActorRegistry>().Get<PointWorkerProxy>();
+        pointWorkerClient.Tell(request, TestActor);
     }
 
     public PathFinderDone ReceivePathFound()

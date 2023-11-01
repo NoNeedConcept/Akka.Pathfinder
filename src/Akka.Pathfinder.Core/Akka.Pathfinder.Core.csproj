@@ -12,10 +12,8 @@
     <PackageReference Include="Akka.Cluster.Sharding" Version="1.5.*" />
     <PackageReference Include="Akka.Cluster.Hosting" Version="1.5.*" />
     <PackageReference Include="Akka.Cluster" Version="1.5.13" />
-    <PackageReference Include="Akka.Persistence.Hosting" Version="1.5.*" />
-    <PackageReference Include="Akka.Persistence.MongoDb.Hosting" Version="1.5.*" />
-    <PackageReference Include="Akka.Persistence.MongoDb" Version="1.5.*" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0-dev-00923" />
+    <PackageReference Include="MongoDB.Driver" Version="*" />
  </ItemGroup>
 
 </Project>

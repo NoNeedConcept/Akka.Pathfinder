@@ -13,6 +13,7 @@ public partial class PointWorker
     {
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         _state.AddInactivePathfinder(msg);
+        _state.RemoveOldPathfinderIds(TimeSpan.FromMinutes(10));
     }
 
     private void PointConfigHandler(PointConfig msg)
@@ -59,13 +60,13 @@ public partial class PointWorker
 
         if (_state.IsBlockedAndGetResponse(msg, out PathFound value))
         {
-            _pathfinderClient.Tell(value, ActorRefs.NoSender);
+            Sender.Tell(value, ActorRefs.NoSender);
             return;
         }
 
         if (_state.TryLoopDetection(msg, out var response))
         {
-            _pathfinderClient.Tell(response, ActorRefs.NoSender);
+            Sender.Tell(response, ActorRefs.NoSender);
             return;
         }
 
@@ -76,7 +77,7 @@ public partial class PointWorker
 
         if (_state.TryIsArrivedTargetPoint(newRequest, PersistPath, out var pathFound))
         {
-            _pathfinderClient.Tell(pathFound, ActorRefs.NoSender);
+            Sender.Tell(pathFound, ActorRefs.NoSender);
             return;
         }
 

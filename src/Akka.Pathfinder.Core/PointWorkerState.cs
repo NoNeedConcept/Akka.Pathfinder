@@ -5,14 +5,15 @@ using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Persistence;
 using Akka.Util.Internal;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
+using MongoDB.Driver.Linq;
 
 namespace Akka.Pathfinder.Core;
 
 public record PointWorkerState
 {
     private readonly ConcurrentDictionary<Direction, DirectionConfig> _directionConfigs;
-    private readonly ConcurrentDictionary<Guid, PathfinderDeactivated> _inactivePathfinders = new();
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorkerState>();
+    private ConcurrentDictionary<Guid, DateTime> _inactivePathfinders = new();
 
     public static PointWorkerState FromSnapshot(PersistedPointWorkerState msg)
         => new(msg.DirectionConfigs)
@@ -82,12 +83,16 @@ public record PointWorkerState
 
     public bool Unblock() => (State = PointState.None) is PointState.None;
 
-    public void AddInactivePathfinder(PathfinderDeactivated msg) => _inactivePathfinders.AddOrSet(msg.PathfinderId, msg);
+    public void AddInactivePathfinder(PathfinderDeactivated msg) => _inactivePathfinders.AddOrSet(msg.PathfinderId, DateTime.UtcNow);
+
+    public void RemoveOldPathfinderIds(TimeSpan timeSpan) => _inactivePathfinders.RemoveAll((key, value) => value < DateTime.UtcNow.Add(-timeSpan));
 
     public bool IsBlockedAndGetResponse(FindPathRequest request, out PathFound response)
     {
         response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.PathBlocked);
         if (IsBlocked) return true;
+        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
+        if(_directionConfigs.Count == 0 && PointId != request.TargetPointId) return true;
         response = null!;
         return false;
     }
@@ -106,7 +111,7 @@ public record PointWorkerState
     public bool TryAddCurrentPointCost(FindPathRequest request, out FindPathRequest findPathRequest)
     {
         findPathRequest = request;
-        if(request.Directions.Count == 1) return false;
+        if (request.Directions.Count == 1) return false;
         var pathList = request.Directions.ToConcurrentDictionary(x => x.PointId, x => x);
         var pointInfo = pathList.GetValueOrDefault(PointId);
         if (pointInfo is null) return true;
@@ -133,11 +138,10 @@ public record PointWorkerState
             return true;
         }
 
-
         response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.Success);
         return true;
     }
-    
+
     public IReadOnlyList<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
     {
         var results = new List<FindPathRequest>();
@@ -156,3 +160,8 @@ public record PointWorkerState
     public PersistedPointWorkerState GetPersistenceState() => new(PointId, Cost, _directionConfigs.AsReadOnly(), State);
 }
 
+public static class DictionaryExtensions
+{
+    public static void RemoveAll<TKey, TValue>(this IDictionary<TKey, TValue> dic, Func<TKey, TValue, bool> predicate)
+        => dic.Where(pair => predicate(pair.Key, pair.Value)).ForEach(x => dic.Remove(x));
+}

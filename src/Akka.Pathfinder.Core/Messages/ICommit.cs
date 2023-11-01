@@ -17,7 +17,6 @@ public class DirectionCommit : ICommit
         Direction = direction;
         AdditionalCost = additionalCost;
         _changeMethod = change;
-
     }
 
     public Direction Direction { get; init; } = Direction.None;
@@ -35,7 +34,6 @@ public class PointCommit : ICommit
     {
         AdditionalCost = additionalCost;
         _changeMethod = change;
-
     }
 
     public uint AdditionalCost { get; init; }

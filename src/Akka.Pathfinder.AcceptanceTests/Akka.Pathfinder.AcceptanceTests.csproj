@@ -11,25 +11,18 @@
 
   <ItemGroup>
     <PackageReference Include="Akka.Hosting.TestKit" Version="1.5.13" />
-    <PackageReference Include="Akka.Persistence.PostgreSql" Version="1.5.13" />
-    <PackageReference Include="Akka.Persistence.PostgreSql.Hosting" Version="1.5.13" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.13" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1" />
-    <PackageReference Include="Npgsql" Version="7.0.6" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
     <PackageReference Include="Polly" Version="8.0.0" />
     <PackageReference Include="SpecFlow" Version="3.9.74" />
-    <PackageReference Include="SpecFlow.Plus.LivingDocPlugin" Version="3.9.57" />
     <PackageReference Include="SpecFlow.xUnit" Version="3.9.74" />
     <PackageReference Include="Testcontainers" Version="3.5.0" />
-    <PackageReference Include="Testcontainers.MongoDb" Version="3.5.0" />
-    <PackageReference Include="Testcontainers.PostgreSql" Version="3.5.0" />
     <PackageReference Include="xunit" Version="2.5.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.*">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="3.2.0">
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -37,6 +30,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akka.Pathfinder\Akka.Pathfinder.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>

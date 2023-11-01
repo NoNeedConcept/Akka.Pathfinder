@@ -9,7 +9,7 @@ public partial class PathfinderWorker
 {
     public void FindPath(PathfinderStartRequest msg)
     {
-        Serilog.Log.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         _pathfinderWorkerState = PathfinderWorkerState.FromRequest(msg);
 
@@ -27,7 +27,7 @@ public partial class PathfinderWorker
 
     public void FoundPath(PathFound msg)
     {
-        Serilog.Log.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         switch (msg.Result)
         {
@@ -35,39 +35,39 @@ public partial class PathfinderWorker
                 _pathfinderWorkerState.IncrementFoundPathCounter();
                 break;
             default:
-                Serilog.Log.Debug("[{PathfinderId}] Jan wanted a log here with the reason {Result}", msg.PathfinderId, msg.Result);
+                _logger.Debug("[{PathfinderId}] Jan wanted a log here with the reason {Result}", msg.PathfinderId, msg.Result);
                 break;
         }
     }
 
     public async Task FickDichPatrick(FickDichPatrick msg)
     {
-        Serilog.Log.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(WhilePathEvaluation);
         Context.System.EventStream.Publish(new PathfinderDeactivated(_pathfinderWorkerState.PathfinderId));
 
         if (!_pathfinderWorkerState.HasPathFound)
         {
-            Serilog.Log.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _pathfinderWorkerState.SourcePointId, _pathfinderWorkerState.TargetPointId);
+            _logger.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _pathfinderWorkerState.SourcePointId, _pathfinderWorkerState.TargetPointId);
             Sender.Tell(new PathFinderDone(null));
             Context.SetReceiveTimeout(TimeSpan.FromSeconds(30));
+            return;
         }
-        else
+
+
+        _logger.Debug("[{PathfinderId}] {PathsCount} Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _pathfinderWorkerState.Count, _pathfinderWorkerState.SourcePointId, _pathfinderWorkerState.TargetPointId);
+        using var scope = _serviceScopeFactory.CreateScope();
+        var pathReader = scope.ServiceProvider.GetRequiredService<IPathReader>();
+        await pathReader
+        .GetByPathfinderIdAsync(msg.PathfinderId)
+        .PipeTo(Self, Sender,
+        result =>
         {
-            Serilog.Log.Debug("[{PathfinderId}] {PathsCount} Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _pathfinderWorkerState.Count, _pathfinderWorkerState.SourcePointId, _pathfinderWorkerState.TargetPointId);
-            using var scope = _serviceScopeFactory.CreateScope();
-            var pathReader = scope.ServiceProvider.GetRequiredService<IPathReader>();
-            await pathReader
-            .GetByPathfinderIdAsync(msg.PathfinderId)
-            .PipeTo(Self, Sender,
-            result =>
-            {
-                var pathsOrderedByCost = result.OrderByDescending(p => p.Directions.Select(x => (int)x.Cost).Sum());
-                var bestPathId = pathsOrderedByCost.Last().Id;
-                return new BestPathFound(msg.PathfinderId, bestPathId);
-            },
-            ex => new BestPathFailed(msg.PathfinderId, ex));
-        }
+            var pathsOrderedByCost = result.OrderByDescending(p => p.Directions.Select(x => (int)x.Cost).Sum());
+            var bestPathId = pathsOrderedByCost.Last().Id;
+            return new BestPathFound(msg.PathfinderId, bestPathId);
+        },
+        ex => new BestPathFailed(msg.PathfinderId, ex));
     }
 
     public void BestPathFoundHandler(BestPathFound msg)
@@ -86,7 +86,7 @@ public partial class PathfinderWorker
         Stash.UnstashAll();
         if (msg.Exception is not null)
         {
-            Serilog.Log.Error(msg.Exception, "[{PathfinderId}] -> Exception: {@Exception}", EntityId, msg.Exception);
+            _logger.Error(msg.Exception, "[{PathfinderId}] -> Exception: {@Exception}", EntityId, msg.Exception);
         }
 
         Sender.Tell(new PathFinderDone(null));
