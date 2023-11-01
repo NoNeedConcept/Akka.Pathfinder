@@ -16,14 +16,16 @@ public static class MapFactory
     private const int DefaultPointCost = 42;
     private const int DefaultDirectionCost = 42;
 
-    public static MapConfig Create(int seed, MapSize mapSize)
+    public static MapConfig Create(int seed, MapSize mapSize, bool intergalacticDummyMode = false)
     {
         Random = new Random(seed);
         MapSize = mapSize;
 
-        InitializeMap();
+        InitializeMap(intergalacticDummyMode);
         return ConvertToMapConfig();
     }
+    
+    
 
     private static MapConfig ConvertToMapConfig()
     {
@@ -146,7 +148,7 @@ public static class MapFactory
         return new MapConfig(Guid.NewGuid(), listOfPoints);
     }
 
-    private static void InitializeMap()
+    private static void InitializeMap(bool intergalacticDummyMode)
     {
         Map = new int[MapSize.Width, MapSize.Depth, MapSize.Height];
         int widthCounter = 0, heightCounter = 0, depthCounter = 0;
@@ -158,7 +160,15 @@ public static class MapFactory
                 while (depthCounter < MapSize.Depth)
                 {
                     index++;
-                    Map[widthCounter, heightCounter, depthCounter] = Random.Next(0, 2) == 1 ? index : Emptypoint;
+                    if (intergalacticDummyMode)
+                    {
+                        Map[widthCounter, heightCounter, depthCounter] = index;
+                    }
+                    else
+                    {
+                        Map[widthCounter, heightCounter, depthCounter] = Random.Next(0, 2) == 1 ? index : Emptypoint;
+                    }
+
                     depthCounter++;
                 }
 
