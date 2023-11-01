@@ -1,4 +1,5 @@
 ﻿using Akka.Pathfinder.Core.Configs;
+using Akka.Pathfinder.Layout;
 
 namespace Akka.Pathfinder.AcceptanceTests.InitialData;
 
@@ -30,7 +31,7 @@ public static class MapProvider
     private static MapConfig Map0()
     {
 
-        return new MapConfig(0, new List<PointConfig>()
+        return new MapConfig(Guid.NewGuid(), new List<PointConfig>()
         {
             new(1, _baseCost, new Dictionary<Direction, DirectionConfig>()
             {
@@ -45,7 +46,7 @@ public static class MapProvider
     private static MapConfig Map1()
     {
 
-        return new MapConfig(1, new List<PointConfig>()
+        return new MapConfig(Guid.NewGuid(), new List<PointConfig>()
         {
             new(1, _baseCost, new Dictionary<Direction, DirectionConfig>()
             {

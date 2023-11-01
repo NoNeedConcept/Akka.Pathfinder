@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akka.Pathfinder.Core\Akka.Pathfinder.Core.csproj" />
+    <ProjectReference Include="..\Akka.Pathfinder.Layout\Akka.Pathfinder.Layout.csproj" />
   </ItemGroup>
 
 </Project>
