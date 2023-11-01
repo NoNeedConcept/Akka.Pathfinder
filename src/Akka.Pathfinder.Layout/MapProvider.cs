@@ -21,6 +21,10 @@ public static class MapProvider
             {
                 _mapConfigs.Add(0, Map0());
                 _mapConfigs.Add(1, Map1());
+                MapFactory.Create(1, new MapSize(12, 15, 2));
+                MapFactory.Create(42, new MapSize(200, 10, 4));
+                MapFactory.Create(69, new MapSize(14, 11, 10));
+                MapFactory.Create(420, new MapSize(200, 200, 200));
             }
 
             return _mapConfigs;
