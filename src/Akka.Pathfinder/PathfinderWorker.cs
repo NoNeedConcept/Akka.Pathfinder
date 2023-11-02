@@ -3,6 +3,7 @@ using Akka.Pathfinder.Core.Messages;
 using Akka.Persistence;
 
 namespace Akka.Pathfinder;
+
 public partial class PathfinderWorker : ReceivePersistentActor
 {
     public override string PersistenceId => $"PathfinderWorker_{EntityId}";

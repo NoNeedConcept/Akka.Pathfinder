@@ -25,7 +25,7 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
 
         var cts = new CancellationTokenSource();
         cts.CancelAfter(TimeSpan.FromSeconds(120));
-        var isReady = await IsUrlAsync(client, "/health/ready", cancellationToken: cts.Token);
+        var isReady = await IsUrlAsync(client, "/health/ready", 20, TimeSpan.FromSeconds(2), TimeSpan.FromMinutes(1), cancellationToken: cts.Token);
         if (!isReady)
         {
             Log.Fatal("[TEST][PathfinderApplicationFactory] application NOT healthy!");
@@ -70,8 +70,8 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
                 return response.StatusCode switch
                 {
                     HttpStatusCode.OK => true,
-                    HttpStatusCode.ServiceUnavailable => false,
-                    _ => false
+                    HttpStatusCode.ServiceUnavailable => throw new Exception("MOin"),
+                    _ => throw new Exception("MOin")
                 };
             });
         }

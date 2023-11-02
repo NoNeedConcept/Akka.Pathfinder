@@ -2,12 +2,14 @@ using Akka.Cluster.Hosting;
 using Akka.HealthCheck.Hosting;
 using Akka.HealthCheck.Hosting.Web;
 using Akka.Hosting;
+using Akka.Logger.Serilog;
 using Akka.Pathfinder;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Services;
 using Akka.Persistence.Hosting;
-using Akka.Persistence.MongoDb.Hosting;
+using Akka.Persistence.Sql.Config;
+using Akka.Persistence.Sql.Hosting;
 using Akka.Remote.Hosting;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using MongoDB.Driver;
@@ -16,10 +18,9 @@ using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 
 Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .Enrich.FromLogContext()
             .WriteTo.Console()
             .WriteTo.Debug()
-            .CreateBootstrapLogger();
+            .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,7 @@ RegisterMongoShit();
 
 builder.Services.AddHealthChecks();
 
-builder.Services.WithAkkaHealthCheck(HealthCheckType.Cluster)
+builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
 .AddSingleton<IMongoClient>(x => new MongoClient(AkkaPathfinder.GetEnvironmentVariable("mongodb")))
 .AddScoped(x => x.GetRequiredService<IMongoClient>().GetDatabase("pathfinder"))
 .AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<Path>("path"))
@@ -39,32 +40,32 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.Cluster)
 .AddScoped<IPointConfigReader, PointConfigReader>()
 .AddAkka("Zeus", (builder, sp) =>
     {
-        var connectionStringMongoDb = AkkaPathfinder.GetEnvironmentVariable("mongodb")! + "/pathfinder";
-        var shardingJournalOptions = new MongoDbJournalOptions(true)
+        var connectionString = AkkaPathfinder.GetEnvironmentVariable("postgre");
+        var shardingJournalOptions = new Akka.Persistence.Sql.Hosting.SqlJournalOptions(true)
         {
-            ConnectionString = connectionStringMongoDb,
-            Collection = "EventJournal",
-            MetadataCollection = "Metadata",
-            UseWriteTransaction = false,
+            ConnectionString = connectionString,
+            ProviderName = LinqToDB.ProviderName.PostgreSQL15,
+            TagStorageMode = TagMode.TagTable,
             AutoInitialize = true
         };
 
-        var shardingSnapshotOptions = new MongoDbSnapshotOptions(true)
+        var shardingSnapshotOptions = new Akka.Persistence.Sql.Hosting.SqlSnapshotOptions(true)
         {
-            ConnectionString = connectionStringMongoDb,
-            Collection = "SnapshotStore",
-            UseWriteTransaction = false,
+            ConnectionString = connectionString,
+            ProviderName = LinqToDB.ProviderName.PostgreSQL15,
             AutoInitialize = true
         };
 
-        builder
-            .WithHealthCheck(x =>
+        builder.ConfigureLoggers(setup =>
             {
-                x.AddProviders(HealthCheckType.Cluster);
-                x.Liveness.PersistenceProbeInterval = TimeSpan.FromSeconds(5);
-                x.Readiness.PersistenceProbeInterval = TimeSpan.FromSeconds(5);
-                x.LogConfigOnStart = true;
+                // Clear all loggers
+                setup.ClearLoggers();
+
+                // Add serilog logger
+                setup.AddLogger<SerilogLogger>();
+                setup.LogMessageFormatter = typeof(SerilogLogMessageFormatter);
             })
+            .WithHealthCheck(x => x.AddProviders(HealthCheckType.All))
             .WithWebHealthCheck(sp)
             .WithRemoting("0.0.0.0", 1337, "127.0.0.1")
             .WithClustering(new ClusterOptions
@@ -72,7 +73,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.Cluster)
                 Roles = new[] { "KEKW" },
                 SeedNodes = new[] { "akka.tcp://Zeus@127.0.0.1:42000" }
             })
-            .WithMongoDbPersistence(connectionStringMongoDb, PersistenceMode.Both, true)
+            .WithSqlPersistence(connectionString!, LinqToDB.ProviderName.PostgreSQL15, PersistenceMode.Both, autoInitialize: true, tagStorageMode: TagMode.Both)
             .WithJournalAndSnapshot(shardingJournalOptions, shardingSnapshotOptions)
             .WithShardRegion<PointWorker>("PointWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PointWorker>(x), new MessageExtractor(), new ShardOptions()
             {
