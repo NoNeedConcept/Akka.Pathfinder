@@ -1,7 +1,6 @@
 using Akka.Pathfinder.AcceptanceTests.Containers;
 using Akka.Pathfinder.AcceptanceTests.Drivers;
 using Akka.Pathfinder.Core;
-using MongoDB.Driver;
 using Serilog;
 using TechTalk.SpecFlow;
 using MongoDbContainer = Akka.Pathfinder.AcceptanceTests.Containers.MongoDbContainer;
@@ -66,11 +65,11 @@ public class EnvironmentSetupHooks
     {
         Log.Information("[TEST][EnvironmentSetupHooks][AfterTestRun]");
 
+        await PathfinderApplicationFactory.DisposeAsync();
         // todo: Dispose all containers
         await SeedNodeContainer.DisposeAsync();
         await MongoDbContainer.DisposeAsync();
         await PostgreContainer.DisposeAsync();
-        await PathfinderApplicationFactory.DisposeAsync();
     }
 
     private static Serilog.ILogger CreateLogger() => new LoggerConfiguration()

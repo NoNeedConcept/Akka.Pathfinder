@@ -18,15 +18,12 @@ public class PostgreContainer : IAsyncLifetime
             .WithName($"postgres_{Guid.NewGuid():D}")
             .WithImage("postgres:15.1")
             .WithPortBinding(port, true)
+            .WithEnvironment("POSTGRES_HOST_AUTH_METHOD", "trust")
             .WithEnvironment("POSTGRES_PASSWORD", password)
-            .WithEnvironment("PGPASSWORD", password)
-            .WithEnvironment("PGUSER", username)
-            .WithEnvironment("PGDATABASE", database)
-            .WithCommand("-c", "fsync=off")
-            .WithCommand("-c", "full_page_writes=off")
-            .WithCommand("-c", "synchronous_commit=off")
+            .WithEnvironment("POSTGRES_USER", username)
+            .WithEnvironment("POSTGRES_DB", database)
             .WithWaitStrategy(Wait.ForUnixContainer()
-                .AddCustomWaitStrategy(new WaitUntilLogMessage("database system is ready to accept connections")))
+                .AddCustomWaitStrategy(new WaitUntilLogMessage("PostgreSQL init process complete; ready for start up.")))
             .Build();
     }
 

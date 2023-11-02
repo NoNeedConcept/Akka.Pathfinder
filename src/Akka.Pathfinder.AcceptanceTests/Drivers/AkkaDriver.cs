@@ -1,5 +1,6 @@
 using Akka.Cluster.Hosting;
 using Akka.Hosting;
+using Akka.Logger.Serilog;
 using Akka.Pathfinder.AcceptanceTests.Containers;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Messages;
@@ -42,7 +43,9 @@ public class AkkaDriver : Hosting.TestKit.TestKit
 
     protected static void ConfigureAkkaServices(AkkaConfigurationBuilder builder)
     {
-        builder.WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor());
+        builder
+            .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor())
+            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor());
     }
 
     public void TellPathfinder(object request)
