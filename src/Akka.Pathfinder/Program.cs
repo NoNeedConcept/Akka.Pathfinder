@@ -7,6 +7,7 @@ using Akka.Pathfinder;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Services;
+using Akka.Pathfinder.Workers;
 using Akka.Persistence.Hosting;
 using Akka.Persistence.Sql.Config;
 using Akka.Persistence.Sql.Hosting;

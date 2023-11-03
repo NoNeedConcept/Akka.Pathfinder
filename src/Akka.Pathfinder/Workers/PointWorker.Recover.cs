@@ -3,7 +3,7 @@ using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Persistence;
 using Akka.Persistence;
 
-namespace Akka.Pathfinder;
+namespace Akka.Pathfinder.Workers;
 
 public partial class PointWorker
 {

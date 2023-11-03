@@ -3,7 +3,7 @@ using Akka.Pathfinder.AcceptanceTests.Hooks;
 using Serilog;
 using TechTalk.SpecFlow;
 
-namespace Akka.Pathfinder.AcceptanceTests;
+namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
 
 [Binding]
 public class PointSteps

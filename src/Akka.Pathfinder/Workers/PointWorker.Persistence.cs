@@ -1,6 +1,6 @@
 ﻿using Akka.Pathfinder.Core.Services;
 
-namespace Akka.Pathfinder;
+namespace Akka.Pathfinder.Workers;
 
 public partial class PointWorker
 {

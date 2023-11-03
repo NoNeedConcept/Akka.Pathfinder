@@ -5,7 +5,7 @@ using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Services;
 using Akka.Persistence;
 
-namespace Akka.Pathfinder;
+namespace Akka.Pathfinder.Workers;
 
 public partial class PointWorker : ReceivePersistentActor
 {
