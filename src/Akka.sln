@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.AcceptanceT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Core", "Akka.Pathfinder.Core\Akka.Pathfinder.Core.csproj", "{5441C267-50EE-45EC-B5CD-B51ABD14CAD9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Layout", "Akka.Pathfinder.Layout\Akka.Pathfinder.Layout.csproj", "{700D307C-4BFC-47CE-9D17-E4697C6EE8EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Layout.Tests", "Akka.Pathfinder.Layout.Tests\Akka.Pathfinder.Layout.Tests.csproj", "{247E513D-2636-428A-8AE9-914A7857D527}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{5441C267-50EE-45EC-B5CD-B51ABD14CAD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5441C267-50EE-45EC-B5CD-B51ABD14CAD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5441C267-50EE-45EC-B5CD-B51ABD14CAD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{700D307C-4BFC-47CE-9D17-E4697C6EE8EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{700D307C-4BFC-47CE-9D17-E4697C6EE8EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{700D307C-4BFC-47CE-9D17-E4697C6EE8EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{700D307C-4BFC-47CE-9D17-E4697C6EE8EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{247E513D-2636-428A-8AE9-914A7857D527}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{247E513D-2636-428A-8AE9-914A7857D527}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{247E513D-2636-428A-8AE9-914A7857D527}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{247E513D-2636-428A-8AE9-914A7857D527}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

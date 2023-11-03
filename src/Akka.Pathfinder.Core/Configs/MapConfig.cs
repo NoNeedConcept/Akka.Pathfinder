@@ -1,3 +1,3 @@
 ﻿namespace Akka.Pathfinder.Core.Configs;
 
-public record MapConfig(int MapId, List<PointConfig> Points);
+public record MapConfig(Guid Id, List<PointConfig> Points);

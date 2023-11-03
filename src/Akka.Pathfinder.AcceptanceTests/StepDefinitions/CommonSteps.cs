@@ -1,6 +1,6 @@
 using Akka.Pathfinder.AcceptanceTests.Drivers;
 using Akka.Pathfinder.AcceptanceTests.Hooks;
-using Akka.Pathfinder.AcceptanceTests.InitialData;
+using Akka.Pathfinder.Layout;
 using Serilog;
 using TechTalk.SpecFlow;
 
