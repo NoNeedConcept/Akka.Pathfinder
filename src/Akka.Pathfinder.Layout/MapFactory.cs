@@ -27,7 +27,7 @@ public static class MapFactory
     private static void InitializeRandom()
     {
         int seedToUse = MapSettings.Seed;
-        
+
         if (seedToUse == 0)
         {
             seedToUse = DateTime.UtcNow.Microsecond;
@@ -194,7 +194,7 @@ public static class MapFactory
 
     private static void InitializeMap(bool intergalacticDummyMode)
     {
-        Map = new int[MapSettings.MapSize.Width, MapSettings.MapSize.Depth, MapSettings.MapSize.Height];
+        Map = new int[MapSettings.MapSize.Width, MapSettings.MapSize.Height, MapSettings.MapSize.Depth];
         int widthCounter = 0, heightCounter = 0, depthCounter = 0;
         int index = 0;
         while (widthCounter < MapSettings.MapSize.Width)
@@ -210,7 +210,8 @@ public static class MapFactory
                     }
                     else
                     {
-                        Map[widthCounter, heightCounter, depthCounter] = Random.Next(0, 2) == 1 ? index : EmptyPoint;
+                        Map[widthCounter, heightCounter, depthCounter] =
+                            Random.Next(0, 2) == 1 ? index : EmptyPoint;
                     }
 
                     depthCounter++;
