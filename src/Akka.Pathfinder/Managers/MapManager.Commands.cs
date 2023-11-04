@@ -60,7 +60,7 @@ public partial class MapManager : ReceivePersistentActor
         _logger.Debug("[{ActorName}][{MessageType}] received", GetType().GetEnumName, msg.GetType().Name);
         if (!_readyPoints.TryGetValue(msg.PointId, out var oldValue) && !_readyPoints.TryUpdate(msg.PointId, (oldValue.Created, DateTime.UtcNow), oldValue))
         {
-            _logger.Debug("[{ActorName}] Unkown point initialized - PointId:[{PointId}]", GetType().GetEnumName, msg.PointId);
+            _logger.Debug("[{ActorName}] Unknown point initialized - PointId:[{PointId}]", GetType().GetEnumName, msg.PointId);
             _readyPoints.AddOrSet(msg.PointId, (DateTime.UtcNow, DateTime.UtcNow));
         }
 
