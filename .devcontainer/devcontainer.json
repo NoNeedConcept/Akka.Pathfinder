@@ -1,6 +1,6 @@
 {
 	"name": "Akka.Pathfinder",
-	"image": "mcr.microsoft.com/devcontainers/dotnet:0-7.0",
+	"image": "mcr.microsoft.com/devcontainers/dotnet",
 	"remoteUser": "root",
 	"features": {
 		"ghcr.io/devcontainers/features/dotnet:2.0.1": {},
