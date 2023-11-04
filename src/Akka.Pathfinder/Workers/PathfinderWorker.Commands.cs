@@ -2,6 +2,7 @@ using Akka.Actor;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Services;
+using Akka.Pathfinder.Core.States;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -11,18 +12,9 @@ public partial class PathfinderWorker
     {
         _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
-        _pathfinderWorkerState = PathfinderWorkerState.FromRequest(msg);
-
-        IReadOnlyList<PathPoint> startPointList = new List<PathPoint>()
-        {
-            new(msg.SourcePointId, 0, msg.Direction)
-        };
-
-        var findPathRequest = new FindPathRequest(Guid.Parse(EntityId), Guid.NewGuid(), msg.SourcePointId, msg.TargetPointId, startPointList);
-
-        Context.System.GetRegistry().Get<PointWorkerProxy>().Tell(findPathRequest);
-
-        Context.System.Scheduler.ScheduleTellOnce(msg.Timeout ?? TimeSpan.FromSeconds(30), Self, new FickDichPatrick(_pathfinderWorkerState.PathfinderId), Sender);
+        _state = PathfinderWorkerState.FromRequest(msg);
+        _sender = Sender;
+        _mapManagerClient.Tell(new IsMapReady(msg.PathfinderId));
     }
 
     public void FoundPath(PathFound msg)
@@ -32,7 +24,7 @@ public partial class PathfinderWorker
         switch (msg.Result)
         {
             case PathFinderResult.Success:
-                _pathfinderWorkerState.IncrementFoundPathCounter();
+                _state.IncrementFoundPathCounter();
                 break;
             default:
                 _logger.Debug("[{PathfinderId}] Jan wanted a log here with the reason {Result}", msg.PathfinderId, msg.Result);
@@ -44,18 +36,19 @@ public partial class PathfinderWorker
     {
         _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(WhilePathEvaluation);
-        Context.System.EventStream.Publish(new PathfinderDeactivated(_pathfinderWorkerState.PathfinderId));
+        Context.System.EventStream.Publish(new PathfinderDeactivated(_state.PathfinderId));
 
-        if (!_pathfinderWorkerState.HasPathFound)
+        if (!_state.HasPathFound)
         {
-            _logger.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _pathfinderWorkerState.SourcePointId, _pathfinderWorkerState.TargetPointId);
-            Sender.Tell(new PathFinderDone(null));
-            Context.SetReceiveTimeout(TimeSpan.FromSeconds(30));
+            _logger.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _state.SourcePointId, _state.TargetPointId);
+            Sender.Tell(new PathFinderDone(Guid.Empty, false, "Frag mich doch nicht"));
+            Become(Void);
+            Stash.UnstashAll();
             return;
         }
 
 
-        _logger.Debug("[{PathfinderId}] {PathsCount} Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _pathfinderWorkerState.Count, _pathfinderWorkerState.SourcePointId, _pathfinderWorkerState.TargetPointId);
+        _logger.Debug("[{PathfinderId}] {PathsCount} Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _state.Count, _state.SourcePointId, _state.TargetPointId);
         using var scope = _serviceScopeFactory.CreateScope();
         var pathReader = scope.ServiceProvider.GetRequiredService<IPathReader>();
         await pathReader
@@ -70,14 +63,24 @@ public partial class PathfinderWorker
         ex => new BestPathFailed(msg.PathfinderId, ex));
     }
 
+    private void MapIsReadyHandler(MapIsReady msg)
+    {
+        IReadOnlyList<PathPoint> startPointList = new List<PathPoint>()
+        {
+            new(_state.SourcePointId, 0, _state.StartDirection)
+        };
+        var findPathRequest = new FindPathRequest(Guid.Parse(EntityId), Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList);
+
+        Context.System.GetRegistry().Get<PointWorkerProxy>().Tell(findPathRequest, Self);
+
+        Context.System.Scheduler.ScheduleTellOnce(_state.Timeout, Self, new FickDichPatrick(_state.PathfinderId), _sender);
+    }
+
     public void BestPathFoundHandler(BestPathFound msg)
     {
         Become(Void);
         Stash.UnstashAll();
-        using var scope = _serviceScopeFactory.CreateScope();
-        var pathReader = scope.ServiceProvider.GetRequiredService<IPathReader>();
-        var path = pathReader.Get(msg.PathId).SingleOrDefault();
-        Sender.Tell(new PathFinderDone(path));
+        Sender.Tell(new PathFinderDone(msg.PathId, true));
     }
 
     public void BestPathFailedHandler(BestPathFailed msg)
@@ -89,7 +92,6 @@ public partial class PathfinderWorker
             _logger.Error(msg.Exception, "[{PathfinderId}] -> Exception: {@Exception}", EntityId, msg.Exception);
         }
 
-        Sender.Tell(new PathFinderDone(null));
-        Context.SetReceiveTimeout(TimeSpan.FromSeconds(30));
+        Sender.Tell(new PathFinderDone(Guid.Empty, false, "Frag mich doch nicht"));
     }
 }

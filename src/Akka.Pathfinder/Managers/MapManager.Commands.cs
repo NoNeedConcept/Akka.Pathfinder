@@ -1,6 +1,7 @@
 ﻿using Akka.Actor;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Messages;
+using Akka.Pathfinder.Core.States;
 using Akka.Persistence;
 using Akka.Util.Internal;
 
@@ -10,63 +11,88 @@ public partial class MapManager : ReceivePersistentActor
 {
     public void LoadMapHandler(LoadMap msg)
     {
-        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().GetEnumName, msg.GetType().Name);
+        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
+        Become(WaitingForPoints);
         using var scope = _serviceScopeFactory.CreateScope();
         var mapConfigReader = scope.ServiceProvider.GetRequiredService<IMapConfigReader>();
-        Become(WaitingForPoints);
+        _state = MapManagerState.FromRequest(msg, _state.GetWaitingPathfinders());
         mapConfigReader.Get(msg.MapId).ForEach(x =>
         {
-            _pointWorkerClient.Tell(new InitializePoint(x));
-            _readyPoints.AddOrUpdate(x.Id, _ => (DateTime.UtcNow, null), (_, _) => (DateTime.UtcNow, null));
+            var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
+            client.Tell(new InitializePoint(x));
+            _state.AddInitializePoint(x.Id);
         });
     }
 
     public void UpdateMapHandler(UpdateMap msg)
     {
-        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().GetEnumName, msg.GetType().Name);
-
+        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
+        using var scope = _serviceScopeFactory.CreateScope();
+        var mapConfigReader = scope.ServiceProvider.GetRequiredService<IMapConfigReader>();
+        _state = MapManagerState.FromRequest(msg, _state.GetWaitingPathfinders());
+        Become(WaitingForPoints);
+        mapConfigReader.Get(msg.MapId).ForEach(x =>
+        {
+            var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
+            client.Tell(new UpdatePointDirection(x));
+            _state.AddInitializePoint(x.Id);
+        });
     }
 
     public void ResetMapHandler(ResetMap msg)
     {
-        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().GetEnumName, msg.GetType().Name);
-
+        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
+        using var scope = _serviceScopeFactory.CreateScope();
+        var mapConfigReader = scope.ServiceProvider.GetRequiredService<IMapConfigReader>();
+        _state = MapManagerState.FromRequest(msg, _state.GetWaitingPathfinders());
+        Become(WaitingForPoints);
+        mapConfigReader.Get(msg.MapId).ForEach(x =>
+        {
+            var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
+            client.Tell(new ResetPoint(x));
+            _state.AddInitializePoint(x.Id);
+        });
     }
 
     public void IsMapReadyHandler(IsMapReady msg)
     {
-        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().GetEnumName, msg.GetType().Name);
-        _waitingPathfinders.Add(msg.PathFinderId);
+        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
+        if (_state.IsMapReady)
+        {
+            Sender.Tell(new MapIsReady(msg.PathFinderId));
+        }
 
-        var isReady = _readyPoints.All(x => x.Value.Completed.HasValue);
-
-
-        PathFinderRequest response = isReady ? new MapIsReady(msg.PathFinderId) : new MapIsNotReady(msg.PathFinderId);
-        Sender.Tell(response);
+        _state.AddWaitingPathfinder(msg.PathFinderId);
     }
 
     public void AllPointsInitializedHandler(AllPointsInitialized msg)
     {
+        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
 
+        _state
+        .GetMapIsReadyMessages()
+        .ForEach(x =>
+        {
+            var client = Context.System.GetRegistry().Get<PathfinderProxy>();
+            client.Tell(x);
+        });
+
+        Become(Ready);
     }
 
-    public void NotAllPointsInitializedHandler(NotAllPointsInitialized _)
+    public void NotAllPointsInitializedHandler(NotAllPointsInitialized msg)
     {
-        _logger.Debug("[{ActorName}] not all points initialized", GetType().Name);
+        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
     }
 
     public async Task PointInitializedHandler(PointInitialized msg)
     {
-        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().GetEnumName, msg.GetType().Name);
-        if (!_readyPoints.TryGetValue(msg.PointId, out var oldValue) && !_readyPoints.TryUpdate(msg.PointId, (oldValue.Created, DateTime.UtcNow), oldValue))
-        {
-            _logger.Debug("[{ActorName}] Unknown point initialized - PointId:[{PointId}]", GetType().GetEnumName, msg.PointId);
-            _readyPoints.AddOrSet(msg.PointId, (DateTime.UtcNow, DateTime.UtcNow));
-        }
+        _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
 
-        await _readyPoints
-        .ToAsyncEnumerable()
-        .AllAsync(x => x.Value.Completed.HasValue)
+        _state.UpdatePointInitialized(msg.PointId);
+
+        await _state
+        .AllPointsReadyAsync()
         .PipeTo(Self, Self, x => x ? new AllPointsInitialized() : new NotAllPointsInitialized());
     }
 }

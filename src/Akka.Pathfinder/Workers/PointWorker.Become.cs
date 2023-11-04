@@ -1,4 +1,5 @@
 ﻿using Akka.Pathfinder.Core.Messages;
+using Akka.Persistence;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -6,16 +7,25 @@ public partial class PointWorker
 {
     private void Initialize()
     {
-        _logger.Debug("[{PointId}][INITIALIZE] START", EntityId);
+        _logger.Debug("[{PointId}][INITIALIZE]", EntityId);
 
-        if (_state?.Initialize == true)
-        {
-            Become(Ready);
-            return;
-        }
+        Command<LocalPointConfig>(LocalPointConfigHandler);
+        CommandAny(msg => Stash.Stash());
+    }
 
-        Command<InitializePoint>(InitPointHandler);
+    private void Update()
+    {
+        _logger.Debug("[{PointId}][UPDATE]", EntityId);
 
+        Command<LocalPointConfig>(LocalPointConfigHandler);
+        CommandAny(msg => Stash.Stash());
+    }
+
+    private void Reset()
+    {
+        _logger.Debug("[{PointId}][RESET]", EntityId);
+
+        Command<LocalPointConfig>(LocalPointConfigHandler);
         CommandAny(msg => Stash.Stash());
     }
 
@@ -33,8 +43,19 @@ public partial class PointWorker
         _logger.Debug("[{PointId}][READY]", EntityId);
 
         PersistState();
-        OnReady();
+        Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
+        Command<CostRequest>(CostRequestHandler);
+        Command<PointCommandRequest>(PointCommandRequestHandler);
+        Command<FindPathRequest>(CreatePathPointRequestPathHandler);
+        Command<InitializePoint>(InitializePointHandler);
+        Command<UpdatePointDirection>(UpdatePointDirectionHandler);
+        Command<ResetPoint>(ResetPointHandler);
+
+        Command<SaveSnapshotSuccess>(SaveSnapshotSuccessHandler);
+        Command<SaveSnapshotFailure>(SaveSnapshotFailureHandler);
 
         Stash.UnstashAll();
     }
+
+
 }

@@ -9,7 +9,6 @@ public record BestPathFailed(Guid PathfinderId, Exception Exception) : PathFinde
 public record FickDichPatrick(Guid PathfinderId) : IPathfinderId;
 
 public record MapIsReady(Guid PathfinderId) : PathFinderRequest(PathfinderId);
-public record MapIsNotReady(Guid PathfinderId) : PathFinderRequest(PathfinderId);
 public abstract record PathFinderRequest(Guid PathfinderId) : IPathfinderId;
 
 public enum PathFinderResult : byte

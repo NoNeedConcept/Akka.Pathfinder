@@ -15,7 +15,6 @@ public class EnvironmentSetupHooks
     public static LighthouseNodeContainer SeedNodeContainer = null!;
     public static PathfinderApplicationFactory PathfinderApplicationFactory = null!;
     public static AkkaDriver AkkaDriver = null!;
-    public static PointConfigDriver PointConfigDriver = null!;
     public static Guid DefaultPathfinderId { get; } = Guid.Parse("42069420-6969-6969-6969-420420420420");
 
     [BeforeTestRun]
@@ -45,8 +44,6 @@ public class EnvironmentSetupHooks
         AkkaPathfinder.SetEnvironmentVariable("mongodb", mongoDBString);
         AkkaPathfinder.SetEnvironmentVariable("postgre", postgreSQLString);
 
-        PointConfigDriver = new(MongoDbContainer);
-
         PathfinderApplicationFactory = new();
         await PathfinderApplicationFactory.InitializeAsync();
 
@@ -54,10 +51,9 @@ public class EnvironmentSetupHooks
     }
 
     [AfterScenario]
-    public static async Task AfterScenario()
+    public static void AfterScenario()
     {
         Log.Information("[TEST][EnvironmentSetupHooks][AfterScenario]");
-        await MongoDbContainer.DropDataAsync();
     }
 
     [AfterTestRun]

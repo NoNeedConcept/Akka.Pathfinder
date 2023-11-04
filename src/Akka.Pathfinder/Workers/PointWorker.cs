@@ -3,8 +3,11 @@ using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Persistence;
+using Akka.Pathfinder.Core.States;
 
 namespace Akka.Pathfinder.Workers;
+
+public record LocalPointConfig(PointConfig Config);
 
 public partial class PointWorker : ReceivePersistentActor
 {
@@ -22,7 +25,7 @@ public partial class PointWorker : ReceivePersistentActor
     {
         EntityId = entityId;
         _serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-        var registry= Context.System.GetRegistry();
+        var registry = Context.System.GetRegistry();
         _pointWorkerClient = registry.Get<PointWorkerProxy>();
         _pathfinderClient = registry.Get<PathfinderProxy>();
         _mapManagerClient = registry.Get<MapManagerProxy>();
@@ -35,7 +38,6 @@ public partial class PointWorker : ReceivePersistentActor
 
         Recover<SnapshotOffer>(RecoverSnapshotOffer);
         Recover<PointConfig>(RecoverPointConfig);
-        CommandAny(msg => Stash.Stash());
     }
 
     protected override void OnReplaySuccess()
@@ -48,19 +50,8 @@ public partial class PointWorker : ReceivePersistentActor
         }
         else
         {
-            Become(Initialize);
+            Become(() => Command<InitializePoint>(InitializePointHandler));
         }
-    }
-
-    private void OnReady()
-    {
-        Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
-        Command<CostRequest>(CostRequestHandler);
-        Command<PointCommandRequest>(PointCommandRequestHandler);
-        Command<FindPathRequest>(CreatePathPointRequestPathHandler);
-
-        Command<SaveSnapshotSuccess>(SaveSnapshotSuccessHandler);
-        Command<SaveSnapshotFailure>(SaveSnapshotFailureHandler);
     }
 
     protected override void PreRestart(Exception reason, object message)

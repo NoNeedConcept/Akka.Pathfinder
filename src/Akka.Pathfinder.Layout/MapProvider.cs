@@ -6,49 +6,34 @@ namespace Akka.Pathfinder.Layout;
 // dictionary 0, -> Map0()
 
 
-public static class MapProvider
+public class MapProvider
 {
     private const uint BaseCost = 42;
-    private static Dictionary<int, MapConfig> _mapConfigs = new();
 
-
-    public static Dictionary<int, MapConfig> MapConfigs
-    {
-        get
+    public Dictionary<int, MapConfigWithPoints> MapConfigs => new()
         {
-            if (_mapConfigs.Count == 0)
-            {
-                _mapConfigs.Add(0, Map0());
-                _mapConfigs.Add(1, Map1());
-                // _mapConfigs.Add(2,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(12, 15, 1),new Dictionary<Direction, uint>()),true));
-                // _mapConfigs.Add(3,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(50, 50, 1),new Dictionary<Direction, uint>()),true));
-                // _mapConfigs.Add(4,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(50, 50, 50),new Dictionary<Direction, uint>()),true));
-            }
+             {0, Map0()},
+             {1, Map1()},
+        };
 
-            return _mapConfigs;
-        }
-        set => _mapConfigs = value;
-    }
-
-    private static MapConfig Map0()
+    private MapConfigWithPoints Map0()
     {
 
-        return new MapConfig(Guid.NewGuid(), new List<PointConfig>()
+        return new MapConfigWithPoints(Guid.NewGuid(), Guid.NewGuid(), new List<PointConfig>()
         {
             new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
             {
                 { Direction.Front, new DirectionConfig(2, BaseCost) },
             }),
             new(2, BaseCost, new Dictionary<Direction, DirectionConfig>()),
-
         });
 
     }
 
-    private static MapConfig Map1()
+    private MapConfigWithPoints Map1()
     {
 
-        return new MapConfig(Guid.NewGuid(), new List<PointConfig>()
+        return new MapConfigWithPoints(Guid.NewGuid(), Guid.NewGuid(), new List<PointConfig>()
         {
             new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
             {

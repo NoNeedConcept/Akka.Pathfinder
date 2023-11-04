@@ -2,6 +2,8 @@ using Akka.Pathfinder.AcceptanceTests.Drivers;
 using Akka.Pathfinder.AcceptanceTests.Hooks;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
+using Akka.Pathfinder.Core.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using TechTalk.SpecFlow;
 
@@ -25,9 +27,12 @@ public class PathfinderSteps
     {
         var pathFound = _akkaDriver.ReceivePathFound();
 
-        Assert.NotNull(pathFound.Path);
+        Assert.NotNull(pathFound);
+        Assert.True(pathFound.Success);
 
-        int actualCost = pathFound.Path.Directions.Select(p => (int)p.Cost).Sum();
+        var pathReader = _akkaDriver.Host.Services.GetRequiredService<IPathReader>();
+        var result = pathReader.Get(pathFound.PathId).Single();
+        int actualCost = result.Directions.Select(p => (int)p.Cost).Sum();
 
         Assert.Equal(expectedCost, actualCost);
     }
@@ -37,13 +42,14 @@ public class PathfinderSteps
     {
         var pathFound = _akkaDriver.ReceivePathFound();
 
-        Assert.Null(pathFound.Path);
+        Assert.NotNull(pathFound);
+        Assert.False(pathFound.Success);
     }
 
     [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*)")]
     public void WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId)
     {
-        PathfinderStartRequest request = new(Guid.NewGuid(), startPointId, targetPointId, direction, TimeSpan.FromSeconds(15));
+        PathfinderStartRequest request = new(Guid.NewGuid(), startPointId, targetPointId, direction, TimeSpan.FromSeconds(5));
         _akkaDriver.TellPathfinder(request);
     }
 }

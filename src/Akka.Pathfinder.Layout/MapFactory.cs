@@ -15,7 +15,7 @@ public static class MapFactory
 
     private const int EmptyPoint = -1;
 
-    public static MapConfig Create(MapSettings mapSettings, bool intergalacticDummyMode = false)
+    public static MapConfigWithPoints Create(MapSettings mapSettings, bool intergalacticDummyMode = false)
     {
         MapSettings = mapSettings;
         InitializeRandom();
@@ -70,7 +70,7 @@ public static class MapFactory
     }
 
 
-    private static MapConfig ConvertToMapConfig()
+    private static MapConfigWithPoints ConvertToMapConfig()
     {
         var listOfPoints = new List<PointConfig>();
         int widthCounter = 0, heightCounter = 0, depthCounter = 0;
@@ -189,7 +189,7 @@ public static class MapFactory
             widthCounter++;
         }
 
-        return new MapConfig(Guid.NewGuid(), listOfPoints);
+        return new MapConfigWithPoints(Guid.NewGuid(), Guid.NewGuid(), listOfPoints);
     }
 
     private static void InitializeMap(bool intergalacticDummyMode)
@@ -197,7 +197,7 @@ public static class MapFactory
         Map = new int[MapSettings.MapSize.Width, MapSettings.MapSize.Height, MapSettings.MapSize.Depth];
         int widthCounter = 0, heightCounter = 0, depthCounter = 0;
         int index = 0;
-        while (widthCounter < MapSettings.MapSize.Width)
+        while (widthCounter   < MapSettings.MapSize.Width)
         {
             while (heightCounter < MapSettings.MapSize.Height)
             {

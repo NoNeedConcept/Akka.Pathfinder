@@ -5,20 +5,20 @@ namespace Akka.Pathfinder.Core.Services;
 
 public interface IPointConfigReader
 {
-    IQueryable<PointConfig> Get();
+    public IQueryable<PointConfig> Get(Guid CollectionId);
 
-    IQueryable<PointConfig> Get(int pointId);
+    public IQueryable<PointConfig> Get(Guid CollectionId, int pointId);
 }
 
 public class PointConfigReader : IPointConfigReader
 {
-    private readonly IMongoCollection<PointConfig> _mongoCollection;
-    public PointConfigReader(IMongoCollection<PointConfig> collection)
+    protected IMongoDatabase Database { get; init; }
+    public PointConfigReader(IMongoDatabase database)
     {
-        _mongoCollection = collection;
+        Database = database;
     }
 
-    public IQueryable<PointConfig> Get() => _mongoCollection.AsQueryable();
+    public IQueryable<PointConfig> Get(Guid CollectionId) => Database.GetCollection<PointConfig>(CollectionId.ToString()).AsQueryable();
 
-    public IQueryable<PointConfig> Get(int pointId) => Get().Where(x => x.Id == pointId);
+    public IQueryable<PointConfig> Get(Guid CollectionId, int pointId) => Get(CollectionId).Where(x => x.Id == pointId);
 }

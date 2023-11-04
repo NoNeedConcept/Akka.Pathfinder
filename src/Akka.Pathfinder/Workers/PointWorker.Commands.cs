@@ -1,7 +1,7 @@
 ﻿using Akka.Actor;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Messages;
-using Akka.Pathfinder.Managers;
+using Akka.Pathfinder.Core.States;
 using Akka.Persistence;
 using Akka.Util.Internal;
 
@@ -16,13 +16,38 @@ public partial class PointWorker
         _state.RemoveOldPathfinderIds(TimeSpan.FromMinutes(10));
     }
 
-    private void InitPointHandler(InitializePoint msg)
+    private void LocalPointConfigHandler(LocalPointConfig msg)
     {
-        _logger.Debug("[{PointId}][INITIALIZE] receive config", EntityId);
-
+        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         _state = PointWorkerState.FromConfig(msg.Config);
-        _mapManagerClient.Tell(new PointInitialized(msg.PointId));
+        _mapManagerClient.Tell(new PointInitialized(msg.Config.Id));
         Become(Ready);
+    }
+
+    private void InitializePointHandler(InitializePoint msg)
+    {
+        Become(Initialize);
+        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        Self.Forward(new LocalPointConfig(msg.Config));
+    }
+
+    private void UpdatePointDirectionHandler(UpdatePointDirection msg)
+    {
+        Become(Update);
+        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        var updatedConfig = msg.Config with
+        {
+            DirectionConfigs = _state.MergeDirectionConfigs(msg.Config.DirectionConfigs)
+        };
+
+        Self.Forward(new LocalPointConfig(updatedConfig));
+    }
+
+    private void ResetPointHandler(ResetPoint msg)
+    {
+        Become(Reset);
+        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        Self.Forward(new LocalPointConfig(msg.Config));
     }
 
     private void CostRequestHandler(CostRequest msg)

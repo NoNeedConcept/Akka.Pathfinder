@@ -7,7 +7,7 @@ using Akka.Util.Internal;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 using MongoDB.Driver.Linq;
 
-namespace Akka.Pathfinder.Core;
+namespace Akka.Pathfinder.Core.States;
 
 public record PointWorkerState
 {
@@ -46,6 +46,8 @@ public record PointWorkerState
     public bool IsBlocked => State is PointState.Blocked;
 
     public PointState State { get; internal set; }
+
+    public IDictionary<Direction, DirectionConfig> DirectionConfigs => _directionConfigs;
 
     internal bool UpdatePointCost(PointCommit commit)
     {

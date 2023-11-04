@@ -15,8 +15,8 @@ public class MapFactoryTests
         
         Assert.NotNull(mapConfig);
         Assert.NotEqual(Guid.Empty,mapConfig.Id);
-        Assert.NotNull(mapConfig.Points);
-        Assert.True(mapConfig.Points.Any());
+        Assert.NotNull(mapConfig.Configs);
+        Assert.True(mapConfig.Configs.Any());
 
 
     }

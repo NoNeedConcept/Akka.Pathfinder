@@ -1,5 +1,3 @@
-using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
-
 namespace Akka.Pathfinder.Core.Messages;
 
-public record PathFinderDone(Path? Path);
+public record PathFinderDone(Guid PathId, bool Success, string? ErrorMessage = default);

@@ -7,6 +7,7 @@ using Akka.Pathfinder;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Services;
+using Akka.Pathfinder.Managers;
 using Akka.Pathfinder.Workers;
 using Akka.Persistence.Hosting;
 using Akka.Persistence.Sql.Config;
@@ -35,10 +36,10 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
 .AddSingleton<IMongoClient>(x => new MongoClient(AkkaPathfinder.GetEnvironmentVariable("mongodb")))
 .AddScoped(x => x.GetRequiredService<IMongoClient>().GetDatabase("pathfinder"))
 .AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<Path>("path"))
-.AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<PointConfig>("point_config"))
+.AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<MapConfig>("map_config"))
 .AddScoped<IPathWriter, PathWriter>()
 .AddScoped<IPathReader>(x => x.GetRequiredService<IPathWriter>())
-.AddScoped<IMapConfigWriter, MapConfigWriter>()
+.AddScoped<IMapConfigWriter, MapConfigWriter>(x => new MapConfigWriter(x.GetRequiredService<IMongoCollection<MapConfig>>(), x.GetRequiredService<IMongoDatabase>()))
 .AddScoped<IMapConfigReader>(x => x.GetRequiredService<IMapConfigWriter>())
 .AddScoped<IPointConfigReader, PointConfigReader>()
 .AddAkka("Zeus", (builder, sp) =>
@@ -93,7 +94,9 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 Role = "KEKW",
                 PassivateIdleEntityAfter = null,
             })
-            .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor());
+            .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor())
+            .WithSingleton<MapManager>("MapManager", (_, _, dependecyResolver) => dependecyResolver.Props<MapManager>(), new ClusterSingletonOptions() { Role = "KEKW" }, false)
+            .WithSingletonProxy<MapManagerProxy>("MapManager", new ClusterSingletonOptions() { Role = "KEKW" });
     });
 
 

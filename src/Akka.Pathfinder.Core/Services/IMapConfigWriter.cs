@@ -10,7 +10,7 @@ public interface IMapConfigWriter : IMapConfigReader
 
 public class MapConfigWriter : MapConfigReader, IMapConfigWriter
 {
-    public MapConfigWriter(IMongoCollection<MapConfig> collection) : base(collection)
+    public MapConfigWriter(IMongoCollection<MapConfig> collection, IMongoDatabase database) : base(collection, database)
     { }
 
     public bool AddOrUpdate(Guid Id, MapConfig config) => Collection.ReplaceOne(x => x.Id == Id, config, new ReplaceOptions() { IsUpsert = true }).IsAcknowledged;

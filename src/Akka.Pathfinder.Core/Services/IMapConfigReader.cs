@@ -9,13 +9,17 @@ public interface IMapConfigReader
     IEnumerable<PointConfig> Get(Guid MapId);
 }
 
-
 public class MapConfigReader : IMapConfigReader
 {
-    protected readonly IMongoCollection<MapConfig> Collection;
-    public MapConfigReader(IMongoCollection<MapConfig> collection) => Collection = collection;
+    protected IMongoCollection<MapConfig> Collection { get; init; }
+    protected IMongoDatabase Database { get; init; }
+    public MapConfigReader(IMongoCollection<MapConfig> collection, IMongoDatabase database) 
+    {
+        Collection = collection;
+        Database = database;
+    }
 
     public IQueryable<MapConfig> Get() => Collection.AsQueryable();
 
-    public IEnumerable<PointConfig> Get(Guid MapId) => Get().First(x => x.Id == MapId).Points;
+    public IEnumerable<PointConfig> Get(Guid MapId) => Database.GetCollection<PointConfig>(Get().Single(x => x.Id == MapId).PointConfigsId.ToString()).AsQueryable();
 }

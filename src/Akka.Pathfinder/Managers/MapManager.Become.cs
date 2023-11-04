@@ -11,7 +11,6 @@ public partial class MapManager :ReceivePersistentActor
         Command<IsMapReady>(IsMapReadyHandler);
         Command<AllPointsInitialized>(AllPointsInitializedHandler);
         Command<NotAllPointsInitialized>(NotAllPointsInitializedHandler);
-        CommandAny(msg => Stash.Stash());
     }
 
     private void Ready()
@@ -20,6 +19,6 @@ public partial class MapManager :ReceivePersistentActor
         Command<UpdateMap>(UpdateMapHandler);
         Command<ResetMap>(ResetMapHandler);
         Command<IsMapReady>(IsMapReadyHandler);
-        CommandAny(msg => Stash.Stash());
+        CommandAny(x => {});
     }
 }
