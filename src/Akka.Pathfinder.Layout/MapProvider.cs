@@ -20,9 +20,9 @@ public static class MapProvider
             {
                 _mapConfigs.Add(0, Map0());
                 _mapConfigs.Add(1, Map1());
-                _mapConfigs.Add(2,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(12, 15, 1),new Dictionary<Direction, uint>()),true));
-                _mapConfigs.Add(3,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(50, 50, 1),new Dictionary<Direction, uint>()),true));
-                _mapConfigs.Add(4,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(50, 50, 50),new Dictionary<Direction, uint>()),true));
+                // _mapConfigs.Add(2,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(12, 15, 1),new Dictionary<Direction, uint>()),true));
+                // _mapConfigs.Add(3,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(50, 50, 1),new Dictionary<Direction, uint>()),true));
+                // _mapConfigs.Add(4,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(50, 50, 50),new Dictionary<Direction, uint>()),true));
             }
 
             return _mapConfigs;
