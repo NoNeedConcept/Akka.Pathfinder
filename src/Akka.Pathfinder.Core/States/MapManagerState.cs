@@ -30,7 +30,7 @@ public class MapManagerState
 
     public MapManagerState(IDictionary<Guid, Guid> waitingPathfinders) => _waitingPathfinders = waitingPathfinders.ToConcurrentDictionary(x => x.Key, x => x.Value);
 
-    public bool IsMapReady { get; init; } = false;
+    public bool IsMapReady { get; internal set; } = false;
 
     public IDictionary<Guid, Guid> GetWaitingPathfinders() => _waitingPathfinders;
     public void AddInitializePoint(int pointId) => _readyPoints.AddOrSet(pointId, (DateTime.UtcNow, null));
@@ -53,6 +53,7 @@ public class MapManagerState
     {
         var result = _waitingPathfinders.Select(x => new MapIsReady(x.Key)).ToList();
         _waitingPathfinders = new();
+        IsMapReady = true;
         return result;
     }
 
