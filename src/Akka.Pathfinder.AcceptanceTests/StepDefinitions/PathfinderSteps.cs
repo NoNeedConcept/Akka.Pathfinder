@@ -60,7 +60,7 @@ public class PathfinderSteps
     [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*)")]
     public void WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId, string pathfinderId)
     {
-        PathfinderStartRequest request = new(Guid.Parse(pathfinderId), startPointId, targetPointId, direction, TimeSpan.FromSeconds(5));
+        PathfinderStartRequest request = new(Guid.Parse(pathfinderId), startPointId, targetPointId, direction, TimeSpan.FromMilliseconds(50));
         _stopwatch.Restart();
         _akkaDriver.TellPathfinder(request);
     }
