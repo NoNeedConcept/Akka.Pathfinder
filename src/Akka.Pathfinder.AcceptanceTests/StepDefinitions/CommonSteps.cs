@@ -5,7 +5,6 @@ using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Services;
 using Akka.Pathfinder.Layout;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 using TechTalk.SpecFlow;
 
 namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
@@ -15,10 +14,11 @@ public class CommonSteps
 {
     private readonly ScenarioContext _context;
     private readonly AkkaDriver _akkaDriver;
+    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<CommonSteps>();
 
     public CommonSteps(ScenarioContext context)
     {
-        Log.Information("[TEST][CommonStepDefinitions][ctor]", GetType().Name);
+        _logger.Information("[TEST][CommonStepDefinitions][ctor]", GetType().Name);
         _context = context;
         _akkaDriver = EnvironmentSetupHooks.AkkaDriver;
     }

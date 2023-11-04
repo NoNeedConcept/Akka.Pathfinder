@@ -132,7 +132,7 @@ public record PointWorkerState
         response = null!;
         if (!request.TargetPointId.Equals(PointId)) return false;
         var paths = request.Directions.ToList();
-        var path = new Path(request.PathId, request.PathfinderId, paths);
+        var path = new Path(request.PathId, request.PathfinderId, (DateTimeOffset.UtcNow-request.PathfindingStarted).TotalMilliseconds, paths);
         var success = writer(path);
         if (!success)
         {
@@ -153,7 +153,7 @@ public record PointWorkerState
         {
             var directions = request.Directions.ToList();
             directions.Add(new PathPoint(Value.TargetPointId, Cost, Key));
-            var findPathRequest = new FindPathRequest(request.PathfinderId, Guid.NewGuid(), Value.TargetPointId, request.TargetPointId, directions);
+            var findPathRequest = new FindPathRequest(request.PathfinderId, DateTimeOffset.UtcNow, Guid.NewGuid(), Value.TargetPointId, request.TargetPointId, directions);
             results.Add(findPathRequest);
         }
 

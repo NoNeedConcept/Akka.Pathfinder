@@ -10,10 +10,11 @@ public class PointSteps
 {
     private readonly ScenarioContext _context;
     private readonly AkkaDriver _akkaDriver;
+    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointSteps>();
 
     public PointSteps(ScenarioContext context)
     {
-        Log.Information("[TEST][PointSteps][ctor]", GetType().Name);
+        _logger.Information("[TEST][PointSteps][ctor]", GetType().Name);
         _context = context;
         _akkaDriver = EnvironmentSetupHooks.AkkaDriver;
     }
