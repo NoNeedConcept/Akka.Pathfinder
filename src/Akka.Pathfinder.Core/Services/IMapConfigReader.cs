@@ -22,7 +22,8 @@ public class MapConfigReader : IMapConfigReader
 
     public IQueryable<MapConfig> Get() => Collection.AsQueryable();
 
-    public IQueryable<PointConfig> Get(Guid MapId) => Database.GetCollection<PointConfig>(Get().Single(x => x.Id == MapId).PointConfigsId.ToString()).AsQueryable();
+    public IQueryable<PointConfig> Get(Guid MapId) 
+    => Get().Single(x => x.Id == MapId).PointConfigsIds.SelectMany(x => Database.GetCollection<PointConfig>(x.ToString()).AsQueryable()).AsQueryable();
 
     public IQueryable<PointConfig> GetPointWithChanges(Guid MapId) => Get(MapId).Where(x => x.HasChanges);
 }

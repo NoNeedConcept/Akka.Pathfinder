@@ -6,8 +6,14 @@ using Akka.Pathfinder.Core.Persistence;
 using Akka.Util.Internal;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 using MongoDB.Driver.Linq;
+using LinqToDB.Tools;
 
 namespace Akka.Pathfinder.Core.States;
+
+public class MongoConstantLengthForCollections
+{
+    public const int Length = 1500;
+}
 
 public record PointWorkerState
 {
@@ -92,9 +98,9 @@ public record PointWorkerState
 
     public bool IsBlockedAndGetResponse(FindPathRequest request, out PathFound response)
     {
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.PathBlocked);
+        response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.PathBlocked);
         if (IsBlocked) return true;
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
+        response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.MindBlown);
         if (_directionConfigs.Count == 0 && PointId != request.TargetPointId) return true;
         response = null!;
         return false;
@@ -102,7 +108,7 @@ public record PointWorkerState
 
     public bool TryLoopDetection(FindPathRequest request, out PathFound response)
     {
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.LoopDetected);
+        response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.LoopDetected);
         var loopDetectionList = request.Directions.SkipLast(1).ToList();
         if (loopDetectionList.Any(x => x.PointId.Equals(PointId))) return true;
         response = null!;
@@ -127,22 +133,38 @@ public record PointWorkerState
         return false;
     }
 
-    public bool TryIsArrivedTargetPoint(FindPathRequest request, Func<Path, bool> writer, out PathFound response)
+    public bool TryIsArrivedTargetPoint(FindPathRequest request, Func<Path, (bool, Guid)> writer, out PathFound response)
     {
         response = null!;
         if (!request.TargetPointId.Equals(PointId)) return false;
         var paths = request.Directions.ToList();
         var path = new Path(request.PathId, request.PathfinderId, paths);
-        var success = writer(path);
+        var (success, pathId) = writer(path);
         if (!success)
         {
             _logger.Debug("[{PathId}][{PathfinderId}] update path failed", request.PathId, request.PathfinderId);
-            response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
+            response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds) { pathId }, PathFinderResult.MindBlown);
             return true;
         }
 
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.Success);
+        response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.Success);
         return true;
+    }
+
+    public bool TrySavePartialPath(FindPathRequest request, Func<Path, (bool, Guid)> writer, out FindPathRequest findPathRequest)
+    {
+        findPathRequest = request;
+        var success = false;
+        if (request.Directions.Count == MongoConstantLengthForCollections.Length)
+        {
+            var (updated, value) = writer.Invoke(new Path(Guid.NewGuid(), request.PathfinderId, request.Directions));
+            success = updated;
+            findPathRequest = request with
+            {
+                SubPathIds = new SortedSet<Guid>(request.SubPathIds) { value }
+            };
+        }
+        return success;
     }
 
     public IReadOnlyList<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
@@ -153,7 +175,7 @@ public record PointWorkerState
         {
             var directions = request.Directions.ToList();
             directions.Add(new PathPoint(Value.TargetPointId, Value.Cost, Key));
-            var findPathRequest = new FindPathRequest(request.PathfinderId, request.PathfindingStarted, Guid.NewGuid(), Value.TargetPointId, request.TargetPointId, directions.ToList());
+            var findPathRequest = new FindPathRequest(request.PathfinderId, Guid.NewGuid(), Value.TargetPointId, request.TargetPointId, directions.ToList(), request.SubPathIds);
             results.Add(findPathRequest);
         }
 

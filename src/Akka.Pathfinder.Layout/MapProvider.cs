@@ -10,22 +10,25 @@ public class MapProvider
         {
             { 0, Map0()},
             { 1, Map1()},
-            { 2, MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(50, 50, 30), new Dictionary<Direction, uint>()), true)},
-            { 3, MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(50, 50, 1), new Dictionary<Direction, uint>()), true)}
+            { 2, MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(10, 10, 1), new Dictionary<Direction, uint>()), true)},
+            { 3, MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(25, 25, 28), new Dictionary<Direction, uint>()), true)}
         };
 
-    private MapConfigWithPoints Map0() => new(Guid.NewGuid(), Guid.NewGuid(), new List<PointConfig>()
-        {
-            new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
-            {
-                { Direction.Front, new DirectionConfig(2, BaseCost) },
-            }),
-            new(2, BaseCost, new Dictionary<Direction, DirectionConfig>()),
-        });
+    private MapConfigWithPoints Map0()
+    {
+        var value = new List<PointConfig>(){
+                new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
+                {
+                    { Direction.Front, new DirectionConfig(2, BaseCost) },
+                }),
+                new(2, BaseCost, new Dictionary<Direction, DirectionConfig>()),
+            };
+        return new MapConfigWithPoints(Guid.NewGuid(), new Dictionary<Guid, List<PointConfig>>() { { Guid.NewGuid(), value } });
+    }
 
     private MapConfigWithPoints Map1()
     {
-        return new MapConfigWithPoints(Guid.NewGuid(), Guid.NewGuid(), new List<PointConfig>()
+        return new MapConfigWithPoints(Guid.NewGuid(), new Dictionary<Guid, List<PointConfig>>(){{ Guid.NewGuid(), new List<PointConfig>()
         {
             new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
             {
@@ -66,6 +69,6 @@ public class MapProvider
             {
                 { Direction.Top, new DirectionConfig(4, BaseCost) },
             })
-        });
+        }}});
     }
 }

@@ -69,6 +69,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 setup.AddLogger<SerilogLogger>();
                 setup.LogMessageFormatter = typeof(SerilogLogMessageFormatter);
             })
+            .AddHocon(hocon: "akka.remote.dot-netty.tcp.maximum-frame-size = 256000b", addMode: HoconAddMode.Prepend)
             .WithHealthCheck(x => x.AddProviders(HealthCheckType.All))
             .WithWebHealthCheck(sp)
             .WithRemoting("0.0.0.0", 1337, "127.0.0.1")

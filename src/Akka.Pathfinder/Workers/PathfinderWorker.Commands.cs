@@ -69,7 +69,7 @@ public partial class PathfinderWorker
         {
             new(_state.SourcePointId, 0, _state.StartDirection)
         };
-        var findPathRequest = new FindPathRequest(Guid.Parse(EntityId),DateTimeOffset.UtcNow, Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList);
+        var findPathRequest = new FindPathRequest(Guid.Parse(EntityId), Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList, new SortedSet<Guid>());
 
         Context.System.GetRegistry().Get<PointWorkerProxy>().Tell(findPathRequest, Self);
 

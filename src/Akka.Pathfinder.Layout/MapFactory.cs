@@ -1,6 +1,12 @@
 using Akka.Pathfinder.Core.Configs;
+using LanguageExt.UnitsOfMeasure;
 
 namespace Akka.Pathfinder.Layout;
+
+public class MongoConstantLengthForCollections
+{
+    public const int Length = 1500000;
+}
 
 public record MapSize(int Width, int Height, int Depth);
 
@@ -206,7 +212,24 @@ public class MapFactory : IMapFactory
             widthCounter++;
         }
 
-        return new MapConfigWithPoints(Guid.NewGuid(), Guid.NewGuid(), listOfPoints);
+        var result = new Dictionary<Guid, List<PointConfig>>();
+        if (listOfPoints.Count > MongoConstantLengthForCollections.Length)
+        {
+            var kekw = listOfPoints
+            .Chunk(MongoConstantLengthForCollections.Length)
+            .Select(x => new KeyValuePair<Guid, List<PointConfig>>(Guid.NewGuid(), x.ToList()))
+            .ToDictionary(x => x.Key, x => x.Value);
+            result = kekw;
+        }
+        else
+        {
+            result = new Dictionary<Guid, List<PointConfig>>()
+            {
+                {Guid.NewGuid(), listOfPoints}
+            };
+        }
+
+        return new MapConfigWithPoints(Guid.NewGuid(), result);
     }
 
     private void InitializeMap(bool intergalacticDummyMode)

@@ -10,10 +10,10 @@ public partial class PointWorker
         SaveSnapshot(persistedWorkerState);
     }
 
-    private bool PersistPath(Core.Persistence.Data.Path path)
+    private (bool Success, Guid PathId) PersistPath(Core.Persistence.Data.Path path)
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var pathWriter = scope.ServiceProvider.GetRequiredService<IPathWriter>();
-        return pathWriter.AddOrUpdate(path);
+        return (pathWriter.AddOrUpdate(path), path.Id);
     }
 }

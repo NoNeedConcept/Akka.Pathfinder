@@ -57,10 +57,10 @@ public class PathfinderSteps
         Assert.Equal(pathfinderId, pathFound.PathfinderId.ToString());
     }
 
-    [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*)")]
-    public void WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId, string pathfinderId)
+    [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*) Seconds (.*)")]
+    public void WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId, string pathfinderId, int seconds)
     {
-        PathfinderStartRequest request = new(Guid.Parse(pathfinderId), startPointId, targetPointId, direction, TimeSpan.FromMilliseconds(50));
+        PathfinderStartRequest request = new(Guid.Parse(pathfinderId), startPointId, targetPointId, direction, TimeSpan.FromSeconds(seconds));
         _stopwatch.Restart();
         _akkaDriver.TellPathfinder(request);
     }

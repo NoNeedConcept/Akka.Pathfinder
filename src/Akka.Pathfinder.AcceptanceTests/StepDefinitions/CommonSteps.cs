@@ -1,6 +1,7 @@
 using Akka.Pathfinder.AcceptanceTests.Drivers;
 using Akka.Pathfinder.AcceptanceTests.Hooks;
 using Akka.Pathfinder.Core;
+using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Services;
 using Akka.Pathfinder.Layout;
@@ -30,8 +31,12 @@ public class CommonSteps
         Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
         var mapToLoad = new MapProvider().MapConfigs.GetValueOrDefault(mapId)!;
         using var scope = _akkaDriver.Host.Services.CreateScope();
-        scope.ServiceProvider.GetRequiredService<IMapConfigWriter>().AddOrUpdate(mapToLoad.Id, mapToLoad);
-        scope.ServiceProvider.GetRequiredService<IPointConfigWriter>().AddPointConfigs(mapToLoad.PointConfigsId, mapToLoad.Configs);
+        scope.ServiceProvider.GetRequiredService<IMapConfigWriter>().AddOrUpdate(mapToLoad.Id, new MapConfig(mapToLoad.Id, mapToLoad.PointConfigsIds));
+        var pointConfigWriter = scope.ServiceProvider.GetRequiredService<IPointConfigWriter>();
+        foreach (var (key, value) in mapToLoad.Configs)
+        {
+            pointConfigWriter.AddPointConfigs(key, value);
+        }
         _akkaDriver.TellMapManager(new LoadMap(mapToLoad.Id));
     }
 }

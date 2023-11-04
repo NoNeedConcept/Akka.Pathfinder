@@ -77,7 +77,7 @@ public partial class PointWorker
         };
     }
 
-    private void CreatePathPointRequestPathHandler(FindPathRequest msg)
+    private async Task CreatePathPointRequestPathHandler(FindPathRequest msg)
     {
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
@@ -106,8 +106,15 @@ public partial class PointWorker
             return;
         }
 
+        if (_state.TrySavePartialPath(newRequest, PersistPath, out var newFindPathRequest))
+        {
+            _logger.Debug("[{PointId}][{MessageType}] not saved :(", EntityId, msg.GetType().Name);
+        }
+        
+        await Task.Delay(75);
+
         _state
-        .GetAllForwardMessages(newRequest)
+        .GetAllForwardMessages(newFindPathRequest)
         .ForEach(msg =>
         {
             var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
