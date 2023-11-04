@@ -26,7 +26,8 @@ public class CommonSteps
     [Given(@"Map is (.*)")]
     public void GivenMapIs(int mapId)
     {
-        var mapToLoad = new MapProvider().MapConfigs[mapId];
+        Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
+        var mapToLoad = new MapProvider().MapConfigs.GetValueOrDefault(mapId)!;
         using var scope = _akkaDriver.Host.Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<IMapConfigWriter>().AddOrUpdate(mapToLoad.Id, mapToLoad);
         scope.ServiceProvider.GetRequiredService<IPointConfigWriter>().AddPointConfigs(mapToLoad.PointConfigsId, mapToLoad.Configs);

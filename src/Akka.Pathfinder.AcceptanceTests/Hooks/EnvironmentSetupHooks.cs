@@ -58,6 +58,7 @@ public class EnvironmentSetupHooks
         Log.Information("[TEST][EnvironmentSetupHooks][AfterFeature]");
 
         await PathfinderApplicationFactory.DisposeAsync();
+        await MongoDbContainer.DropDataAsync();
         await SeedNodeContainer.DisposeAsync();
         await MongoDbContainer.DisposeAsync();
         await PostgreContainer.DisposeAsync();
