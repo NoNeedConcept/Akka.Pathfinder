@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Akka.Pathfinder.AcceptanceTests.Drivers;
 using Akka.Pathfinder.AcceptanceTests.Hooks;
 using Akka.Pathfinder.Core.Configs;
@@ -18,6 +19,8 @@ public class PathfinderSteps
     private readonly ScenarioContext _context;
     private readonly AkkaDriver _akkaDriver;
 
+    private Stopwatch _stopwatch = new();
+
     public PathfinderSteps(ScenarioContext context, ISpecFlowOutputHelper specFlowOutputHelper)
     {
         _logger.Information("[TEST][PathfinderSteps][ctor]", GetType().Name);
@@ -30,7 +33,7 @@ public class PathfinderSteps
     public void ThenThePathShouldCost(string pathfinderId, int expectedCost)
     {
         var pathFound = _akkaDriver.ReceivePathFound();
-
+        _stopwatch.Stop();
         Assert.NotNull(pathFound);
         Assert.Equal(pathfinderId, pathFound.PathfinderId.ToString());
         Assert.True(pathFound.Success);
@@ -40,7 +43,7 @@ public class PathfinderSteps
         var result = pathReader.Get(pathFound.PathId).Single();
         int actualCost = result.Directions.Select(p => (int)p.Cost).Sum();
 
-        _specFlowOutputHelper.WriteLine($"Best path was found after {result.CalculationDuration} ms");
+        _specFlowOutputHelper.WriteLine($"Best path was found after {_stopwatch.ElapsedMilliseconds} ms");
         Assert.Equal(expectedCost, actualCost);
     }
 
@@ -58,6 +61,7 @@ public class PathfinderSteps
     public void WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId, string pathfinderId)
     {
         PathfinderStartRequest request = new(Guid.Parse(pathfinderId), startPointId, targetPointId, direction, TimeSpan.FromSeconds(5));
+        _stopwatch.Restart();
         _akkaDriver.TellPathfinder(request);
     }
 }

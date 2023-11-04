@@ -89,24 +89,30 @@ public partial class PointWorker
             return;
         }
 
-        if (_state.TryLoopDetection(msg, out var response))
+        if (_state.TryLoopDetection(msg, out PathFound response))
         {
             Sender.Tell(response, ActorRefs.NoSender);
             return;
         }
 
-        if (_state.TryAddCurrentPointCost(msg, out var newRequest))
+        if (_state.TryAddCurrentPointCost(msg, out FindPathRequest newRequest))
         {
             return;
         }
 
-        if (_state.TryIsArrivedTargetPoint(newRequest, PersistPath, out var pathFound))
+        if (_state.TryIsArrivedTargetPoint(newRequest, PersistPath, out PathFound pathFound))
         {
             Sender.Tell(pathFound, ActorRefs.NoSender);
             return;
         }
 
-        _state.GetAllForwardMessages(newRequest).ForEach(_pointWorkerClient.Forward);
+        _state
+        .GetAllForwardMessages(newRequest)
+        .ForEach(msg =>
+        {
+            var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
+            client.Forward(msg);
+        });
     }
 
     private void SaveSnapshotFailureHandler(SaveSnapshotFailure msg)

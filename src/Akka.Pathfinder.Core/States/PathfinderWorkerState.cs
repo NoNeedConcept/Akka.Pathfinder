@@ -12,12 +12,10 @@ public class PathfinderWorkerState
             TargetPointId = msg.TargetPointId,
             SourcePointId = msg.SourcePointId,
             StartDirection = msg.Direction,
-            Timeout = msg.Timeout ?? TimeSpan.FromSeconds(20),
-            PathfinderStarted = DateTimeOffset.UtcNow
+            Timeout = msg.Timeout ?? TimeSpan.FromSeconds(20)
         };
 
     private int _counter;
-    public DateTimeOffset PathfinderStarted { get; set; }
 
     internal PathfinderWorkerState() => _counter = 0;
 

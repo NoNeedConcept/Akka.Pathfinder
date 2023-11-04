@@ -41,7 +41,7 @@ public partial class PathfinderWorker
         if (!_state.HasPathFound)
         {
             _logger.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _state.SourcePointId, _state.TargetPointId);
-            Sender.Tell(new PathFinderDone(msg.PathfinderId, Guid.Empty, _state.PathfinderStarted, false, "Frag mich doch nicht"));
+            Sender.Tell(new PathFinderDone(msg.PathfinderId, Guid.Empty, false, "Frag mich doch nicht"));
             Become(Void);
             Stash.UnstashAll();
             return;
@@ -58,7 +58,7 @@ public partial class PathfinderWorker
             var paths = result.ToList(); 
             var pathsOrderedByCost = paths.OrderByDescending(p => p.Directions.Select(x => (int)x.Cost).Sum()).Last();
             var bestPathId = pathsOrderedByCost.Id;
-            return new BestPathFound(msg.PathfinderId, _state.PathfinderStarted, bestPathId);
+            return new BestPathFound(msg.PathfinderId, bestPathId);
         },
         ex => new BestPathFailed(msg.PathfinderId, ex));
     }
@@ -80,7 +80,7 @@ public partial class PathfinderWorker
     {
         Become(Void);
         Stash.UnstashAll();
-        Sender.Tell(new PathFinderDone(msg.PathfinderId, msg.PathId, _state.PathfinderStarted, true));
+        Sender.Tell(new PathFinderDone(msg.PathfinderId, msg.PathId, true));
     }
 
     public void BestPathFailedHandler(BestPathFailed msg)
@@ -92,6 +92,6 @@ public partial class PathfinderWorker
             _logger.Error(msg.Exception, "[{PathfinderId}] -> Exception: {@Exception}", EntityId, msg.Exception);
         }
 
-        Sender.Tell(new PathFinderDone(msg.PathfinderId, Guid.Empty, _state.PathfinderStarted,false, "Frag mich doch nicht"));
+        Sender.Tell(new PathFinderDone(msg.PathfinderId, Guid.Empty, false, "Frag mich doch nicht"));
     }
 }

@@ -95,7 +95,7 @@ public record PointWorkerState
         response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.PathBlocked);
         if (IsBlocked) return true;
         response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
-        if(_directionConfigs.Count == 0 && PointId != request.TargetPointId) return true;
+        if (_directionConfigs.Count == 0 && PointId != request.TargetPointId) return true;
         response = null!;
         return false;
     }
@@ -103,7 +103,7 @@ public record PointWorkerState
     public bool TryLoopDetection(FindPathRequest request, out PathFound response)
     {
         response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.LoopDetected);
-        var loopDetectionList = request.Directions.SkipLast(request.Directions.Count).ToList();
+        var loopDetectionList = request.Directions.SkipLast(1).ToList();
         if (loopDetectionList.Any(x => x.PointId.Equals(PointId))) return true;
         response = null!;
         return false;
@@ -132,7 +132,7 @@ public record PointWorkerState
         response = null!;
         if (!request.TargetPointId.Equals(PointId)) return false;
         var paths = request.Directions.ToList();
-        var path = new Path(request.PathId, request.PathfinderId, (DateTimeOffset.UtcNow-request.PathfindingStarted).TotalMilliseconds, paths);
+        var path = new Path(request.PathId, request.PathfinderId, paths);
         var success = writer(path);
         if (!success)
         {
@@ -152,15 +152,27 @@ public record PointWorkerState
         foreach (var (Key, Value) in _directionConfigs)
         {
             var directions = request.Directions.ToList();
-            directions.Add(new PathPoint(Value.TargetPointId, Cost, Key));
-            var findPathRequest = new FindPathRequest(request.PathfinderId, DateTimeOffset.UtcNow, Guid.NewGuid(), Value.TargetPointId, request.TargetPointId, directions);
+            directions.Add(new PathPoint(Value.TargetPointId, Value.Cost, Key));
+            var findPathRequest = new FindPathRequest(request.PathfinderId, request.PathfindingStarted, Guid.NewGuid(), Value.TargetPointId, request.TargetPointId, directions.ToList());
             results.Add(findPathRequest);
         }
 
-        return results;
+        return results.ToList();
     }
 
     public PersistedPointWorkerState GetPersistenceState() => new(PointId, Cost, _directionConfigs.AsReadOnly(), State);
+
+    private static Direction Invert(Direction direction) => direction switch
+    {
+        Direction.Back => Direction.Front,
+        Direction.Front => Direction.Back,
+        Direction.Bottom => Direction.Top,
+        Direction.Top => Direction.Bottom,
+        Direction.Left => Direction.Right,
+        Direction.Right => Direction.Left,
+        Direction.None => Direction.None,
+        _ => throw new InvalidOperationException("KEKW")
+    };
 }
 
 public static class DictionaryExtensions

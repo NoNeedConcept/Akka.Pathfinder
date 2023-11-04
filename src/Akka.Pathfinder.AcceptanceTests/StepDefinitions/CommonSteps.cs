@@ -5,6 +5,7 @@ using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Services;
 using Akka.Pathfinder.Layout;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using TechTalk.SpecFlow;
 
 namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
