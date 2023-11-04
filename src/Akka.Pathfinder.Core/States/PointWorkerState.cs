@@ -24,11 +24,12 @@ public record PointWorkerState
             Initialize = true,
         };
 
-    public static PointWorkerState FromConfig(PointConfig config)
+    public static PointWorkerState FromConfig(PointConfig config, PointState? state)
         => new(config.DirectionConfigs)
         {
             PointId = config.Id,
             Cost = config.Cost,
+            State = state ?? PointState.None,
             Initialize = true,
         };
 
@@ -87,7 +88,7 @@ public record PointWorkerState
 
     public void AddInactivePathfinder(PathfinderDeactivated msg) => _inactivePathfinders.AddOrSet(msg.PathfinderId, DateTime.UtcNow);
 
-    public void RemoveOldPathfinderIds(TimeSpan timeSpan) => _inactivePathfinders.RemoveAll((key, value) => value < DateTime.UtcNow.Add(-timeSpan));
+    public void RemoveOldPathfinderIds(TimeSpan timeSpan) => _inactivePathfinders.RemoveAll((_, value) => value < DateTime.UtcNow.Add(-timeSpan));
 
     public bool IsBlockedAndGetResponse(FindPathRequest request, out PathFound response)
     {

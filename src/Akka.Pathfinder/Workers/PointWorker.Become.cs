@@ -5,25 +5,9 @@ namespace Akka.Pathfinder.Workers;
 
 public partial class PointWorker
 {
-    private void Initialize()
+    private void Configure()
     {
-        _logger.Debug("[{PointId}][INITIALIZE]", EntityId);
-
-        Command<LocalPointConfig>(LocalPointConfigHandler);
-        CommandAny(msg => Stash.Stash());
-    }
-
-    private void Update()
-    {
-        _logger.Debug("[{PointId}][UPDATE]", EntityId);
-
-        Command<LocalPointConfig>(LocalPointConfigHandler);
-        CommandAny(msg => Stash.Stash());
-    }
-
-    private void Reset()
-    {
-        _logger.Debug("[{PointId}][RESET]", EntityId);
+        _logger.Debug("[{PointId}][CONFIFURE]", EntityId);
 
         Command<LocalPointConfig>(LocalPointConfigHandler);
         CommandAny(msg => Stash.Stash());

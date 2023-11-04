@@ -20,7 +20,7 @@ public partial class MapManager : ReceivePersistentActor
         {
             var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
             client.Tell(new InitializePoint(x));
-            _state.AddInitializePoint(x.Id);
+            _state.Add(x.Id);
         });
     }
 
@@ -31,11 +31,11 @@ public partial class MapManager : ReceivePersistentActor
         var mapConfigReader = scope.ServiceProvider.GetRequiredService<IMapConfigReader>();
         _state = MapManagerState.FromRequest(msg, _state.GetWaitingPathfinders());
         Become(WaitingForPoints);
-        mapConfigReader.Get(msg.MapId).ForEach(x =>
+        mapConfigReader.GetPointWithChanges(msg.MapId).ForEach(x =>
         {
             var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
             client.Tell(new UpdatePointDirection(x));
-            _state.AddInitializePoint(x.Id);
+            _state.Add(x.Id);
         });
     }
 
@@ -50,7 +50,7 @@ public partial class MapManager : ReceivePersistentActor
         {
             var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
             client.Tell(new ResetPoint(x));
-            _state.AddInitializePoint(x.Id);
+            _state.Add(x.Id);
         });
     }
 
@@ -89,7 +89,7 @@ public partial class MapManager : ReceivePersistentActor
     {
         _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
 
-        _state.UpdatePointInitialized(msg.PointId);
+        _state.Complete(msg.PointId);
 
         await _state
         .AllPointsReadyAsync()

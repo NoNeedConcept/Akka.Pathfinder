@@ -37,7 +37,6 @@ public partial class PointWorker : ReceivePersistentActor
         }
 
         Recover<SnapshotOffer>(RecoverSnapshotOffer);
-        Recover<PointConfig>(RecoverPointConfig);
     }
 
     protected override void OnReplaySuccess()

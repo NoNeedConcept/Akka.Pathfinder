@@ -1,6 +1,6 @@
 ﻿using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Containers;
 using Serilog;
-using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Akka.Pathfinder.AcceptanceTests.Containers;
 

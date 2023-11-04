@@ -21,4 +21,5 @@ public class PointConfigReader : IPointConfigReader
     public IQueryable<PointConfig> Get(Guid CollectionId) => Database.GetCollection<PointConfig>(CollectionId.ToString()).AsQueryable();
 
     public IQueryable<PointConfig> Get(Guid CollectionId, int pointId) => Get(CollectionId).Where(x => x.Id == pointId);
+
 }

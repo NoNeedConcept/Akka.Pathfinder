@@ -41,12 +41,11 @@ public partial class PathfinderWorker
         if (!_state.HasPathFound)
         {
             _logger.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _state.SourcePointId, _state.TargetPointId);
-            Sender.Tell(new PathFinderDone(Guid.Empty, false, "Frag mich doch nicht"));
+            Sender.Tell(new PathFinderDone(msg.PathfinderId, Guid.Empty, false, "Frag mich doch nicht"));
             Become(Void);
             Stash.UnstashAll();
             return;
         }
-
 
         _logger.Debug("[{PathfinderId}] {PathsCount} Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _state.Count, _state.SourcePointId, _state.TargetPointId);
         using var scope = _serviceScopeFactory.CreateScope();
@@ -55,9 +54,10 @@ public partial class PathfinderWorker
         .GetByPathfinderIdAsync(msg.PathfinderId)
         .PipeTo(Self, Sender,
         result =>
-        {
-            var pathsOrderedByCost = result.OrderByDescending(p => p.Directions.Select(x => (int)x.Cost).Sum());
-            var bestPathId = pathsOrderedByCost.Last().Id;
+        {  
+            var paths = result.ToList(); 
+            var pathsOrderedByCost = paths.OrderByDescending(p => p.Directions.Select(x => (int)x.Cost).Sum()).Last();
+            var bestPathId = pathsOrderedByCost.Id;
             return new BestPathFound(msg.PathfinderId, bestPathId);
         },
         ex => new BestPathFailed(msg.PathfinderId, ex));
@@ -80,7 +80,7 @@ public partial class PathfinderWorker
     {
         Become(Void);
         Stash.UnstashAll();
-        Sender.Tell(new PathFinderDone(msg.PathId, true));
+        Sender.Tell(new PathFinderDone(msg.PathfinderId, msg.PathId, true));
     }
 
     public void BestPathFailedHandler(BestPathFailed msg)
@@ -92,6 +92,6 @@ public partial class PathfinderWorker
             _logger.Error(msg.Exception, "[{PathfinderId}] -> Exception: {@Exception}", EntityId, msg.Exception);
         }
 
-        Sender.Tell(new PathFinderDone(Guid.Empty, false, "Frag mich doch nicht"));
+        Sender.Tell(new PathFinderDone(msg.PathfinderId, Guid.Empty, false, "Frag mich doch nicht"));
     }
 }

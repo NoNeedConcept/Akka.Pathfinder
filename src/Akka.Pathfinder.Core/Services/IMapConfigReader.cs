@@ -6,14 +6,15 @@ namespace Akka.Pathfinder.Core;
 public interface IMapConfigReader
 {
     IQueryable<MapConfig> Get();
-    IEnumerable<PointConfig> Get(Guid MapId);
+    IQueryable<PointConfig> Get(Guid MapId);
+    IQueryable<PointConfig> GetPointWithChanges(Guid MapId);
 }
 
 public class MapConfigReader : IMapConfigReader
 {
     protected IMongoCollection<MapConfig> Collection { get; init; }
     protected IMongoDatabase Database { get; init; }
-    public MapConfigReader(IMongoCollection<MapConfig> collection, IMongoDatabase database) 
+    public MapConfigReader(IMongoCollection<MapConfig> collection, IMongoDatabase database)
     {
         Collection = collection;
         Database = database;
@@ -21,5 +22,7 @@ public class MapConfigReader : IMapConfigReader
 
     public IQueryable<MapConfig> Get() => Collection.AsQueryable();
 
-    public IEnumerable<PointConfig> Get(Guid MapId) => Database.GetCollection<PointConfig>(Get().Single(x => x.Id == MapId).PointConfigsId.ToString()).AsQueryable();
+    public IQueryable<PointConfig> Get(Guid MapId) => Database.GetCollection<PointConfig>(Get().Single(x => x.Id == MapId).PointConfigsId.ToString()).AsQueryable();
+
+    public IQueryable<PointConfig> GetPointWithChanges(Guid MapId) => Get(MapId).Where(x => x.HasChanges);
 }

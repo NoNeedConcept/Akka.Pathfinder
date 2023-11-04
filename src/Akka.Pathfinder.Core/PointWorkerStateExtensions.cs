@@ -1,8 +1,6 @@
 ﻿using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
-using LanguageExt;
-using System.Linq;
 
 namespace Akka.Pathfinder.Core;
 

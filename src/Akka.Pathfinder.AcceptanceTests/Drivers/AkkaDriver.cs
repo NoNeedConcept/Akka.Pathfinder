@@ -85,8 +85,5 @@ public class AkkaDriver : Hosting.TestKit.TestKit
         mapManagerClient.Tell(request, TestActor);
     }
 
-    public PathFinderDone ReceivePathFound()
-    {
-        return ExpectMsg<PathFinderDone>(TimeSpan.FromSeconds(120));
-    }
+    public PathFinderDone ReceivePathFound() => ExpectMsg<PathFinderDone>(TimeSpan.FromMinutes(2));
 }

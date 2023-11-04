@@ -19,21 +19,21 @@ public partial class PointWorker
     private void LocalPointConfigHandler(LocalPointConfig msg)
     {
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
-        _state = PointWorkerState.FromConfig(msg.Config);
+        _state = PointWorkerState.FromConfig(msg.Config, _state?.State);
         _mapManagerClient.Tell(new PointInitialized(msg.Config.Id));
         Become(Ready);
     }
 
     private void InitializePointHandler(InitializePoint msg)
     {
-        Become(Initialize);
+        Become(Configure);
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Self.Forward(new LocalPointConfig(msg.Config));
     }
 
     private void UpdatePointDirectionHandler(UpdatePointDirection msg)
     {
-        Become(Update);
+        Become(Configure);
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         var updatedConfig = msg.Config with
         {
@@ -45,7 +45,7 @@ public partial class PointWorker
 
     private void ResetPointHandler(ResetPoint msg)
     {
-        Become(Reset);
+        Become(Configure);
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Self.Forward(new LocalPointConfig(msg.Config));
     }

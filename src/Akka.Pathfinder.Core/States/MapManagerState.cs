@@ -33,8 +33,8 @@ public class MapManagerState
     public bool IsMapReady { get; internal set; } = false;
 
     public IDictionary<Guid, Guid> GetWaitingPathfinders() => _waitingPathfinders;
-    public void AddInitializePoint(int pointId) => _readyPoints.AddOrSet(pointId, (DateTime.UtcNow, null));
-    public void UpdatePointInitialized(int pointId)
+    public void Add(int pointId) => _readyPoints.AddOrSet(pointId, (DateTime.UtcNow, null));
+    public void Complete(int pointId)
     {
         if (_readyPoints.TryGetValue(pointId, out var oldValue))
         {

@@ -3,7 +3,6 @@ using Akka.Pathfinder.AcceptanceTests.Drivers;
 using Akka.Pathfinder.Core;
 using Serilog;
 using TechTalk.SpecFlow;
-using MongoDbContainer = Akka.Pathfinder.AcceptanceTests.Containers.MongoDbContainer;
 
 namespace Akka.Pathfinder.AcceptanceTests.Hooks;
 
@@ -15,27 +14,27 @@ public class EnvironmentSetupHooks
     public static LighthouseNodeContainer SeedNodeContainer = null!;
     public static PathfinderApplicationFactory PathfinderApplicationFactory = null!;
     public static AkkaDriver AkkaDriver = null!;
-    public static Guid DefaultPathfinderId { get; } = Guid.Parse("42069420-6969-6969-6969-420420420420");
 
-    [BeforeTestRun]
-    public static async Task BeforeTestRun()
+    [BeforeFeature]
+    public static async Task BeforeFeature()
     {
-        Log.Information("[TEST][EnvironmentSetupHooks][BeforeTestRun]");
-        Serilog.Log.Logger = CreateLogger();
-        MongoDbContainer = new MongoDbContainer();
-        PostgreContainer = new PostgreContainer();
-
+        Log.Logger = CreateLogger();
+        Log.Information("[TEST][EnvironmentSetupHooks][BeforeFeature]");
+        MongoDbContainer = new();
+        PostgreContainer = new();
+        AkkaDriver = new();
         SeedNodeContainer = new();
+
         var lighthouseTask = SeedNodeContainer.InitializeAsync();
         var mongoTask = MongoDbContainer.InitializeAsync();
         var postgreTask = PostgreContainer.InitializeAsync();
 
         await lighthouseTask;
-
         await mongoTask;
         await postgreTask;
-        AkkaDriver = new AkkaDriver();
+
         await AkkaDriver.InitializeAsync();
+
         var mongoDBString = MongoDbContainer.GetConnectionString();
         var postgreSQLString = PostgreContainer.GetConnectionString();
 
@@ -51,24 +50,21 @@ public class EnvironmentSetupHooks
     }
 
     [AfterScenario]
-    public static void AfterScenario()
-    {
-        Log.Information("[TEST][EnvironmentSetupHooks][AfterScenario]");
-    }
+    public static void AfterScenario() => Log.Information("[TEST][EnvironmentSetupHooks][AfterScenario]");
 
-    [AfterTestRun]
-    public static async Task AfterTestRun()
+    [AfterFeature]
+    public static async Task AfterFeature()
     {
-        Log.Information("[TEST][EnvironmentSetupHooks][AfterTestRun]");
+        Log.Information("[TEST][EnvironmentSetupHooks][AfterFeature]");
 
         await PathfinderApplicationFactory.DisposeAsync();
-        // todo: Dispose all containers
         await SeedNodeContainer.DisposeAsync();
         await MongoDbContainer.DisposeAsync();
         await PostgreContainer.DisposeAsync();
     }
 
-    private static Serilog.ILogger CreateLogger() => new LoggerConfiguration()
+    private static ILogger CreateLogger()
+        => new LoggerConfiguration()
             .MinimumLevel.Debug()
             .Enrich.FromLogContext()
             .WriteTo.Console()

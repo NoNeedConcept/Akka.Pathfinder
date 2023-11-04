@@ -22,12 +22,13 @@ public class PathfinderSteps
         _akkaDriver = EnvironmentSetupHooks.AkkaDriver;
     }
 
-    [Then(@"the path should cost (.*)")]
-    public void ThenThePathShouldCost(int expectedCost)
+    [Then(@"the path for PathfinderId (.*) should cost (.*)")]
+    public void ThenThePathShouldCost(string pathfinderId, int expectedCost)
     {
         var pathFound = _akkaDriver.ReceivePathFound();
 
         Assert.NotNull(pathFound);
+        Assert.Equal(pathfinderId, pathFound.PathfinderId.ToString());
         Assert.True(pathFound.Success);
 
         var pathReader = _akkaDriver.Host.Services.GetRequiredService<IPathReader>();
@@ -37,19 +38,20 @@ public class PathfinderSteps
         Assert.Equal(expectedCost, actualCost);
     }
 
-    [Then(@"the path should not be found")]
-    public void ThenThePathShouldNotBeFound()
+    [Then(@"the path for PathfinderId (.*) should not be found")]
+    public void ThenThePathShouldNotBeFound(string pathfinderId)
     {
         var pathFound = _akkaDriver.ReceivePathFound();
 
         Assert.NotNull(pathFound);
         Assert.False(pathFound.Success);
+        Assert.Equal(pathfinderId, pathFound.PathfinderId.ToString());
     }
 
-    [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*)")]
-    public void WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId)
+    [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*)")]
+    public void WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId, string pathfinderId)
     {
-        PathfinderStartRequest request = new(Guid.NewGuid(), startPointId, targetPointId, direction, TimeSpan.FromSeconds(5));
+        PathfinderStartRequest request = new(Guid.Parse(pathfinderId), startPointId, targetPointId, direction, TimeSpan.FromSeconds(5));
         _akkaDriver.TellPathfinder(request);
     }
 }

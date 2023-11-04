@@ -1,5 +1,4 @@
-﻿using Akka.Pathfinder.Core.Configs;
-using Akka.Pathfinder.Core.Persistence;
+﻿using Akka.Pathfinder.Core.Persistence;
 using Akka.Pathfinder.Core.States;
 using Akka.Persistence;
 
@@ -21,20 +20,6 @@ public partial class PointWorker
             }
 
             _logger.Warning("[{PointId}][RECOVER][{MessageType}] Invalid snapshot type!", EntityId, msg.Snapshot.GetType().Name);
-        }
-        catch (Exception ex)
-        {
-            _logger.Fatal(ex, "[{PointId}][RECOVER][{MessageType}] Failed to recover", EntityId, msg.GetType().Name);
-            Become(Failure);
-        }
-    }
-
-    public void RecoverPointConfig(PointConfig msg)
-    {
-        try
-        {
-            _logger.Debug("[{PointId}][RECOVER][{MessageType}]", EntityId, msg.GetType().Name);
-            _state = PointWorkerState.FromConfig(msg);
         }
         catch (Exception ex)
         {
