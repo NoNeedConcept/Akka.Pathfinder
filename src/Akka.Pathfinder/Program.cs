@@ -38,6 +38,8 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
 .AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<PointConfig>("point_config"))
 .AddScoped<IPathWriter, PathWriter>()
 .AddScoped<IPathReader>(x => x.GetRequiredService<IPathWriter>())
+.AddScoped<IMapConfigWriter, MapConfigWriter>()
+.AddScoped<IMapConfigReader>(x => x.GetRequiredService<IMapConfigWriter>())
 .AddScoped<IPointConfigReader, PointConfigReader>()
 .AddAkka("Zeus", (builder, sp) =>
     {
@@ -118,4 +120,6 @@ namespace Akka.Pathfinder
     public record PointWorkerProxy;
 
     public record PathfinderProxy;
+
+    public record MapManagerProxy;
 }

@@ -1,4 +1,4 @@
-﻿using Akka.Pathfinder.Core.Configs;
+﻿using Akka.Pathfinder.Core.Messages;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -14,11 +14,9 @@ public partial class PointWorker
             return;
         }
 
-        Command<PointConfig>(PointConfigHandler);
+        Command<InitializePoint>(InitPointHandler);
 
         CommandAny(msg => Stash.Stash());
-
-        OnInitialize();
     }
 
     private void Failure()

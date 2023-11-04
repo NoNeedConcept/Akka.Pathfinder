@@ -1,7 +1,15 @@
-using Akka.Pathfinder.Core.Configs;
-
 namespace Akka.Pathfinder.Core.Messages;
 
-public record InitializeMap(Guid MapId);
+public record LoadMap(Guid MapId);
+public record UpdateMap(Guid MapId);
+public record ResetMap(Guid MapId);
 
-public record InitializePointWorker(PointConfig PointConfig);
+public record IsMapReady(Guid PathFinderId);
+
+public abstract record AllPoints();
+
+public record AllPointsInitialized() : AllPoints;
+
+public record NotAllPointsInitialized() : AllPoints;
+
+public record PointInitialized(int PointId);

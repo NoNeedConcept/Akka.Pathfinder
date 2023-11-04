@@ -1,7 +1,7 @@
 ﻿using Akka.Actor;
 using Akka.Pathfinder.Core;
-using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
+using Akka.Pathfinder.Managers;
 using Akka.Persistence;
 using Akka.Util.Internal;
 
@@ -16,12 +16,12 @@ public partial class PointWorker
         _state.RemoveOldPathfinderIds(TimeSpan.FromMinutes(10));
     }
 
-    private void PointConfigHandler(PointConfig msg)
+    private void InitPointHandler(InitializePoint msg)
     {
         _logger.Debug("[{PointId}][INITIALIZE] receive config", EntityId);
 
-        _state = PointWorkerState.FromConfig(msg);
-
+        _state = PointWorkerState.FromConfig(msg.Config);
+        _mapManagerClient.Tell(new PointInitialized(msg.PointId));
         Become(Ready);
     }
 
