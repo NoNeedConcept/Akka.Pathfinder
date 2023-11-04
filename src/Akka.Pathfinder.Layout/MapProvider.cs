@@ -2,24 +2,19 @@
 
 namespace Akka.Pathfinder.Layout;
 
-//map 0
-// dictionary 0, -> Map0()
-
-
 public class MapProvider
 {
     private const uint BaseCost = 42;
 
     public Dictionary<int, MapConfigWithPoints> MapConfigs => new()
         {
-             {0, Map0()},
-             {1, Map1()},
+            { 0, Map0()},
+            { 1, Map1()},
+            { 2, MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(12, 15, 1), new Dictionary<Direction, uint>()), true)},
+            { 3, MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(50, 50, 1), new Dictionary<Direction, uint>()), true)}
         };
 
-    private MapConfigWithPoints Map0()
-    {
-
-        return new MapConfigWithPoints(Guid.NewGuid(), Guid.NewGuid(), new List<PointConfig>()
+    private MapConfigWithPoints Map0() => new(Guid.NewGuid(), Guid.NewGuid(), new List<PointConfig>()
         {
             new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
             {
@@ -28,11 +23,8 @@ public class MapProvider
             new(2, BaseCost, new Dictionary<Direction, DirectionConfig>()),
         });
 
-    }
-
     private MapConfigWithPoints Map1()
     {
-
         return new MapConfigWithPoints(Guid.NewGuid(), Guid.NewGuid(), new List<PointConfig>()
         {
             new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()

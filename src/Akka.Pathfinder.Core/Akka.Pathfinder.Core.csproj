@@ -16,8 +16,5 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0-dev-00923" />
     <PackageReference Include="MongoDB.Driver" Version="*" />
  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="States/" />
-  </ItemGroup>
 
 </Project>

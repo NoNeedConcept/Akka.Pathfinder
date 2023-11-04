@@ -3,7 +3,7 @@ using Akka.Persistence;
 
 namespace Akka.Pathfinder.Managers;
 
-public partial class MapManager :ReceivePersistentActor
+public partial class MapManager : ReceivePersistentActor
 {
     private void WaitingForPoints()
     {
@@ -19,6 +19,6 @@ public partial class MapManager :ReceivePersistentActor
         Command<UpdateMap>(UpdateMapHandler);
         Command<ResetMap>(ResetMapHandler);
         Command<IsMapReady>(IsMapReadyHandler);
-        CommandAny(x => {});
+        CommandAny(x => { });
     }
 }
