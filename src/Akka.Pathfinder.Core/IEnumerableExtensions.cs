@@ -4,13 +4,13 @@ namespace Akka.Pathfinder.Core;
 
 public static class ConcurrentDictionaryExtensions
 {
-    public static async IAsyncEnumerable<T> Throttle<T>(this IEnumerable<T> values, TimeSpan initialDelay = default, TimeSpan interval = default)
+    public static async Task Throttle<T>(this IEnumerable<T> values, Action<T> action, TimeSpan initialDelay = default, TimeSpan interval = default)
     {
         await Task.Delay(initialDelay);
         foreach(var item in values.ToList())
         {
             await Task.Delay(interval);
-            yield return item;
+            action.Invoke(item);
         }
     }  
 
