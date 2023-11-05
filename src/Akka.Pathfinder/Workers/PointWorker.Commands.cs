@@ -1,4 +1,5 @@
-﻿using Akka.Actor;
+﻿using System.Reactive.Linq;
+using Akka.Actor;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
@@ -20,7 +21,7 @@ public partial class PointWorker
     {
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         _state = PointWorkerState.FromConfig(msg.Config, _state?.State);
-        _mapManagerClient.Tell(new PointInitialized(msg.Config.Id));
+        Context.System.EventStream.Publish(new PointInitialized(msg.Config.Id));
         Become(Ready);
     }
 
@@ -113,7 +114,9 @@ public partial class PointWorker
 
         _state
         .GetAllForwardMessages(newFindPathRequest)
-        .ForEach(msg =>
+        .ToObservable()
+        .Throttle(TimeSpan.FromMilliseconds(5))
+        .ForEachAsync(msg =>
         {
             var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
             client.Forward(msg);

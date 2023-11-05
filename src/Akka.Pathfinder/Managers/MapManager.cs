@@ -1,4 +1,5 @@
 using Akka.Actor;
+using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Persistence;
 
@@ -16,6 +17,7 @@ public partial class MapManager : ReceivePersistentActor
     public MapManager(IServiceScopeFactory serviceScopeFactory)
     {
         _serviceScopeFactory = serviceScopeFactory;
+        Context.System.EventStream.Subscribe(Self, typeof(PointInitialized));
         Ready();
     }
 }
