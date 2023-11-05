@@ -4,7 +4,6 @@ using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Persistence;
-using Akka.Util.Internal;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -80,7 +79,7 @@ public partial class PointWorker
 
     private void CreatePathPointRequestPathHandler(FindPathRequest msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         if (_state.TryIsInactivePathfinder(msg.PathfinderId)) return;
 
@@ -115,7 +114,7 @@ public partial class PointWorker
         _state
         .GetAllForwardMessages(newFindPathRequest)
         .ToObservable()
-        .Throttle(TimeSpan.FromMilliseconds(5))
+        .Throttle(TimeSpan.Zero)
         .ForEachAsync(msg =>
         {
             var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
