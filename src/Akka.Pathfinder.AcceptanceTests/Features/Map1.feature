@@ -13,5 +13,5 @@ Feature: Map1
 
     Scenario: Find simple Path and long Path on Map
         Given Map is 1
-        When You are on Point 1 and have the direction 0 want to find a Path to Point 2 PathfinderId 1dff208f-7090-4c5f-bb61-b6bbc4e09a5c Seconds 2
+        When You are on Point 1 and have the direction 0 want to find a Path to Point 2 PathfinderId 1dff208f-7090-4c5f-bb61-b6bbc4e09a5c Seconds 1
         Then the path for PathfinderId 1dff208f-7090-4c5f-bb61-b6bbc4e09a5c should cost 420

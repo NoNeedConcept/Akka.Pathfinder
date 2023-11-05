@@ -30,7 +30,7 @@ public partial class PointWorker
         Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
         Command<CostRequest>(CostRequestHandler);
         Command<PointCommandRequest>(PointCommandRequestHandler);
-        CommandAsync<FindPathRequest>(CreatePathPointRequestPathHandler);
+        Command<FindPathRequest>(CreatePathPointRequestPathHandler);
         Command<InitializePoint>(InitializePointHandler);
         Command<UpdatePointDirection>(UpdatePointDirectionHandler);
         Command<ResetPoint>(ResetPointHandler);
