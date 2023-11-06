@@ -6,12 +6,14 @@ public class MapProvider
 {
     private const uint BaseCost = 42;
 
+    private static readonly IMapFactoryProvider _factoryProvider = MapFactoryProvider.Instance;
+
     public Dictionary<int, MapConfigWithPoints> MapConfigs => new()
         {
             { 0, Map0()},
             { 1, Map1()},
-            { 2, MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(BaseCost, BaseCost, new MapSize(10, 1, 10), new Dictionary<Direction, uint>()), true)},
-            { 3, MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(25, 25, 28), new Dictionary<Direction, uint>()), true)}
+            { 2, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost, new MapSize(10, 1, 10), new Dictionary<Direction, uint>()), true)},
+            { 3, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(25, 25, 28), new Dictionary<Direction, uint>()), true)}
         };
 
     private MapConfigWithPoints Map0()
