@@ -101,7 +101,7 @@ public record PointWorkerState
         response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.PathBlocked);
         if (IsBlocked) return true;
         response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.MindBlown);
-        if (_directionConfigs.Count == 0 && PointId != request.TargetPointId) return true;
+        if (_directionConfigs.IsEmpty && PointId != request.TargetPointId) return true;
         response = null!;
         return false;
     }

@@ -48,5 +48,6 @@ public class MapFactoryTests
         Assert.NotNull(mapConfig.PointConfigsIds);
         Assert.True(mapConfig.PointConfigsIds.Any());
         Assert.Contains(mapConfig.Configs.Values, x => x.Any(t => t.Id == 1));
+        Assert.Equal(3, mapConfig.Configs.Values.SelectMany(x => x).Single(x => x.Id == 1).DirectionConfigs.Count);
     }
 }
