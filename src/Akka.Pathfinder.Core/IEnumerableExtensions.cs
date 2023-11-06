@@ -4,15 +4,18 @@ namespace Akka.Pathfinder.Core;
 
 public static class ConcurrentDictionaryExtensions
 {
-    public static async Task Throttle<T>(this IEnumerable<T> values, Action<T> action, TimeSpan initialDelay = default, TimeSpan interval = default)
+    public static async Task Throttle<T>(this IEnumerable<T> values, Action<T> action, TimeSpan? initialDelay = null, TimeSpan? interval = null)
     {
-        await Task.Delay(initialDelay);
-        foreach(var item in values.ToList())
+        initialDelay ??= TimeSpan.Zero;
+        interval ??= TimeSpan.FromMicroseconds(5);
+
+        await Task.Delay(initialDelay.Value);
+        foreach (var item in values.ToList())
         {
-            await Task.Delay(interval);
+            await Task.Delay(interval.Value);
             action.Invoke(item);
         }
-    }  
+    }
 
     public static ConcurrentDictionary<TKey, TElement> ToConcurrentDictionary<TSource, TKey, TElement>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer) where TKey : notnull
     {

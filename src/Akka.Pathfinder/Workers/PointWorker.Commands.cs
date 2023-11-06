@@ -20,6 +20,7 @@ public partial class PointWorker
     {
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         _state = PointWorkerState.FromConfig(msg.Config, _state?.State);
+        PersistState();
         Context.System.EventStream.Publish(new PointInitialized(msg.Config.Id));
         Become(Ready);
     }
@@ -111,15 +112,12 @@ public partial class PointWorker
             _logger.Debug("[{PointId}][{MessageType}] not saved :(", EntityId, msg.GetType().Name);
         }
 
-        _state
+        _ = _state
         .GetAllForwardMessages(newFindPathRequest)
-        .ToObservable()
-        .Throttle(TimeSpan.Zero)
-        .ForEachAsync(msg =>
-        {
-            var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
-            client.Forward(msg);
-        });
+        .Throttle(
+            msg => Context.System.GetRegistry().Get<PointWorkerProxy>().Forward(msg),
+            TimeSpan.FromMilliseconds(5),
+            TimeSpan.FromMilliseconds(2));
     }
 
     private void SaveSnapshotFailureHandler(SaveSnapshotFailure msg)

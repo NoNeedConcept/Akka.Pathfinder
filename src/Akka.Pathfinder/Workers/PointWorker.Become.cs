@@ -26,7 +26,6 @@ public partial class PointWorker
     {
         _logger.Debug("[{PointId}][READY]", EntityId);
 
-        PersistState();
         Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
         Command<CostRequest>(CostRequestHandler);
         Command<PointCommandRequest>(PointCommandRequestHandler);
@@ -40,6 +39,4 @@ public partial class PointWorker
 
         Stash.UnstashAll();
     }
-
-
 }

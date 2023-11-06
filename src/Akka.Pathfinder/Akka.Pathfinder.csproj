@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Akka" Version="1.5.*" />
+    <PackageReference Include="Akka.Quartz.Actor" Version="1.5.*" />
     <PackageReference Include="Akka.HealthCheck.Hosting" Version="1.5.*" />
     <PackageReference Include="Akka.HealthCheck.Cluster" Version="1.5.*" />
     <PackageReference Include="Akka.HealthCheck.Hosting.Web" Version="1.5.*" />

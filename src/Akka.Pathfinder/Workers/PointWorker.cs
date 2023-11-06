@@ -17,18 +17,10 @@ public partial class PointWorker : ReceivePersistentActor
 
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
-    private readonly IActorRef _pointWorkerClient = ActorRefs.Nobody;
-    private readonly IActorRef _pathfinderClient = ActorRefs.Nobody;
-    private readonly IActorRef _mapManagerClient = ActorRefs.Nobody;
-
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
         EntityId = entityId;
         _serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-        var registry = Context.System.GetRegistry();
-        _pointWorkerClient = registry.Get<PointWorkerProxy>();
-        _pathfinderClient = registry.Get<PathfinderProxy>();
-        _mapManagerClient = registry.Get<MapManagerProxy>();
 
         var result = Context.System.EventStream.Subscribe(Self, typeof(PathfinderDeactivated));
         if (!result)
