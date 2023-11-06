@@ -22,7 +22,7 @@ public class MapFactoryTests
     [Fact]
     public void CreateMapConfigFromArray()
     {
-        var mapSize = new MapSize(5, 3, 2);
+        var mapSize = new MapSize(3, 3, 2);
         var mapSettings = new MapSettings(42, 20, mapSize, new Dictionary<Direction, uint>()
         {
             { Direction.Top, 100 },
@@ -31,12 +31,14 @@ public class MapFactoryTests
 
         var kekw = new Dictionary<int, int[,]>
         {
-            { 1, new[,] { { 1, 1, 1 },
+            { 0, new[,] { { 1, 1, 1 },
                           { 1, 0, 1 },
                           { 1, 1, 1 } } },
 
-            { 2, new[,] { { 1, 1, 1 },
-                          { 1, 1, 1 } } }
+            { 1, new[,] { { 1, 1, 1 },
+                          { 1, 1, 1 },
+                          { 0, 0, 0 }
+            } }
         };
 
         var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(mapSettings, kekw);
