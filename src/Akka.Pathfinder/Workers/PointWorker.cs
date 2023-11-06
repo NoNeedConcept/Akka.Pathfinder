@@ -1,6 +1,4 @@
-﻿using Akka.Actor;
-using Akka.Pathfinder.Core;
-using Akka.Pathfinder.Core.Configs;
+﻿using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Persistence;
 using Akka.Pathfinder.Core.States;

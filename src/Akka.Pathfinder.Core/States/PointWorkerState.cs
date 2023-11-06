@@ -6,7 +6,6 @@ using Akka.Pathfinder.Core.Persistence;
 using Akka.Util.Internal;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 using MongoDB.Driver.Linq;
-using LinqToDB.Tools;
 
 namespace Akka.Pathfinder.Core.States;
 
