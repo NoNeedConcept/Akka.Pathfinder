@@ -169,7 +169,7 @@ public static class Extensions
         try
         {
             wrapper.AddRef();
-            while (wrapper.Get(currentPos, out T ignore))
+            while (wrapper.Get(currentPos, out _))
             {
                 yield return new ChunkedEnumerable<T>(wrapper, chunksize, currentPos);
                 currentPos += chunksize;

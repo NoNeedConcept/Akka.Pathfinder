@@ -46,9 +46,9 @@ public class MapFactory : IMapFactory
         return ConvertToMapConfig(indexBasedMap, mapSettings);
     }
 
-    private static Random InitializeRandom(MapSettings settings)
+    private static Random InitializeRandom(MapSettings? settings)
     {
-        int seedToUse = settings.Seed;
+        int seedToUse = settings?.Seed ?? 0;
 
         if (seedToUse == 0)
         {
@@ -58,7 +58,7 @@ public class MapFactory : IMapFactory
         return new Random(seedToUse);
     }
 
-    private void InitializeDirectionCost(MapSettings settings)
+    private static void InitializeDirectionCost(MapSettings settings)
     {
         if (!settings.DirectionsCosts.ContainsKey(Direction.Back))
         {
@@ -91,7 +91,7 @@ public class MapFactory : IMapFactory
         }
     }
 
-    private MapConfigWithPoints ConvertToMapConfig(IDictionary<int, int[,]> map, MapSettings settings)
+    private static MapConfigWithPoints ConvertToMapConfig(IDictionary<int, int[,]> map, MapSettings settings)
     {
         var listOfPoints = new List<PointConfig>();
         int index = 0;
@@ -107,7 +107,6 @@ public class MapFactory : IMapFactory
                     }
 
                     index++;
-
                     List<Direction> directionsToCheck = new();
 
                     if (width > 0) directionsToCheck.Add(Direction.Left);
@@ -117,7 +116,6 @@ public class MapFactory : IMapFactory
                     if (width < map.Count) directionsToCheck.Add(Direction.Right);
                     if (height < map[depth].GetLength(1)) directionsToCheck.Add(Direction.Back);
                     if (depth < map[depth].GetLength(0)) directionsToCheck.Add(Direction.Top);
-
 
                     var tempDic = new Dictionary<Direction, DirectionConfig>();
 
@@ -161,8 +159,7 @@ public class MapFactory : IMapFactory
                                         values.GetLength(1) > height &&
                                         values.GetLength(0) > width - 1)
                                     {
-                                        if (height <= -1 || width - 1 <= -1) continue;
-                                        if (values[width - 1, height] == 0) continue;
+
                                         tempDic.Add(direction,
                                             new DirectionConfig(map[depth][width - 1, height],
                                                 settings.DirectionsCosts[direction]));
