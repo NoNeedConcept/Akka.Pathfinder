@@ -1,4 +1,5 @@
 using Akka.Pathfinder.Core.Configs;
+using LanguageExt.Pipes;
 
 namespace Akka.Pathfinder.Layout;
 
@@ -230,12 +231,17 @@ public class MapFactory : IMapFactory
     private void InitializeMap(bool intergalacticDummyMode)
     {
         Map = new Dictionary<int, int[,]>();
+        for (int depth = 0; depth < MapSettings.MapSize.Depth; depth++)
+        {
+            Map.Add(depth, new int[MapSettings.MapSize.Width, MapSettings.MapSize.Height]);
+        }
+
         int index = 0;
-        for (int width = 0; width < MapSettings.MapSize.Width; width++)
+        for (int depth = 0; depth < MapSettings.MapSize.Depth; depth++)
         {
             for (int height = 0; height < MapSettings.MapSize.Height; height++)
             {
-                for (int depth = 0; depth < MapSettings.MapSize.Depth; depth++)
+                for (int width = 0; width < MapSettings.MapSize.Width; width++)
                 {
                     index++;
                     if (intergalacticDummyMode)
@@ -254,11 +260,11 @@ public class MapFactory : IMapFactory
     private void ConvertToIndexBasedMap()
     {
         int index = 0;
-        for (int depth = 0; depth < MapSettings.MapSize.Depth; depth++)
+        for (int depth = 0; depth < Map.Count; depth++)
         {
-            for (int height = 0; height < MapSettings.MapSize.Height; height++)
+            for (int height = 0; height < Map[depth].GetLength(0); height++)
             {
-                for (int width = 0; width < MapSettings.MapSize.Width; width++)
+                for (int width = 0; width < Map[depth].GetLength(1); width++)
                 {
                     if (Map.TryGetValue(depth, out var ints))
                     {
