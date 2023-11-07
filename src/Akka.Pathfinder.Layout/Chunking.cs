@@ -9,7 +9,7 @@ public static class Extensions
             private readonly ChunkedEnumerable<T> parent;
             private int position;
             private bool done = false;
-            private T current;
+            private T current = default!;
 
 
             public ChildEnumerator(ChunkedEnumerable<T> parent)
@@ -93,7 +93,7 @@ public static class Extensions
 
         private IEnumerable<T> SourceEumerable { get; set; }
 
-        private Enumeration currentEnumeration;
+        private Enumeration currentEnumeration = default!;
 
         private class Enumeration
         {

@@ -54,8 +54,8 @@ public partial class PathfinderWorker
         .GetByPathfinderIdAsync(msg.PathfinderId)
         .PipeTo(Self, Sender,
         result =>
-        {  
-            var paths = result.ToList(); 
+        {
+            var paths = result.ToList();
             var pathsOrderedByCost = paths.OrderByDescending(p => p.Directions.Select(x => (int)x.Cost).Sum()).Last();
             var bestPathId = pathsOrderedByCost.Id;
             return new BestPathFound(msg.PathfinderId, bestPathId);
@@ -69,7 +69,7 @@ public partial class PathfinderWorker
         {
             new(_state.SourcePointId, 0, _state.StartDirection)
         };
-        var findPathRequest = new FindPathRequest(Guid.Parse(EntityId), Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList, new SortedSet<Guid>());
+        var findPathRequest = new FindPathRequest(Guid.Parse(EntityId), Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList);
 
         Context.System.GetRegistry().Get<PointWorkerProxy>().Tell(findPathRequest, Self);
 

@@ -26,14 +26,16 @@ public partial class PointWorker
     {
         _logger.Debug("[{PointId}][READY]", EntityId);
 
+        // Sender -> PathfinderWorker
+        CommandAsync<FindPathRequest>(CreatePathPointRequestPathHandler);
         Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
+        // Sender -> MapManager 
         Command<CostRequest>(CostRequestHandler);
         Command<PointCommandRequest>(PointCommandRequestHandler);
-        Command<FindPathRequest>(CreatePathPointRequestPathHandler);
         Command<InitializePoint>(InitializePointHandler);
         Command<UpdatePointDirection>(UpdatePointDirectionHandler);
         Command<ResetPoint>(ResetPointHandler);
-
+        // Sender -> SnapshotStore
         Command<SaveSnapshotSuccess>(SaveSnapshotSuccessHandler);
         Command<SaveSnapshotFailure>(SaveSnapshotFailureHandler);
 

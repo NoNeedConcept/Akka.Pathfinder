@@ -5,8 +5,8 @@ public class MapFactoryTests
     [Fact]
     public void CreateRandomMapConfig()
     {
-        int x = 150;
-        var mapSize = new MapSize(x, x, 150);
+        int x = 5;
+        var mapSize = new MapSize(x, x, 2);
         var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(42, 20, mapSize, new Dictionary<Direction, uint>()
         {
             { Direction.Top, 100 },

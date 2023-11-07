@@ -58,10 +58,28 @@ public class EnvironmentSetupHooks
         Log.Information("[TEST][EnvironmentSetupHooks][AfterFeature]");
 
         await PathfinderApplicationFactory.DisposeAsync();
-        await MongoDbContainer.DropDataAsync();
-        await SeedNodeContainer.DisposeAsync();
+        PathfinderApplicationFactory = null!;
         await MongoDbContainer.DisposeAsync();
+        MongoDbContainer = null!;
         await PostgreContainer.DisposeAsync();
+        PostgreContainer = null!;
+        await SeedNodeContainer.DisposeAsync();
+        SeedNodeContainer = null!;
+    }
+
+    [AfterTestRun]
+    public static async Task AfterTestRun()
+    {
+        Log.Information("[TEST][EnvironmentSetupHooks][AfterFeature]");
+
+        await (PathfinderApplicationFactory?.DisposeAsync() ?? ValueTask.CompletedTask);
+        PathfinderApplicationFactory = null!;
+        await (MongoDbContainer?.DisposeAsync() ?? Task.CompletedTask);
+        MongoDbContainer = null!;
+        await (PostgreContainer?.DisposeAsync() ?? Task.CompletedTask);
+        PostgreContainer = null!;
+        await (SeedNodeContainer?.DisposeAsync() ?? Task.CompletedTask);
+        SeedNodeContainer = null!;
     }
 
     private static ILogger CreateLogger()

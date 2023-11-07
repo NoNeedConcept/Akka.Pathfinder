@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using TechTalk.SpecFlow;
 using TechTalk.SpecFlow.Infrastructure;
 
-
 namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
 
 [Binding]

@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using Akka.Pathfinder.Core.Configs;
 using LanguageExt.Pipes;
+using Serilog;
 
 namespace Akka.Pathfinder.Layout;
 
@@ -34,14 +36,14 @@ public class MapFactory : IMapFactory
     public MapConfigWithPoints Create(MapSettings mapSettings, bool intergalacticDummyMode = false)
     {
         var random = InitializeRandom(mapSettings);
-        InitializeDirectionCost(mapSettings);
+        InitializeDirectionCost(ref mapSettings);
         var map = InitializeMap(mapSettings, random, intergalacticDummyMode);
         return ConvertToMapConfig(map, mapSettings);
     }
 
     public MapConfigWithPoints Create(MapSettings mapSettings, IDictionary<int, int[,]> map)
     {
-        InitializeDirectionCost(mapSettings);
+        InitializeDirectionCost(ref mapSettings);
         var indexBasedMap = ConvertToIndexBasedMap(map);
         return ConvertToMapConfig(indexBasedMap, mapSettings);
     }
@@ -58,7 +60,7 @@ public class MapFactory : IMapFactory
         return new Random(seedToUse);
     }
 
-    private static void InitializeDirectionCost(MapSettings settings)
+    private static void InitializeDirectionCost(ref MapSettings settings)
     {
         if (!settings.DirectionsCosts.ContainsKey(Direction.Back))
         {
@@ -97,9 +99,9 @@ public class MapFactory : IMapFactory
         int index = 0;
         for (int depth = 0; depth < map.Count; depth++)
         {
-            for (int height = 0; height < map[depth].GetLength(1); height++)
+            for (int height = 0; height < map[depth].GetLength(0); height++)
             {
-                for (int width = 0; width < map[depth].GetLength(0); width++)
+                for (int width = 0; width < map[depth].GetLength(1); width++)
                 {
                     if (map[depth][width, height] == 0)
                     {
@@ -114,8 +116,8 @@ public class MapFactory : IMapFactory
                     if (depth > 0) directionsToCheck.Add(Direction.Bottom);
 
                     if (width < map.Count) directionsToCheck.Add(Direction.Right);
-                    if (height < map[depth].GetLength(1)) directionsToCheck.Add(Direction.Back);
-                    if (depth < map[depth].GetLength(0)) directionsToCheck.Add(Direction.Top);
+                    if (height < map[depth].GetLength(0)) directionsToCheck.Add(Direction.Back);
+                    if (depth < map[depth].GetLength(1)) directionsToCheck.Add(Direction.Top);
 
                     var tempDic = new Dictionary<Direction, DirectionConfig>();
 
@@ -126,8 +128,8 @@ public class MapFactory : IMapFactory
                             case Direction.Front:
                                 {
                                     if (map.TryGetValue(depth, out var values) &&
-                                        values.GetLength(1) > height - 1 &&
-                                        values.GetLength(0) > width)
+                                        values.GetLength(0) > height - 1 &&
+                                        values.GetLength(1) > width)
                                     {
                                         if (height - 1 <= -1 || width <= -1) continue;
                                         if (values[width, height - 1] == 0) continue;
@@ -141,8 +143,8 @@ public class MapFactory : IMapFactory
                             case Direction.Back:
                                 {
                                     if (map.TryGetValue(depth, out var values) &&
-                                        values.GetLength(1) > height + 1 &&
-                                        values.GetLength(0) > width)
+                                        values.GetLength(0) > height + 1 &&
+                                        values.GetLength(1) > width)
                                     {
                                         if (height + 1 <= -1 || width <= -1) continue;
                                         if (values[width, height + 1] == 0) continue;
@@ -156,8 +158,8 @@ public class MapFactory : IMapFactory
                             case Direction.Left:
                                 {
                                     if (map.TryGetValue(depth, out var values) &&
-                                        values.GetLength(1) > height &&
-                                        values.GetLength(0) > width - 1)
+                                        values.GetLength(0) > height &&
+                                        values.GetLength(1) > width - 1)
                                     {
 
                                         tempDic.Add(direction,
@@ -170,8 +172,8 @@ public class MapFactory : IMapFactory
                             case Direction.Right:
                                 {
                                     if (map.TryGetValue(depth, out var values) &&
-                                        values.GetLength(1) > height &&
-                                        values.GetLength(0) > width + 1)
+                                        values.GetLength(0) > height &&
+                                        values.GetLength(1) > width + 1)
                                     {
                                         if (height <= -1 || width + 1 <= -1) continue;
                                         if (values[width + 1, height] == 0) continue;
@@ -185,8 +187,8 @@ public class MapFactory : IMapFactory
                             case Direction.Top:
                                 {
                                     if (map.TryGetValue(depth + 1, out var values) &&
-                                        values.GetLength(1) > height &&
-                                        values.GetLength(0) > width)
+                                        values.GetLength(0) > height &&
+                                        values.GetLength(1) > width)
                                     {
                                         if (height <= -1 || width <= -1) continue;
                                         if (values[width, height] == 0) continue;
@@ -200,8 +202,8 @@ public class MapFactory : IMapFactory
                             case Direction.Bottom:
                                 {
                                     if (map.TryGetValue(depth - 1, out var values) &&
-                                        values.GetLength(1) > height &&
-                                        values.GetLength(0) > width)
+                                        values.GetLength(0) > height &&
+                                        values.GetLength(1) > width)
                                     {
                                         if (height <= -1 || width <= -1) continue;
                                         if (values[width, height] == 0) continue;
@@ -251,9 +253,9 @@ public class MapFactory : IMapFactory
         int index = 0;
         for (int depth = 0; depth < settings.MapSize.Depth; depth++)
         {
-            for (int height = 0; height < result[depth].GetLength(1); height++)
+            for (int height = 0; height < result[depth].GetLength(0); height++)
             {
-                for (int width = 0; width < result[depth].GetLength(0); width++)
+                for (int width = 0; width < result[depth].GetLength(1); width++)
                 {
                     index++;
                     if (intergalacticDummyMode)
@@ -276,21 +278,26 @@ public class MapFactory : IMapFactory
         int index = 0;
         for (int depth = 0; depth < map.Count; depth++)
         {
-            for (int height = 0; height < map[depth].GetLength(1); height++)
+            Console.WriteLine("Level {0}", depth);
+            for (int height = 0; height < map[depth].GetLength(0); height++)
             {
-                for (int width = 0; width < map[depth].GetLength(0); width++)
+                for (int width = 0; width < map[depth].GetLength(1); width++)
                 {
                     if (map.TryGetValue(depth, out var ints))
                     {
                         index++;
-                        map[depth][width, height] = ints[width, height] switch
+
+                        var result = ints[width, height] switch
                         {
                             1 => index,
                             _ => 0,
                         };
+                        Console.Write(string.Format("{0} ", result));
+                        map[depth][width, height] = result;
                     }
-
                 }
+
+                Console.Write(Environment.NewLine + Environment.NewLine);
             }
         }
 

@@ -19,6 +19,7 @@ public record PointWorkerState
     private readonly ConcurrentDictionary<Direction, DirectionConfig> _directionConfigs;
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorkerState>();
     private ConcurrentDictionary<Guid, DateTime> _inactivePathfinders = new();
+    private ConcurrentDictionary<Guid, int> _pathfinderPathCost = new();
 
     public static PointWorkerState FromSnapshot(PersistedPointWorkerState msg)
         => new(msg.DirectionConfigs)
@@ -93,24 +94,24 @@ public record PointWorkerState
 
     public void AddInactivePathfinder(PathfinderDeactivated msg) => _inactivePathfinders.AddOrSet(msg.PathfinderId, DateTime.UtcNow);
 
+    public void AddPathfinderPathCost(Guid pathfinderId, int cost) => _pathfinderPathCost.AddOrUpdate(pathfinderId, cost, (_, _) => cost);
+
     public void RemoveOldPathfinderIds(TimeSpan timeSpan) => _inactivePathfinders.RemoveAll((_, value) => value < DateTime.UtcNow.Add(-timeSpan));
 
     public bool IsBlockedAndGetResponse(FindPathRequest request, out PathFound response)
     {
-        response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.PathBlocked);
+        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.PathBlocked);
         if (IsBlocked) return true;
-        response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.MindBlown);
+        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
         if (_directionConfigs.IsEmpty && PointId != request.TargetPointId) return true;
         response = null!;
         return false;
     }
 
-    public bool TryLoopDetection(FindPathRequest request, out PathFound response)
+    public bool TryLoopDetection(FindPathRequest request)
     {
-        response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.LoopDetected);
         var loopDetectionList = request.Directions.SkipLast(1).ToList();
         if (loopDetectionList.Any(x => x.PointId.Equals(PointId))) return true;
-        response = null!;
         return false;
     }
 
@@ -142,43 +143,63 @@ public record PointWorkerState
         if (!success)
         {
             _logger.Debug("[{PathId}][{PathfinderId}] update path failed", request.PathId, request.PathfinderId);
-            response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds) { pathId }, PathFinderResult.MindBlown);
+            response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
             return true;
         }
 
-        response = new PathFound(request.PathfinderId, new SortedSet<Guid>(request.SubPathIds), PathFinderResult.Success);
+        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.Success);
         return true;
     }
 
-    public bool TrySavePartialPath(FindPathRequest request, Func<Path, (bool, Guid)> writer, out FindPathRequest findPathRequest)
+    public bool TryIsNotShortestPathForPathfinderId(FindPathRequest msg)
     {
-        findPathRequest = request;
-        var success = false;
-        if (request.Directions.Count == MongoConstantLengthForCollections.Length)
+        var currentPathCost = msg.Directions.Select(x => x.Cost).Sum(x => (int)x);
+        if (_pathfinderPathCost.TryGetValue(msg.PathfinderId, out var value))
         {
-            var (updated, value) = writer.Invoke(new Path(Guid.NewGuid(), request.PathfinderId, request.Directions));
-            success = updated;
-            findPathRequest = request with
-            {
-                SubPathIds = new SortedSet<Guid>(request.SubPathIds) { value }
-            };
+            if (value <= currentPathCost) return true;
+            _pathfinderPathCost.AddOrUpdate(msg.PathfinderId, currentPathCost, (_, _) => currentPathCost);
         }
-        return success;
+        else
+        {
+            _pathfinderPathCost.AddOrUpdate(msg.PathfinderId, currentPathCost, (_, _) => currentPathCost);
+        }
+
+        return false;
     }
+
+    // public bool TrySavePartialPath(FindPathRequest request, Func<Path, (bool, Guid)> writer, out FindPathRequest findPathRequest)
+    // {
+    //     findPathRequest = request;
+    //     var success = false;
+    //     if (request.Directions.Count == MongoConstantLengthForCollections.Length)
+    //     {
+    //         var (updated, value) = writer.Invoke(new Path(Guid.NewGuid(), request.PathfinderId, request.Directions));
+    //         success = updated;
+    //         findPathRequest = request with
+    //         {
+    //             SubPathIds = new SortedSet<Guid>(request.SubPathIds) { value }
+    //         };
+    //     }
+    //     return success;
+    // }
 
     public IReadOnlyList<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
     {
         var results = new List<FindPathRequest>();
+        var infoIds = request.Directions
+        .GroupJoin(_directionConfigs, x => x.PointId, x => x.Value.TargetPointId, (info, points) => { return points.Any() ? info.PointId : int.MinValue; })
+        .Where(x => x != int.MinValue)
+        .ToList();
 
-        foreach (var (Key, Value) in _directionConfigs)
+        foreach (var (key, value) in _directionConfigs.ExceptBy(infoIds, x => x.Value.TargetPointId).ToDictionary(x => x.Key, x => x.Value))
         {
-            var directions = request.Directions.ToList();
-            directions.Add(new PathPoint(Value.TargetPointId, Value.Cost, Key));
-            var findPathRequest = new FindPathRequest(request.PathfinderId, Guid.NewGuid(), Value.TargetPointId, request.TargetPointId, directions.ToList(), request.SubPathIds);
+            _logger.Debug("[{PointId}][{PathId}] TargetPointId [{Id}]", PointId, request.PathId, value.TargetPointId);
+            var directions = request.Directions.ToArray().Append(new PathPoint(value.TargetPointId, value.Cost, key)).ToList();
+            var findPathRequest = new FindPathRequest(request.PathfinderId, Guid.NewGuid(), value.TargetPointId, request.TargetPointId, directions);
             results.Add(findPathRequest);
         }
 
-        return results.ToList();
+        return results.OrderBy(x => x.Directions.Select(x => (int)x.Cost).Sum()).ToList();
     }
 
     public PersistedPointWorkerState GetPersistenceState() => new(PointId, Cost, _directionConfigs.AsReadOnly(), State);

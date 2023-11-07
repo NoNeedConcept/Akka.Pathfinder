@@ -23,6 +23,7 @@ public sealed class LighthouseNodeContainer : IAsyncLifetime
         Container = new ContainerBuilder()
             .WithName($"lighthouse_{Guid.NewGuid():D}")
             .WithImage($"petabridge/lighthouse:{dockerTag}")
+            .WithAutoRemove(true)
             .WithHostname("host.docker.internal")
             .WithPortBinding(9110, 9110)
             .WithPortBinding(Port, Port)
