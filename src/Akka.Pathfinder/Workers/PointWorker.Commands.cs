@@ -12,7 +12,8 @@ public partial class PointWorker
     private void PathfinderDeactivatedHandler(PathfinderDeactivated msg)
     {
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
-        _state.AddInactivePathfinder(msg);
+        _state.AddInactivePathfinder(msg.PathfinderId);
+        _state.RemovePathfinderPathCost(msg.PathfinderId);
         _state.RemoveOldPathfinderIds(TimeSpan.FromMinutes(10));
     }
 
@@ -106,10 +107,6 @@ public partial class PointWorker
             return;
         }
 
-        // if (_state.TrySavePartialPath(newRequest, PersistPath, out FindPathRequest newFindPathRequest))
-        // {
-        //     _logger.Debug("[{PointId}][{MessageType}] not saved :(", EntityId, msg.GetType().Name);
-        // }
         var pointWorkerClient = Context.System.GetRegistry().Get<PointWorkerProxy>();
         await _state
         .GetAllForwardMessages(newRequest)
