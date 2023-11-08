@@ -1,5 +1,4 @@
 using Akka.Actor;
-using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Persistence;
 
@@ -12,12 +11,10 @@ public partial class MapManager : ReceivePersistentActor
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<MapManager>();
     private MapManagerState _state = new(new Dictionary<Guid, Guid>());
-    private readonly IActorRef _pointWorkerClient = ActorRefs.Nobody;
-
+    
     public MapManager(IServiceScopeFactory serviceScopeFactory)
     {
         _serviceScopeFactory = serviceScopeFactory;
-        Context.System.EventStream.Subscribe(Self, typeof(PointInitialized));
         Ready();
     }
 }

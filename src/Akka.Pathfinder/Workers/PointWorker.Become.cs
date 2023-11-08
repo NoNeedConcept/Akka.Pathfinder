@@ -1,10 +1,18 @@
-﻿using Akka.Pathfinder.Core.Messages;
+﻿using Akka.Actor;
+using Akka.Cluster.Sharding;
+using Akka.Pathfinder.Core.Messages;
 using Akka.Persistence;
 
 namespace Akka.Pathfinder.Workers;
 
 public partial class PointWorker
 {
+    private void Initialize()
+    {
+        Command<InitializePoint>(InitializePointHandler);
+        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
+    }
+
     private void Configure()
     {
         _logger.Debug("[{PointId}][CONFIFURE]", EntityId);
@@ -16,6 +24,7 @@ public partial class PointWorker
     private void Failure()
     {
         _logger.Debug("[{PointId}][FAILURE]", EntityId);
+        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
         CommandAny(msg =>
         {
             _logger.Debug("[{PointId}][{MessageType}] message received -> no action in failure state", EntityId, msg.GetType().Name);
@@ -38,6 +47,7 @@ public partial class PointWorker
         // Sender -> SnapshotStore
         Command<SaveSnapshotSuccess>(SaveSnapshotSuccessHandler);
         Command<SaveSnapshotFailure>(SaveSnapshotFailureHandler);
+        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
 
         Stash.UnstashAll();
     }

@@ -2,6 +2,9 @@
 using Akka.Pathfinder.Core.Messages;
 using Akka.Persistence;
 using Akka.Pathfinder.Core.States;
+using Akka.Actor;
+using Akka.Cluster.Sharding;
+using Akka.Pathfinder.Core;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -15,10 +18,13 @@ public partial class PointWorker : ReceivePersistentActor
 
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
+    private readonly IActorRef _mapManagerClient = ActorRefs.Nobody;
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
+        Context.SetReceiveTimeout(TimeSpan.FromSeconds(20));
         EntityId = entityId;
         _serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+        _mapManagerClient = Context.System.GetRegistry().Get<MapManagerProxy>();
 
         var result = Context.System.EventStream.Subscribe(Self, typeof(PathfinderDeactivated));
         if (!result)
@@ -39,7 +45,7 @@ public partial class PointWorker : ReceivePersistentActor
         }
         else
         {
-            Become(() => Command<InitializePoint>(InitializePointHandler));
+            Become(Initialize);
         }
     }
 

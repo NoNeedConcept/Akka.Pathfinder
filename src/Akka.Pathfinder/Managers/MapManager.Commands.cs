@@ -9,19 +9,20 @@ namespace Akka.Pathfinder.Managers;
 
 public partial class MapManager : ReceivePersistentActor
 {
-    public void LoadMapHandler(LoadMap msg)
+    public async Task LoadMapHandler(LoadMap msg)
     {
         _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
         Become(WaitingForPoints);
         using var scope = _serviceScopeFactory.CreateScope();
         var mapConfigReader = scope.ServiceProvider.GetRequiredService<IMapConfigReader>();
         _state = MapManagerState.FromRequest(msg, _state.GetWaitingPathfinders());
-        mapConfigReader.Get(msg.MapId).ForEach(x =>
+        var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
+        await mapConfigReader.Get(msg.MapId).Throttle(x =>
         {
-            var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
             client.Tell(new InitializePoint(x));
             _state.Add(x.Id);
-        });
+        }, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(15));
+        Sender.Tell(new MapLoaded(msg.MapId));
     }
 
     public void UpdateMapHandler(UpdateMap msg)
@@ -85,15 +86,16 @@ public partial class MapManager : ReceivePersistentActor
         _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
     }
 
-    public async Task PointInitializedHandler(PointInitialized msg)
+    public void PointInitializedHandler(PointInitialized msg)
     {
         _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
+        
+        _state.Remove(msg.PointId);
 
-        _state.Complete(msg.PointId);
-
-        await _state
-        .AllPointsReadyAsync()
-        .PipeTo(Self, Self, x => x ? new AllPointsInitialized() : new NotAllPointsInitialized());
+        if (_state.AllPointsReady)
+        {
+            Sender.Tell(new AllPointsInitialized());
+        }
     }
 }
 

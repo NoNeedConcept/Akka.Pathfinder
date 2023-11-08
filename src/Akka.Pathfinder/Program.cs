@@ -85,7 +85,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
                 Role = "KEKW",
-                PassivateIdleEntityAfter = null,
+                ShouldPassivateIdleEntities = true
             })
             .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor())
             .WithShardRegion<PathfinderWorker>("PathfinderWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PathfinderWorker>(x), new MessageExtractor(), new ShardOptions()
@@ -93,7 +93,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
                 Role = "KEKW",
-                PassivateIdleEntityAfter = null,
+                ShouldPassivateIdleEntities = true
             })
             .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor())
             .WithSingleton<MapManager>("MapManager", (_, _, dependecyResolver) => dependecyResolver.Props<MapManager>(), new ClusterSingletonOptions() { Role = "KEKW" }, false)

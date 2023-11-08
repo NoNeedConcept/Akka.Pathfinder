@@ -7,8 +7,7 @@ public partial class MapManager : ReceivePersistentActor
 {
     private void WaitingForPoints()
     {
-        
-        CommandAsync<PointInitialized>(PointInitializedHandler);
+        Command<PointInitialized>(PointInitializedHandler);
         Command<IsMapReady>(IsMapReadyHandler);
         Command<AllPointsInitialized>(AllPointsInitializedHandler);
         Command<NotAllPointsInitialized>(NotAllPointsInitializedHandler);
@@ -16,7 +15,7 @@ public partial class MapManager : ReceivePersistentActor
 
     private void Ready()
     {
-        Command<LoadMap>(LoadMapHandler);
+        CommandAsync<LoadMap>(LoadMapHandler);
         Command<UpdateMap>(UpdateMapHandler);
         Command<ResetMap>(ResetMapHandler);
         Command<IsMapReady>(IsMapReadyHandler);

@@ -32,19 +32,14 @@ public class MapManagerState
 
     public bool IsMapReady { get; internal set; } = false;
 
+    public bool AllPointsReady => _readyPoints.IsEmpty;
+
     public IDictionary<Guid, Guid> GetWaitingPathfinders() => _waitingPathfinders;
     public void Add(int pointId) => _readyPoints.AddOrSet(pointId, (DateTime.UtcNow, null));
-    public void Complete(int pointId)
+    public void Remove(int pointId)
     {
-        if (_readyPoints.TryGetValue(pointId, out var oldValue))
-        {
-            _readyPoints.AddOrUpdate(pointId, (_) => (oldValue.Created, DateTime.UtcNow), (_, _) => (oldValue.Created, DateTime.UtcNow));
-        }
-        else
-        {
-            _logger.Debug("[{StateName}] Unkown point initialized - PointId:[{PointId}]", GetType().Name, pointId);
-            _readyPoints.AddOrSet(pointId, (DateTime.UtcNow, DateTime.UtcNow));
-        }
+        _readyPoints.Remove(pointId, out _);
+        _logger.Debug("NotReadyPoints: [{Count}]", _readyPoints.Count);
     }
 
     public void AddWaitingPathfinder(Guid pathfinderId) => _waitingPathfinders.AddOrSet(pathfinderId, pathfinderId);
@@ -54,13 +49,6 @@ public class MapManagerState
         var result = _waitingPathfinders.Select(x => new MapIsReady(x.Key)).ToList();
         _waitingPathfinders = new();
         IsMapReady = true;
-        return result;
-    }
-
-    public async Task<bool> AllPointsReadyAsync()
-    {
-        var result = _readyPoints.AsEnumerable().All(x => x.Value.Completed.HasValue);
-        await Task.CompletedTask;
         return result;
     }
 }

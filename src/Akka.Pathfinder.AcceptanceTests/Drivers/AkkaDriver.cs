@@ -83,7 +83,10 @@ public class AkkaDriver : Hosting.TestKit.TestKit
     {
         var mapManagerClient = Host.Services.GetRequiredService<IActorRegistry>().Get<MapManagerProxy>();
         mapManagerClient.Tell(request, TestActor);
+        
     }
+
+    public T Expect<T>(int seconds) => ExpectMsg<T>(TimeSpan.FromSeconds(seconds));
 
     public PathFinderDone ReceivePathFound() => ExpectMsg<PathFinderDone>(TimeSpan.FromSeconds(180));
 }
