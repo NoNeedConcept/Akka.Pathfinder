@@ -1,11 +1,14 @@
 using Akka.Cluster.Hosting;
 using Akka.Hosting;
-using Akka.Logger.Serilog;
 using Akka.Pathfinder.AcceptanceTests.Containers;
 using Akka.Pathfinder.Core;
+using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
+using Akka.Pathfinder.Core.Services;
 using Akka.Remote.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using MongoDB.Driver;
 
 namespace Akka.Pathfinder.AcceptanceTests.Drivers;
 
@@ -45,7 +48,23 @@ public class AkkaDriver : Hosting.TestKit.TestKit
     {
         builder
             .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor())
-            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor());
+            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor())
+            .WithSingletonProxy<MapManagerProxy>("MapManager", new ClusterSingletonOptions() { Role = "KEKW" });
+    }
+
+    protected override void ConfigureServices(HostBuilderContext _, IServiceCollection services)
+    {
+        services
+        .AddSingleton<IMongoClient>(x => new MongoClient(AkkaPathfinder.GetEnvironmentVariable("mongodb")))
+        .AddScoped(x => x.GetRequiredService<IMongoClient>().GetDatabase("pathfinder"))
+        .AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<Core.Persistence.Data.Path>("path"))
+        .AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<MapConfig>("map_config"))
+        .AddScoped<IPathWriter, PathWriter>()
+        .AddScoped<IPathReader>(x => x.GetRequiredService<IPathWriter>())
+        .AddScoped<IMapConfigWriter, MapConfigWriter>()
+        .AddScoped<IMapConfigReader>(x => x.GetRequiredService<IMapConfigWriter>())
+        .AddScoped<IPointConfigWriter, PointConfigWriter>()
+        .AddScoped<IPointConfigReader>(x => x.GetRequiredService<IPointConfigWriter>());
     }
 
     public void TellPathfinder(object request)
@@ -60,8 +79,14 @@ public class AkkaDriver : Hosting.TestKit.TestKit
         pointWorkerClient.Tell(request, TestActor);
     }
 
-    public PathFinderDone ReceivePathFound()
+    public void TellMapManager(object request)
     {
-        return ExpectMsg<PathFinderDone>(TimeSpan.FromSeconds(120));
+        var mapManagerClient = Host.Services.GetRequiredService<IActorRegistry>().Get<MapManagerProxy>();
+        mapManagerClient.Tell(request, TestActor);
+        
     }
+
+    public T Expect<T>(int seconds) => ExpectMsg<T>(TimeSpan.FromSeconds(seconds));
+
+    public PathFinderDone ReceivePathFound() => ExpectMsg<PathFinderDone>(TimeSpan.FromSeconds(180));
 }

@@ -2,53 +2,35 @@
 
 namespace Akka.Pathfinder.Layout;
 
-//map 0
-// dictionary 0, -> Map0()
-
-
-public static class MapProvider
+public class MapProvider
 {
     private const uint BaseCost = 42;
-    private static Dictionary<int, MapConfig> _mapConfigs = new();
 
+    private static readonly IMapFactoryProvider _factoryProvider = MapFactoryProvider.Instance;
 
-    public static Dictionary<int, MapConfig> MapConfigs
-    {
-        get
+    public Dictionary<int, MapConfigWithPoints> MapConfigs => new()
         {
-            if (_mapConfigs.Count == 0)
-            {
-                _mapConfigs.Add(0, Map0());
-                _mapConfigs.Add(1, Map1());
-                // _mapConfigs.Add(2,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(12, 15, 1),new Dictionary<Direction, uint>()),true));
-                // _mapConfigs.Add(3,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(50, 50, 1),new Dictionary<Direction, uint>()),true));
-                // _mapConfigs.Add(4,MapFactory.Create(new MapSettings(BaseCost,BaseCost*2,new MapSize(50, 50, 50),new Dictionary<Direction, uint>()),true));
-            }
+            { 0, Map0()},
+            { 1, Map1()},
+            { 2, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost, new MapSize(3, 3, 3), new Dictionary<Direction, uint>(), 15), true)},
+            { 3, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(15, 15, 15), new Dictionary<Direction, uint>(), 20), true)}
+        };
 
-            return _mapConfigs;
-        }
-        set => _mapConfigs = value;
+    private MapConfigWithPoints Map0()
+    {
+        var value = new List<PointConfig>(){
+                new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
+                {
+                    { Direction.Front, new DirectionConfig(2, BaseCost) },
+                }),
+                new(2, BaseCost, new Dictionary<Direction, DirectionConfig>()),
+            };
+        return new MapConfigWithPoints(Guid.NewGuid(), new Dictionary<Guid, List<PointConfig>>() { { Guid.NewGuid(), value } });
     }
 
-    private static MapConfig Map0()
+    private MapConfigWithPoints Map1()
     {
-
-        return new MapConfig(Guid.NewGuid(), new List<PointConfig>()
-        {
-            new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
-            {
-                { Direction.Front, new DirectionConfig(2, BaseCost) },
-            }),
-            new(2, BaseCost, new Dictionary<Direction, DirectionConfig>()),
-
-        });
-
-    }
-
-    private static MapConfig Map1()
-    {
-
-        return new MapConfig(Guid.NewGuid(), new List<PointConfig>()
+        return new MapConfigWithPoints(Guid.NewGuid(), new Dictionary<Guid, List<PointConfig>>(){{ Guid.NewGuid(), new List<PointConfig>()
         {
             new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
             {
@@ -89,6 +71,6 @@ public static class MapProvider
             {
                 { Direction.Top, new DirectionConfig(4, BaseCost) },
             })
-        });
+        }}});
     }
 }

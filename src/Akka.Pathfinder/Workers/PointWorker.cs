@@ -1,11 +1,14 @@
-﻿using Akka.Actor;
-using Akka.Pathfinder.Core;
-using Akka.Pathfinder.Core.Configs;
+﻿using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
-using Akka.Pathfinder.Core.Services;
 using Akka.Persistence;
+using Akka.Pathfinder.Core.States;
+using Akka.Actor;
+using Akka.Cluster.Sharding;
+using Akka.Pathfinder.Core;
 
-namespace Akka.Pathfinder;
+namespace Akka.Pathfinder.Workers;
+
+public record LocalPointConfig(PointConfig Config);
 
 public partial class PointWorker : ReceivePersistentActor
 {
@@ -15,14 +18,13 @@ public partial class PointWorker : ReceivePersistentActor
 
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
-    private readonly IActorRef _pointWorkerClient = ActorRefs.Nobody;
-    private readonly IActorRef _pathfinderClient = ActorRefs.Nobody;
-
+    private readonly IActorRef _mapManagerClient = ActorRefs.Nobody;
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
+        Context.SetReceiveTimeout(TimeSpan.FromSeconds(20));
         EntityId = entityId;
         _serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-        _pointWorkerClient = Context.System.GetRegistry().Get<PointWorkerProxy>();
+        _mapManagerClient = Context.System.GetRegistry().Get<MapManagerProxy>();
 
         var result = Context.System.EventStream.Subscribe(Self, typeof(PathfinderDeactivated));
         if (!result)
@@ -31,8 +33,6 @@ public partial class PointWorker : ReceivePersistentActor
         }
 
         Recover<SnapshotOffer>(RecoverSnapshotOffer);
-        Recover<PointConfig>(RecoverPointConfig);
-        CommandAny(msg => Stash.Stash());
     }
 
     protected override void OnReplaySuccess()
@@ -47,34 +47,6 @@ public partial class PointWorker : ReceivePersistentActor
         {
             Become(Initialize);
         }
-    }
-
-    protected void OnInitialize()
-    {
-        using var scope = _serviceScopeFactory.CreateScope();
-        var configReader = scope.ServiceProvider
-            .GetRequiredService<IPointConfigReader>();
-
-        var config = configReader.Get(Convert.ToInt32(EntityId)).SingleOrDefault();
-
-        if (config is null)
-        {
-            _logger.Error("[{PointId}] failed to query point config from database", EntityId);
-            return;
-        }
-
-        Self.Tell(config);
-    }
-
-    private void OnReady()
-    {
-        Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
-        Command<CostRequest>(CostRequestHandler);
-        Command<PointCommandRequest>(PointCommandRequestHandler);
-        Command<FindPathRequest>(CreatePathPointRequestPathHandler);
-
-        Command<SaveSnapshotSuccess>(SaveSnapshotSuccessHandler);
-        Command<SaveSnapshotFailure>(SaveSnapshotFailureHandler);
     }
 
     protected override void PreRestart(Exception reason, object message)

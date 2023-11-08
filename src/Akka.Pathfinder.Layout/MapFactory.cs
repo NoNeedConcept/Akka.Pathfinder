@@ -1,104 +1,122 @@
 using Akka.Pathfinder.Core.Configs;
+using LanguageExt.Pipes;
 
 namespace Akka.Pathfinder.Layout;
 
+public class MongoConstantLengthForCollections
+{
+    public const int Length = 1500000;
+}
+
 public record MapSize(int Width, int Height, int Depth);
 
-public record MapSettings(uint PointCost, uint DefaultDirectionCost, MapSize MapSize,
-    Dictionary<Direction, uint> DirectionsCosts, int Seed = 0);
+public record MapSettings(uint PointCost, uint DefaultDirectionCost, MapSize MapSize, Dictionary<Direction, uint> DirectionsCosts, int Seed = 0);
 
-public static class MapFactory
+public interface IMapFactoryProvider
 {
-    private static int[,,] Map { get; set; } = null!;
-    private static MapSettings MapSettings { get; set; } = null!;
-    private static Random Random { get; set; } = null!;
+    IMapFactory CreateFactory();
+}
 
-    private const int EmptyPoint = -1;
+public class MapFactoryProvider : IMapFactoryProvider
+{
+    public static MapFactoryProvider Instance { get; } = new();
+    public IMapFactory CreateFactory() => new MapFactory();
+}
 
-    public static MapConfig Create(MapSettings mapSettings, bool intergalacticDummyMode = false)
+public interface IMapFactory
+{
+    MapConfigWithPoints Create(MapSettings mapSettings, bool intergalacticDummyMode = false);
+    MapConfigWithPoints Create(MapSettings mapSettings, IDictionary<int, int[,]> map);
+}
+
+public class MapFactory : IMapFactory
+{
+    public MapConfigWithPoints Create(MapSettings mapSettings, bool intergalacticDummyMode = false)
     {
-        MapSettings = mapSettings;
-        InitializeRandom();
-        InitializeDirectionCost();
-        InitializeMap(intergalacticDummyMode);
-        return ConvertToMapConfig();
+        var random = InitializeRandom(mapSettings);
+        InitializeDirectionCost(ref mapSettings);
+        var map = InitializeMap(mapSettings, random, intergalacticDummyMode);
+        var indexBasedMap = ConvertToIndexBasedMap(map);
+        return ConvertToMapConfig(indexBasedMap, mapSettings);
     }
 
-    private static void InitializeRandom()
+    public MapConfigWithPoints Create(MapSettings mapSettings, IDictionary<int, int[,]> map)
     {
-        int seedToUse = MapSettings.Seed;
+        InitializeDirectionCost(ref mapSettings);
+        var indexBasedMap = ConvertToIndexBasedMap(map);
+        return ConvertToMapConfig(indexBasedMap, mapSettings);
+    }
+
+    private static Random InitializeRandom(MapSettings? settings)
+    {
+        int seedToUse = settings?.Seed ?? 0;
 
         if (seedToUse == 0)
         {
             seedToUse = DateTime.UtcNow.Microsecond;
         }
 
-        Random = new Random(seedToUse);
+        return new Random(seedToUse);
     }
 
-    private static void InitializeDirectionCost()
+    private static void InitializeDirectionCost(ref MapSettings settings)
     {
-        if (!MapSettings.DirectionsCosts.ContainsKey(Direction.Back))
+        if (!settings.DirectionsCosts.ContainsKey(Direction.Back))
         {
-            MapSettings.DirectionsCosts.Add(Direction.Back, MapSettings.DefaultDirectionCost);
+            settings.DirectionsCosts.Add(Direction.Back, settings.DefaultDirectionCost);
         }
 
-        if (!MapSettings.DirectionsCosts.ContainsKey(Direction.Front))
+        if (!settings.DirectionsCosts.ContainsKey(Direction.Front))
         {
-            MapSettings.DirectionsCosts.Add(Direction.Front, MapSettings.DefaultDirectionCost);
+            settings.DirectionsCosts.Add(Direction.Front, settings.DefaultDirectionCost);
         }
 
-        if (!MapSettings.DirectionsCosts.ContainsKey(Direction.Left))
+        if (!settings.DirectionsCosts.ContainsKey(Direction.Left))
         {
-            MapSettings.DirectionsCosts.Add(Direction.Left, MapSettings.DefaultDirectionCost);
+            settings.DirectionsCosts.Add(Direction.Left, settings.DefaultDirectionCost);
         }
 
-        if (!MapSettings.DirectionsCosts.ContainsKey(Direction.Right))
+        if (!settings.DirectionsCosts.ContainsKey(Direction.Right))
         {
-            MapSettings.DirectionsCosts.Add(Direction.Right, MapSettings.DefaultDirectionCost);
+            settings.DirectionsCosts.Add(Direction.Right, settings.DefaultDirectionCost);
         }
 
-        if (!MapSettings.DirectionsCosts.ContainsKey(Direction.Bottom))
+        if (!settings.DirectionsCosts.ContainsKey(Direction.Bottom))
         {
-            MapSettings.DirectionsCosts.Add(Direction.Bottom, MapSettings.DefaultDirectionCost);
+            settings.DirectionsCosts.Add(Direction.Bottom, settings.DefaultDirectionCost);
         }
 
-        if (!MapSettings.DirectionsCosts.ContainsKey(Direction.Top))
+        if (!settings.DirectionsCosts.ContainsKey(Direction.Top))
         {
-            MapSettings.DirectionsCosts.Add(Direction.Top, MapSettings.DefaultDirectionCost);
+            settings.DirectionsCosts.Add(Direction.Top, settings.DefaultDirectionCost);
         }
     }
 
-
-    private static MapConfig ConvertToMapConfig()
+    private static MapConfigWithPoints ConvertToMapConfig(IDictionary<int, int[,]> map, MapSettings settings)
     {
         var listOfPoints = new List<PointConfig>();
-        int widthCounter = 0, heightCounter = 0, depthCounter = 0;
         int index = 0;
-        while (widthCounter < MapSettings.MapSize.Width)
+        for (int depth = 0; depth < map.Count; depth++)
         {
-            while (heightCounter < MapSettings.MapSize.Height)
+            for (int height = 0; height < map[depth].GetLength(0); height++)
             {
-                while (depthCounter < MapSettings.MapSize.Depth)
+                for (int width = 0; width < map[depth].GetLength(1); width++)
                 {
-                    if (Map[widthCounter, heightCounter, depthCounter] == EmptyPoint)
+                    if (map[depth][height, width] == 0)
                     {
-                        depthCounter++;
                         continue;
                     }
 
                     index++;
+                    List<Direction> directionsToCheck = new();
 
-                    List<Direction> directionsToCheck = new List<Direction>();
+                    if (width > 0) directionsToCheck.Add(Direction.Left);
+                    if (height > 0) directionsToCheck.Add(Direction.Front);
+                    if (depth > 0) directionsToCheck.Add(Direction.Bottom);
 
-                    if (widthCounter > 0) directionsToCheck.Add(Direction.Left);
-                    if (heightCounter > 0) directionsToCheck.Add(Direction.Top);
-                    if (depthCounter > 0) directionsToCheck.Add(Direction.Back);
-
-                    if (widthCounter < MapSettings.MapSize.Width - 1) directionsToCheck.Add(Direction.Right);
-                    if (heightCounter < MapSettings.MapSize.Height - 1) directionsToCheck.Add(Direction.Bottom);
-                    if (depthCounter < MapSettings.MapSize.Depth - 1) directionsToCheck.Add(Direction.Front);
-
+                    if (height < map[depth].GetLength(0)) directionsToCheck.Add(Direction.Back);
+                    if (width < map[depth].GetLength(1)) directionsToCheck.Add(Direction.Right);
+                    if (depth < map.Count) directionsToCheck.Add(Direction.Top);
 
                     var tempDic = new Dictionary<Direction, DirectionConfig>();
 
@@ -106,124 +124,175 @@ public static class MapFactory
                     {
                         switch (direction)
                         {
-                            case Direction.Top:
-                            {
-                                if (Map[widthCounter, heightCounter - 1, depthCounter] != EmptyPoint)
-                                {
-                                    tempDic.Add(direction,
-                                        new DirectionConfig(Map[widthCounter, heightCounter - 1, depthCounter],
-                                            MapSettings.DirectionsCosts[direction]));
-                                }
-
-                                break;
-                            }
-                            case Direction.Bottom:
-                            {
-                                if (Map[widthCounter, heightCounter + 1, depthCounter] != EmptyPoint)
-                                {
-                                    tempDic.Add(direction,
-                                        new DirectionConfig(Map[widthCounter, heightCounter + 1, depthCounter],
-                                            MapSettings.DirectionsCosts[direction]));
-                                }
-
-                                break;
-                            }
-                            case Direction.Left:
-                            {
-                                if (Map[widthCounter - 1, heightCounter, depthCounter] != EmptyPoint)
-                                {
-                                    tempDic.Add(direction,
-                                        new DirectionConfig(Map[widthCounter - 1, heightCounter, depthCounter],
-                                            MapSettings.DirectionsCosts[direction]));
-                                }
-
-                                break;
-                            }
-                            case Direction.Right:
-                            {
-                                if (Map[widthCounter + 1, heightCounter, depthCounter] != EmptyPoint)
-                                {
-                                    tempDic.Add(direction,
-                                        new DirectionConfig(Map[widthCounter + 1, heightCounter, depthCounter],
-                                            MapSettings.DirectionsCosts[direction]));
-                                }
-
-                                break;
-                            }
                             case Direction.Front:
-                            {
-                                if (Map[widthCounter, heightCounter, depthCounter + 1] != EmptyPoint)
                                 {
-                                    tempDic.Add(direction,
-                                        new DirectionConfig(Map[widthCounter, heightCounter, depthCounter + 1],
-                                            MapSettings.DirectionsCosts[direction]));
-                                }
+                                    if (map.TryGetValue(depth, out var values) &&
+                                        values.GetLength(0) > height - 1 &&
+                                        values.GetLength(1) > width)
+                                    {
+                                        if (height - 1 <= -1 || width <= -1) continue;
+                                        if (values[height - 1, width] == 0) continue;
+                                        tempDic.Add(direction,
+                                            new DirectionConfig(map[depth][height - 1, width],
+                                                settings.DirectionsCosts[direction]));
+                                    }
 
-                                break;
-                            }
+                                    break;
+                                }
                             case Direction.Back:
-                            {
-                                if (Map[widthCounter, heightCounter, depthCounter - 1] != EmptyPoint)
                                 {
-                                    tempDic.Add(direction,
-                                        new DirectionConfig(Map[widthCounter, heightCounter, depthCounter - 1],
-                                            MapSettings.DirectionsCosts[direction]));
-                                }
+                                    if (map.TryGetValue(depth, out var values) &&
+                                        values.GetLength(0) > height + 1 &&
+                                        values.GetLength(1) > width)
+                                    {
+                                        if (height + 1 <= -1 || width <= -1) continue;
+                                        if (values[height + 1, width] == 0) continue;
+                                        tempDic.Add(direction,
+                                            new DirectionConfig(map[depth][height + 1, width],
+                                                settings.DirectionsCosts[direction]));
+                                    }
 
-                                break;
-                            }
+                                    break;
+                                }
+                            case Direction.Left:
+                                {
+                                    if (map.TryGetValue(depth, out var values) &&
+                                        values.GetLength(0) > height &&
+                                        values.GetLength(1) > width - 1)
+                                    {
+                                        if (height <= -1 || width - 1 <= -1) continue;
+                                        if (values[height, width - 1] == 0) continue;
+                                        tempDic.Add(direction,
+                                            new DirectionConfig(map[depth][height, width - 1],
+                                                settings.DirectionsCosts[direction]));
+                                    }
+
+                                    break;
+                                }
+                            case Direction.Right:
+                                {
+                                    if (map.TryGetValue(depth, out var values) &&
+                                        values.GetLength(0) > height &&
+                                        values.GetLength(1) > width + 1)
+                                    {
+                                        if (height <= -1 || width + 1 <= -1) continue;
+                                        if (values[height, width + 1] == 0) continue;
+                                        tempDic.Add(direction,
+                                            new DirectionConfig(map[depth][height, width + 1],
+                                                settings.DirectionsCosts[direction]));
+                                    }
+
+                                    break;
+                                }
+                            case Direction.Top:
+                                {
+                                    if (map.TryGetValue(depth + 1, out var values) &&
+                                        values.GetLength(0) > height &&
+                                        values.GetLength(1) > width)
+                                    {
+                                        if (height <= -1 || width <= -1) continue;
+                                        if (values[height, width] == 0) continue;
+                                        tempDic.Add(direction,
+                                            new DirectionConfig(map[depth + 1][height, width],
+                                                settings.DirectionsCosts[direction]));
+                                    }
+
+                                    break;
+                                }
+                            case Direction.Bottom:
+                                {
+                                    if (map.TryGetValue(depth - 1, out var values) &&
+                                        values.GetLength(0) > height &&
+                                        values.GetLength(1) > width)
+                                    {
+                                        if (height <= -1 || width <= -1) continue;
+                                        if (values[height, width] == 0) continue;
+                                        tempDic.Add(direction,
+                                            new DirectionConfig(map[depth - 1][height, width],
+                                                settings.DirectionsCosts[direction]));
+                                    }
+
+                                    break;
+                                }
                         }
                     }
 
-                    listOfPoints.Add(new PointConfig(index, MapSettings.PointCost, tempDic));
-
-                    depthCounter++;
+                    listOfPoints.Add(new PointConfig(index, settings.PointCost, tempDic));
                 }
-
-                depthCounter = 0;
-                heightCounter++;
             }
-
-
-            heightCounter = 0;
-            widthCounter++;
         }
 
-        return new MapConfig(Guid.NewGuid(), listOfPoints);
+        var result = new Dictionary<Guid, List<PointConfig>>();
+        if (listOfPoints.Count > MongoConstantLengthForCollections.Length)
+        {
+            var kekw = listOfPoints
+            .Chunk(MongoConstantLengthForCollections.Length)
+            .Select(x => new KeyValuePair<Guid, List<PointConfig>>(Guid.NewGuid(), x.ToList()))
+            .ToDictionary(x => x.Key, x => x.Value);
+            result = kekw;
+        }
+        else
+        {
+            result = new Dictionary<Guid, List<PointConfig>>()
+            {
+                { Guid.NewGuid(), listOfPoints }
+            };
+        }
+
+        return new MapConfigWithPoints(Guid.NewGuid(), result);
     }
 
-    private static void InitializeMap(bool intergalacticDummyMode)
+    private static IDictionary<int, int[,]> InitializeMap(MapSettings settings, Random? random = default, bool intergalacticDummyMode = false)
     {
-        Map = new int[MapSettings.MapSize.Width, MapSettings.MapSize.Height, MapSettings.MapSize.Depth];
-        int widthCounter = 0, heightCounter = 0, depthCounter = 0;
-        int index = 0;
-        while (widthCounter < MapSettings.MapSize.Width)
+        var result = new Dictionary<int, int[,]>();
+        for (int depth = 0; depth < settings.MapSize.Depth; depth++)
         {
-            while (heightCounter < MapSettings.MapSize.Height)
+            result.Add(depth, new int[settings.MapSize.Height, settings.MapSize.Width]);
+        }
+
+        for (int depth = 0; depth < settings.MapSize.Depth; depth++)
+        {
+            for (int height = 0; height < result[depth].GetLength(0); height++)
             {
-                while (depthCounter < MapSettings.MapSize.Depth)
+                for (int width = 0; width < result[depth].GetLength(1); width++)
                 {
-                    index++;
                     if (intergalacticDummyMode)
                     {
-                        Map[widthCounter, heightCounter, depthCounter] = index;
+                        result[depth][height, width] = 1;
                     }
                     else
                     {
-                        Map[widthCounter, heightCounter, depthCounter] =
-                            Random.Next(0, 2) == 1 ? index : EmptyPoint;
+                        result[depth][height, width] = random?.Next(0, 2) == 1 ? 1 : 0;
                     }
-
-                    depthCounter++;
                 }
-
-                depthCounter = 0;
-                heightCounter++;
             }
-
-
-            heightCounter = 0;
-            widthCounter++;
         }
+
+        return result;
+    }
+
+    private static IDictionary<int, int[,]> ConvertToIndexBasedMap(IDictionary<int, int[,]> map)
+    {
+        int index = 0;
+        for (int depth = 0; depth < map.Count; depth++)
+        {
+            for (int height = 0; height < map[depth].GetLength(0); height++)
+            {
+                for (int width = 0; width < map[depth].GetLength(1); width++)
+                {
+                    if (map.TryGetValue(depth, out var ints))
+                    {
+                        index++;
+                        map[depth][height, width] = ints[height, width] switch
+                        {
+                            1 => index,
+                            _ => 0,
+                        };
+                    }
+                }
+            }
+        }
+
+        return map;
     }
 }

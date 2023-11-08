@@ -1,6 +1,6 @@
 ﻿using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Containers;
 using Serilog;
-using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Akka.Pathfinder.AcceptanceTests.Containers;
 
@@ -17,6 +17,7 @@ public class PostgreContainer : IAsyncLifetime
         Container = new ContainerBuilder()
             .WithName($"postgres_{Guid.NewGuid():D}")
             .WithImage("postgres:15.1")
+            .WithAutoRemove(true)
             .WithPortBinding(port, true)
             .WithEnvironment("POSTGRES_HOST_AUTH_METHOD", "trust")
             .WithEnvironment("POSTGRES_PASSWORD", password)

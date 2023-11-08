@@ -9,7 +9,9 @@ public static class CostConstants
 
 public record UpdateCostResponse(int PointId, bool Success);
 
-public abstract record CostRequest(int PointId, uint Value, ChangeMethod ChangeMethod) : IPointId;
+public abstract record PointRequest(int PointId) : IPointId;
+
+public abstract record CostRequest(int PointId, uint Value, ChangeMethod ChangeMethod) : PointRequest(PointId);
 
 public abstract record PointCostRequest(int PointId, uint Value, ChangeMethod ChangeMethod) : CostRequest(PointId, Value, ChangeMethod);
 
@@ -28,3 +30,7 @@ public abstract record PointCommandRequest(int PointId) : IPointId;
 
 public record BlockPointCommandRequest(int PointId) : PointCommandRequest(PointId);
 public record UnblockPointCommandRequest(int PointId) : PointCommandRequest(PointId);
+public record InitializePoint(PointConfig Config) : PointRequest(Config.Id);
+public record UpdatePointDirection(PointConfig Config) : PointRequest(Config.Id);
+public record ResetPoint(PointConfig Config) : PointRequest(Config.Id);
+public record FindPathRequest(Guid PathfinderId, Guid PathId, int NextPointId, int TargetPointId, IReadOnlyList<PathPoint> Directions) : PointRequest(NextPointId);

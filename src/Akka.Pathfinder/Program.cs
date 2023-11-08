@@ -7,6 +7,8 @@ using Akka.Pathfinder;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Services;
+using Akka.Pathfinder.Managers;
+using Akka.Pathfinder.Workers;
 using Akka.Persistence.Hosting;
 using Akka.Persistence.Sql.Config;
 using Akka.Persistence.Sql.Hosting;
@@ -34,9 +36,11 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
 .AddSingleton<IMongoClient>(x => new MongoClient(AkkaPathfinder.GetEnvironmentVariable("mongodb")))
 .AddScoped(x => x.GetRequiredService<IMongoClient>().GetDatabase("pathfinder"))
 .AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<Path>("path"))
-.AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<PointConfig>("point_config"))
+.AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<MapConfig>("map_config"))
 .AddScoped<IPathWriter, PathWriter>()
 .AddScoped<IPathReader>(x => x.GetRequiredService<IPathWriter>())
+.AddScoped<IMapConfigWriter, MapConfigWriter>(x => new MapConfigWriter(x.GetRequiredService<IMongoCollection<MapConfig>>(), x.GetRequiredService<IMongoDatabase>()))
+.AddScoped<IMapConfigReader>(x => x.GetRequiredService<IMapConfigWriter>())
 .AddScoped<IPointConfigReader, PointConfigReader>()
 .AddAkka("Zeus", (builder, sp) =>
     {
@@ -65,6 +69,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 setup.AddLogger<SerilogLogger>();
                 setup.LogMessageFormatter = typeof(SerilogLogMessageFormatter);
             })
+            .AddHocon(hocon: "akka.remote.dot-netty.tcp.maximum-frame-size = 256000b", addMode: HoconAddMode.Prepend)
             .WithHealthCheck(x => x.AddProviders(HealthCheckType.All))
             .WithWebHealthCheck(sp)
             .WithRemoting("0.0.0.0", 1337, "127.0.0.1")
@@ -80,7 +85,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
                 Role = "KEKW",
-                PassivateIdleEntityAfter = null,
+                ShouldPassivateIdleEntities = true
             })
             .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor())
             .WithShardRegion<PathfinderWorker>("PathfinderWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PathfinderWorker>(x), new MessageExtractor(), new ShardOptions()
@@ -88,9 +93,11 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
                 Role = "KEKW",
-                PassivateIdleEntityAfter = null,
+                ShouldPassivateIdleEntities = true
             })
-            .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor());
+            .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor())
+            .WithSingleton<MapManager>("MapManager", (_, _, dependecyResolver) => dependecyResolver.Props<MapManager>(), new ClusterSingletonOptions() { Role = "KEKW" }, false)
+            .WithSingletonProxy<MapManagerProxy>("MapManager", new ClusterSingletonOptions() { Role = "KEKW" });
     });
 
 
@@ -117,4 +124,6 @@ namespace Akka.Pathfinder
     public record PointWorkerProxy;
 
     public record PathfinderProxy;
+
+    public record MapManagerProxy;
 }

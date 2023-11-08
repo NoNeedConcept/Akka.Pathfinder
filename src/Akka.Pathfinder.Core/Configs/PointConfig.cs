@@ -1,6 +1,6 @@
 ﻿namespace Akka.Pathfinder.Core.Configs;
 
-public record PointConfig(int Id, uint Cost, Dictionary<Direction, DirectionConfig> DirectionConfigs);
+public record PointConfig(int Id, uint Cost, Dictionary<Direction, DirectionConfig> DirectionConfigs, bool HasChanges = false);
 
 public record DirectionConfig(int TargetPointId, uint Cost)
 {

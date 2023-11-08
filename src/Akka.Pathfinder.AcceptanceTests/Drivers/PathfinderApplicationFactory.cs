@@ -1,4 +1,5 @@
 using System.Net;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Polly;
 using Polly.Timeout;
@@ -35,10 +36,10 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         Log.Information("[TEST][PathfinderApplicationFactory] application healthy");
     }
 
-    public override ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         Log.Information("[TEST][PathfinderApplicationFactory][DisposeAsync]");
-        return base.DisposeAsync();
+        await base.DisposeAsync();
     }
 
     public static async Task<bool> IsUrlAsync(HttpClient client, string relativeUri, int retry = 5,

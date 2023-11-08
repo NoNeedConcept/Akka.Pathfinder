@@ -3,22 +3,24 @@ using MongoDB.Driver;
 
 namespace Akka.Pathfinder.Core.Services;
 
-public interface IPointConfigWriter
+public interface IPointConfigWriter : IPointConfigReader
 {
-    public bool AddOrUpdate(PointConfig pointConfig);
+    public void AddPointConfigs(Guid CollectionId, List<PointConfig> pointConfigs);
+    public void AddPointConfig(Guid CollectionId, PointConfig pointConfig);
 }
 public class PointConfigWriter : PointConfigReader, IPointConfigWriter
 {
-    private IMongoCollection<PointConfig> _mongoCollection { get; set; }
 
-    public PointConfigWriter(IMongoCollection<PointConfig> collection) : base(collection)
-    {
-        _mongoCollection = collection;
-    }
+    public PointConfigWriter(IMongoDatabase database) : base(database)
+    { }
 
-    public bool AddOrUpdate(PointConfig pointConfig)
-    {
-        var result =  _mongoCollection.ReplaceOne(p => pointConfig.Id == p.Id, pointConfig, options: new ReplaceOptions() { IsUpsert = true });
-        return result.IsAcknowledged;
-    }
+    public void AddPointConfigs(Guid CollectionId, List<PointConfig> pointConfigs)
+        => Database
+        .GetCollection<PointConfig>(CollectionId.ToString())
+        .InsertMany(pointConfigs, new InsertManyOptions() { IsOrdered = true });
+
+    public void AddPointConfig(Guid CollectionId, PointConfig pointConfig)
+        => Database
+        .GetCollection<PointConfig>(CollectionId.ToString())
+        .InsertOne(pointConfig);
 }
