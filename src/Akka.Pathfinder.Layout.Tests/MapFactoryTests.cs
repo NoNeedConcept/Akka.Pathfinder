@@ -9,8 +9,7 @@ public class MapFactoryTests
     public void CreateRandomMapConfig()
     {
         int x = 3;
-        var mapSize = new MapSize(x, x, 3);
-        var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(42, 20, mapSize, new Dictionary<Direction, uint>()
+        var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(42, 20, new MapSize(x, x, x), new Dictionary<Direction, uint>()
         {
             { Direction.Top, 100 },
             { Direction.Bottom, 100 }
@@ -18,17 +17,16 @@ public class MapFactoryTests
 
         foreach (var item in mapConfig.Configs.SelectMany(x => x.Value))
         {
-            Debug.Write($"Level {item.Id} ");
-            Debug.Write($"Count {item.DirectionConfigs.Count} ");
+            Debug.Write($"Point: {item.Id} ");
+            Debug.Write($"Count: {item.DirectionConfigs.Count} ");
             Debug.WriteLine($"Directions: {string.Join(",", item.DirectionConfigs.Values.Select(x => x.TargetPointId.ToString()))}");
-
         }
-
 
         Assert.NotNull(mapConfig);
         Assert.NotEqual(Guid.Empty, mapConfig.Id);
         Assert.NotNull(mapConfig.PointConfigsIds);
         Assert.True(mapConfig.PointConfigsIds.Any());
+        Assert.Equal(27, mapConfig.Configs.Values.SelectMany(x => x).Count());
     }
 
     [Fact]
