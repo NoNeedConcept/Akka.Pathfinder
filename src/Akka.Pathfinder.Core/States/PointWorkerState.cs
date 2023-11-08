@@ -92,9 +92,11 @@ public record PointWorkerState
 
     public bool Unblock() => (State = PointState.None) is PointState.None;
 
-    public void AddInactivePathfinder(PathfinderDeactivated msg) => _inactivePathfinders.AddOrSet(msg.PathfinderId, DateTime.UtcNow);
-
     public void AddPathfinderPathCost(Guid pathfinderId, int cost) => _pathfinderPathCost.AddOrUpdate(pathfinderId, cost, (_, _) => cost);
+
+    public void AddInactivePathfinder(Guid pathfinderId) => _inactivePathfinders.AddOrSet(pathfinderId, DateTime.UtcNow);
+
+    public void RemovePathfinderPathCost(Guid pathfinderId) => _pathfinderPathCost.Remove(pathfinderId, out _);
 
     public void RemoveOldPathfinderIds(TimeSpan timeSpan) => _inactivePathfinders.RemoveAll((_, value) => value < DateTime.UtcNow.Add(-timeSpan));
 
