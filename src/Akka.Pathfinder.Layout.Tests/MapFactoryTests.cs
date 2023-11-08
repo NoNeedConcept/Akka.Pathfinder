@@ -60,4 +60,21 @@ public class MapFactoryTests
         Assert.Contains(mapConfig.Configs.Values, x => x.Any(t => t.Id == 1));
         Assert.Equal(3, mapConfig.Configs.Values.SelectMany(x => x).Single(x => x.Id == 1).DirectionConfigs.Count);
     }
+
+     [Fact]
+    public void CreateLargeMapConfig()
+    {
+        int x = 125;
+        var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(42, 20, new MapSize(x, x, x), new Dictionary<Direction, uint>()
+        {
+            { Direction.Top, 100 },
+            { Direction.Bottom, 100 }
+        }), true);
+
+        Assert.NotNull(mapConfig);
+        Assert.NotEqual(Guid.Empty, mapConfig.Id);
+        Assert.NotNull(mapConfig.PointConfigsIds);
+        Assert.True(mapConfig.PointConfigsIds.Any());
+        Assert.Equal(1953125 , mapConfig.Configs.Values.SelectMany(x => x).Count());
+    }
 }
