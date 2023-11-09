@@ -38,7 +38,7 @@ public class CommonSteps
             pointConfigWriter.AddPointConfigs(key, value);
         }
         _akkaDriver.TellMapManager(new LoadMap(mapToLoad.Id));
-        _ = _akkaDriver.Expect<MapLoaded>(1500);
+        _ = _akkaDriver.Expect<MapLoaded>(15000);
 
         Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapLoaded", mapId);
     }

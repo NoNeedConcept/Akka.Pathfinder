@@ -4,7 +4,7 @@ namespace Akka.Pathfinder.Core;
 
 public class MessageExtractor : HashCodeMessageExtractor
 {
-    public MessageExtractor() : base(1500) { }
+    public MessageExtractor() : base(3000) { }
 
     public override string EntityId(object message)
     {

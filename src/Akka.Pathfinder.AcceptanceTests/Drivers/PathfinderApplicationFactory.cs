@@ -1,5 +1,4 @@
 using System.Net;
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Polly;
 using Polly.Timeout;
