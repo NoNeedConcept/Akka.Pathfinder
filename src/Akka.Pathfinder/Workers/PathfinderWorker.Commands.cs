@@ -19,7 +19,7 @@ public partial class PathfinderWorker
         };
 
         var findPathRequest = new FindPathRequest(Guid.Parse(EntityId), Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList);
-        _mapManagerClient.Forward(findPathRequest);
+        _mapManagerClient.Tell(findPathRequest, Self);
     }
 
     private void FindPathRequestStarted(FindPathRequestStarted msg)
