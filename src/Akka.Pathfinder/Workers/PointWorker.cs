@@ -40,14 +40,9 @@ public partial class PointWorker : ReceivePersistentActor
     {
         _logger.Debug("[{PointId}][RECOVER] SUCCESS", EntityId);
 
-        if (_state?.Loaded == true)
+        if (_state?.Initialize == true)
         {
             Become(Ready);
-        }
-        else if (_state?.Initialize == true)
-        {
-            Become(Configure);
-            OnConfigure();
         }
         else
         {

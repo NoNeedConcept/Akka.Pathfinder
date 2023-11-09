@@ -5,18 +5,15 @@ namespace Akka.Pathfinder.Managers;
 
 public partial class MapManager : ReceivePersistentActor
 {
-    private void WaitingForPoints()
-    {
-        Command<IsMapReady>(IsMapReadyHandler);
-        CommandAny(_ => {});
-    }
-
     private void Ready()
     {
         CommandAsync<LoadMap>(LoadMapHandler);
-        Command<UpdateMap>(UpdateMapHandler);
-        Command<ResetMap>(ResetMapHandler);
-        Command<IsMapReady>(IsMapReadyHandler);
-        CommandAny(x => { });
+        CommandAsync<UpdateMap>(UpdateMapHandler);
+        CommandAsync<ResetMap>(ResetMapHandler);
+        Command<FindPathRequest>(FindPathRequestHandler);
+        CommandAny(msg => Stash.Stash());
+        Stash.UnstashAll();
     }
+
+    private void Waiting() => CommandAny(msg => Stash.Stash());
 }

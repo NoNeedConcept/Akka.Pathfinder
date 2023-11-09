@@ -20,6 +20,7 @@ public partial class PointWorker
         _logger.Debug("[{PointId}][CONFIGURE]", EntityId);
         Command<LocalPointConfig>(LocalPointConfigHandler);
         CommandAny(msg => Stash.Stash());
+        OnConfigure();
     }
 
     private void Failure()

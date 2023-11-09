@@ -10,7 +10,7 @@ public partial class PathfinderWorker
     {
         Command<BestPathFound>(BestPathFoundHandler);
         Command<BestPathFailed>(BestPathFailedHandler);
-        CommandAny(_ => Stash.Stash());
+        CommandAny(msg => Stash.Stash());
     }
 
     private void Void()
