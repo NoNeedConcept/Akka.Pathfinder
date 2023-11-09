@@ -13,7 +13,8 @@ public partial class MapManager : ReceivePersistentActor
     {
         _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
         _state = MapManagerState.FromRequest(msg, _state.GetWaitingPathfinders());
-        var client = Context.System.GetRegistry().Get<PointWorkerProxy>();
+        var pointWorkerclient = Context.System.GetRegistry().Get<PointWorkerProxy>();
+        var pathfinderWorkerClient = Context.System.GetRegistry().Get<PathfinderProxy>();
         var pointCollectionIds = _mapConfigReader.Get(msg.MapId).PointConfigsIds;
         foreach (var collectionId in pointCollectionIds)
         {
@@ -21,7 +22,7 @@ public partial class MapManager : ReceivePersistentActor
             .Get(collectionId)
             .Throttle(config =>
             {
-                client.Tell(new InitializePoint(config.Id, collectionId));
+                pointWorkerclient.Tell(new InitializePoint(config.Id, collectionId));
             }, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5));
         }
 
@@ -30,8 +31,7 @@ public partial class MapManager : ReceivePersistentActor
         .GetMapIsReadyMessages()
         .ForEach(x =>
         {
-            var client = Context.System.GetRegistry().Get<PathfinderProxy>();
-            client.Tell(x);
+            pathfinderWorkerClient.Tell(x);
         });
         Become(Ready);
     }

@@ -26,7 +26,7 @@ public class CommonSteps
     }
 
     [Given(@"Map is (.*)")]
-    public async Task GivenMapIs(int mapId)
+    public void GivenMapIs(int mapId)
     {
         Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
         var mapToLoad = new MapProvider().MapConfigs.GetValueOrDefault(mapId)!;
@@ -40,6 +40,6 @@ public class CommonSteps
         _akkaDriver.TellMapManager(new LoadMap(mapToLoad.Id));
         _ = _akkaDriver.Expect<MapLoaded>(1500);
 
-        await Task.Delay(1500000);
+        Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapLoaded", mapId);
     }
 }
