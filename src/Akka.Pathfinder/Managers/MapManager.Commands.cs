@@ -11,6 +11,7 @@ public partial class MapManager : ReceivePersistentActor
     private async Task LoadMapHandler(LoadMap msg)
     {
         _logger.Debug("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
+        Become(Waiting);
 
         _state = MapManagerState.FromRequest(msg);
         var pointCollectionIds = _mapConfigReader.Get(msg.MapId).PointConfigsIds;
@@ -25,6 +26,7 @@ public partial class MapManager : ReceivePersistentActor
         }
 
         Sender.Tell(new MapLoaded(msg.MapId));
+        _state.SetMapIsReady();
         Become(Ready);
     }
 

@@ -31,4 +31,5 @@ public class MapManagerState
 
     public Guid MapId { get; internal set; }
     public bool IsMapReady { get; internal set; } = false;
+    public void SetMapIsReady() => IsMapReady = true;
 }
