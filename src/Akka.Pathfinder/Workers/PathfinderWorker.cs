@@ -29,6 +29,7 @@ public partial class PathfinderWorker : ReceivePersistentActor
 
         Command<PathfinderStartRequest>(FindPathHandler);
         Command<FindPathRequestStarted>(FindPathRequestStarted);
+        Command<PathFound>(FoundPathHandler);
         CommandAsync<PathfinderTimeout>(PathfinderTimeoutHandler);
     }
 }
