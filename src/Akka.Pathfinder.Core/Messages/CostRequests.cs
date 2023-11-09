@@ -30,10 +30,7 @@ public abstract record PointCommandRequest(int PointId) : IPointId;
 
 public record BlockPointCommandRequest(int PointId) : PointCommandRequest(PointId);
 public record UnblockPointCommandRequest(int PointId) : PointCommandRequest(PointId);
-public record InitializePoint(PointConfig Config) : PointRequest(Config.Id);
+public record InitializePoint(int PointId, Guid CollectionId): PointRequest(PointId);
 public record UpdatePointDirection(PointConfig Config) : PointRequest(Config.Id);
 public record ResetPoint(PointConfig Config) : PointRequest(Config.Id);
 public record FindPathRequest(Guid PathfinderId, Guid PathId, int NextPointId, int TargetPointId, IReadOnlyList<PathPoint> Directions) : PointRequest(NextPointId);
-
-// new init process
-public record NEWInitializePoint(int PointId, Guid CollectionId);

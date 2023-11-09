@@ -1,6 +1,4 @@
-﻿using Akka.Pathfinder.Core.Services;
-
-namespace Akka.Pathfinder.Workers;
+﻿namespace Akka.Pathfinder.Workers;
 
 public partial class PointWorker
 {
@@ -11,9 +9,5 @@ public partial class PointWorker
     }
 
     private (bool Success, Guid PathId) PersistPath(Core.Persistence.Data.Path path)
-    {
-        using var scope = _serviceScopeFactory.CreateScope();
-        var pathWriter = scope.ServiceProvider.GetRequiredService<IPathWriter>();
-        return (pathWriter.AddOrUpdate(path), path.Id);
-    }
+        => (_pathWriter.AddOrUpdate(path), path.Id);
 }

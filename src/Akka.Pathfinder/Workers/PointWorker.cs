@@ -1,7 +1,7 @@
-﻿using Akka.Pathfinder.Core.Configs;
+﻿using Akka.Pathfinder.Core.Services;
 using Akka.Pathfinder.Core.Messages;
+using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.States;
-using Akka.Pathfinder.Core;
 using Akka.Persistence;
 using Akka.Actor;
 
@@ -13,16 +13,18 @@ public partial class PointWorker : ReceivePersistentActor
 {
     public override string PersistenceId => $"PointWorker_{EntityId}";
     public string EntityId;
-    private PointWorkerState _state = null!;
-
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
-    private readonly IActorRef _mapManagerClient = ActorRefs.Nobody;
+    private PointWorkerState _state = null!;
+    private readonly IPointConfigReader _pointConfigReader;
+    private readonly IPathWriter _pathWriter;
+
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
         EntityId = entityId;
-        _serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-        _mapManagerClient = Context.System.GetRegistry().Get<MapManagerProxy>();
+        using var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
+        var provider = scope.ServiceProvider;
+        _pointConfigReader = provider.GetRequiredService<IPointConfigReader>();
+        _pathWriter = provider.GetRequiredService<IPathWriter>();
 
         var result = Context.System.EventStream.Subscribe(Self, typeof(PathfinderDeactivated));
         if (!result)
@@ -45,6 +47,7 @@ public partial class PointWorker : ReceivePersistentActor
         else if (_state?.Initialize == true)
         {
             Become(Configure);
+            OnConfigure();
         }
         else
         {
@@ -54,7 +57,9 @@ public partial class PointWorker : ReceivePersistentActor
 
     private void OnConfigure()
     {
-        // todo load config
+        _pointConfigReader
+        .Get(_state.CollectionId, _state.PointId)
+        .PipeTo(Self, Self, config => config is not null ? new LocalPointConfig(config): new LocalPointConfig(null!));
     }
 
     protected override void PreRestart(Exception reason, object message)

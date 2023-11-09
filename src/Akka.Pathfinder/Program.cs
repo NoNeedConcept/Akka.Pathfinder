@@ -39,7 +39,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
 .AddScoped(x => x.GetRequiredService<IMongoDatabase>().GetCollection<MapConfig>("map_config"))
 .AddScoped<IPathWriter, PathWriter>()
 .AddScoped<IPathReader>(x => x.GetRequiredService<IPathWriter>())
-.AddScoped<IMapConfigWriter, MapConfigWriter>(x => new MapConfigWriter(x.GetRequiredService<IMongoCollection<MapConfig>>(), x.GetRequiredService<IMongoDatabase>()))
+.AddScoped<IMapConfigWriter, MapConfigWriter>(x => new MapConfigWriter(x.GetRequiredService<IMongoCollection<MapConfig>>()))
 .AddScoped<IMapConfigReader>(x => x.GetRequiredService<IMapConfigWriter>())
 .AddScoped<IPointConfigReader, PointConfigReader>()
 .AddAkka("Zeus", (builder, sp) =>

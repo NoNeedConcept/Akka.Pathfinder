@@ -25,13 +25,12 @@ public partial class PointWorker
         Become(Ready);
     }
 
-    private void InitializePointHandler(NEWInitializePoint msg)
+    private void InitializePointHandler(InitializePoint msg)
     {
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         _state = PointWorkerState.FromInitialize(msg.PointId, msg.CollectionId);
         PersistState();
         Become(Configure);
-        _mapManagerClient.Tell(new PointInitialized(msg.PointId));
     }
 
     private void UpdatePointDirectionHandler(UpdatePointDirection msg)

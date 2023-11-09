@@ -6,7 +6,6 @@ namespace Akka.Pathfinder.Core.States;
 
 public class MapManagerState
 {
-    private readonly ConcurrentDictionary<int, (DateTime Created, DateTime? Completed)> _readyPoints = new();
     private ConcurrentDictionary<Guid, Guid> _waitingPathfinders = new();
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<MapManagerState>();
 
@@ -32,15 +31,7 @@ public class MapManagerState
 
     public bool IsMapReady { get; internal set; } = false;
 
-    public bool AllPointsReady => _readyPoints.IsEmpty;
-
     public IDictionary<Guid, Guid> GetWaitingPathfinders() => _waitingPathfinders;
-    public void Add(int pointId) => _readyPoints.AddOrSet(pointId, (DateTime.UtcNow, null));
-    public void Remove(int pointId)
-    {
-        _readyPoints.Remove(pointId, out _);
-        _logger.Debug("NotReadyPoints: [{Count}]", _readyPoints.Count);
-    }
 
     public void AddWaitingPathfinder(Guid pathfinderId) => _waitingPathfinders.AddOrSet(pathfinderId, pathfinderId);
 

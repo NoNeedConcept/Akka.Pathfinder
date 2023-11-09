@@ -10,7 +10,7 @@ public partial class PointWorker
     private void Initialize()
     {
         _logger.Debug("[{PointId}][INITIALIZE]", EntityId);
-        Command<NEWInitializePoint>(InitializePointHandler);
+        Command<InitializePoint>(InitializePointHandler);
         Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
         CommandAny(msg => Stash.Stash());
     }
@@ -19,9 +19,7 @@ public partial class PointWorker
     {
         _logger.Debug("[{PointId}][CONFIGURE]", EntityId);
         Command<LocalPointConfig>(LocalPointConfigHandler);
-        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
         CommandAny(msg => Stash.Stash());
-        OnConfigure();
     }
 
     private void Failure()
