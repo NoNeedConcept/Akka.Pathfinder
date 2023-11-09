@@ -17,12 +17,11 @@ public partial class MapManager : ReceivePersistentActor
         var pointCollectionIds = _mapConfigReader.Get(msg.MapId).PointConfigsIds;
         foreach (var collectionId in pointCollectionIds)
         {
-            await _pointConfigReader
-            .Get(collectionId)
+            await _pointConfigReader.Get(collectionId)
             .Throttle(config =>
             {
                 _pointWorker.Tell(new InitializePoint(config.Id, collectionId));
-            }, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5));
+            }, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(15));
         }
 
         Sender.Tell(new MapLoaded(msg.MapId));

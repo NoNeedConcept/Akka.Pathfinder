@@ -24,6 +24,7 @@ public partial class PathfinderWorker
 
     private void FindPathRequestStarted(FindPathRequestStarted msg)
     {
+        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Context.System.Scheduler.ScheduleTellOnce(_state.Timeout, Self, new PathfinderTimeout(_state.PathfinderId), _sender);
     }
 
@@ -74,6 +75,7 @@ public partial class PathfinderWorker
 
     public void BestPathFoundHandler(BestPathFound msg)
     {
+        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Void);
         Stash.UnstashAll();
         Sender.Tell(new PathFinderDone(msg.PathfinderId, msg.PathId, true));
@@ -81,6 +83,7 @@ public partial class PathfinderWorker
 
     public void BestPathFailedHandler(BestPathFailed msg)
     {
+        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Void);
         Stash.UnstashAll();
         if (msg.Exception is not null)
