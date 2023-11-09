@@ -85,8 +85,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
                 Role = "KEKW",
-                ShouldPassivateIdleEntities = true,
-                PassivateIdleEntityAfter = TimeSpan.FromSeconds(15)
+                ShouldPassivateIdleEntities = true
             })
             .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor())
             .WithShardRegion<PathfinderWorker>("PathfinderWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PathfinderWorker>(x), new MessageExtractor(), new ShardOptions()
