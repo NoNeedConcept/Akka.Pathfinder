@@ -1,9 +1,9 @@
-﻿using System.Reactive.Linq;
-using Akka.Actor;
-using Akka.Pathfinder.Core;
-using Akka.Pathfinder.Core.Messages;
+﻿using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
+using System.Reactive.Linq;
+using Akka.Pathfinder.Core;
 using Akka.Persistence;
+using Akka.Actor;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -23,20 +23,21 @@ public partial class PointWorker
         _state = PointWorkerState.FromConfig(msg.Config, _state?.State);
         PersistState();
         Become(Ready);
-        _mapManagerClient.Tell(new PointInitialized(msg.Config.Id));
     }
 
-    private void InitializePointHandler(InitializePoint msg)
+    private void InitializePointHandler(NEWInitializePoint msg)
     {
-        Become(Configure);
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
-        Self.Forward(new LocalPointConfig(msg.Config));
+        _state = PointWorkerState.FromInitialize(msg.PointId, msg.CollectionId);
+        PersistState();
+        Become(Configure);
+        _mapManagerClient.Tell(new PointInitialized(msg.PointId));
     }
 
     private void UpdatePointDirectionHandler(UpdatePointDirection msg)
     {
-        Become(Configure);
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        Become(Configure);
         var updatedConfig = msg.Config with
         {
             DirectionConfigs = _state.MergeDirectionConfigs(msg.Config.DirectionConfigs)
@@ -47,8 +48,8 @@ public partial class PointWorker
 
     private void ResetPointHandler(ResetPoint msg)
     {
-        Become(Configure);
         _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        Become(Configure);
         Self.Forward(new LocalPointConfig(msg.Config));
     }
 

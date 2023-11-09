@@ -1,7 +1,7 @@
-﻿using Akka.Actor;
+﻿using Akka.Pathfinder.Core.Messages;
 using Akka.Cluster.Sharding;
-using Akka.Pathfinder.Core.Messages;
 using Akka.Persistence;
+using Akka.Actor;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -9,16 +9,19 @@ public partial class PointWorker
 {
     private void Initialize()
     {
-        Command<InitializePoint>(InitializePointHandler);
+        _logger.Debug("[{PointId}][INITIALIZE]", EntityId);
+        Command<NEWInitializePoint>(InitializePointHandler);
         Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
+        CommandAny(msg => Stash.Stash());
     }
 
     private void Configure()
     {
-        _logger.Debug("[{PointId}][CONFIFURE]", EntityId);
-
+        _logger.Debug("[{PointId}][CONFIGURE]", EntityId);
         Command<LocalPointConfig>(LocalPointConfigHandler);
+        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
         CommandAny(msg => Stash.Stash());
+        OnConfigure();
     }
 
     private void Failure()
@@ -34,14 +37,12 @@ public partial class PointWorker
     private void Ready()
     {
         _logger.Debug("[{PointId}][READY]", EntityId);
-
         // Sender -> PathfinderWorker
         CommandAsync<FindPathRequest>(CreatePathPointRequestPathHandler);
         Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
         // Sender -> MapManager 
         Command<CostRequest>(CostRequestHandler);
         Command<PointCommandRequest>(PointCommandRequestHandler);
-        Command<InitializePoint>(InitializePointHandler);
         Command<UpdatePointDirection>(UpdatePointDirectionHandler);
         Command<ResetPoint>(ResetPointHandler);
         // Sender -> SnapshotStore

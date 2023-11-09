@@ -1,7 +1,7 @@
 using Akka.Pathfinder.Core.Messages;
-using Akka.Persistence;
 using Akka.Pathfinder.Core.States;
 using Akka.Pathfinder.Core;
+using Akka.Persistence;
 using Akka.Actor;
 
 namespace Akka.Pathfinder.Workers;

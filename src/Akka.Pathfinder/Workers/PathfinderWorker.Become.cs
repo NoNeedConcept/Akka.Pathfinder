@@ -1,6 +1,6 @@
-﻿using Akka.Actor;
+﻿using Akka.Pathfinder.Core.Messages;
 using Akka.Cluster.Sharding;
-using Akka.Pathfinder.Core.Messages;
+using Akka.Actor;
 
 namespace Akka.Pathfinder.Workers;
 

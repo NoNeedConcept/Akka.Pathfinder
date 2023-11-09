@@ -1,10 +1,9 @@
 ﻿using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
-using Akka.Persistence;
 using Akka.Pathfinder.Core.States;
-using Akka.Actor;
-using Akka.Cluster.Sharding;
 using Akka.Pathfinder.Core;
+using Akka.Persistence;
+using Akka.Actor;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -21,7 +20,6 @@ public partial class PointWorker : ReceivePersistentActor
     private readonly IActorRef _mapManagerClient = ActorRefs.Nobody;
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
-        Context.SetReceiveTimeout(TimeSpan.FromSeconds(20));
         EntityId = entityId;
         _serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
         _mapManagerClient = Context.System.GetRegistry().Get<MapManagerProxy>();
@@ -33,20 +31,30 @@ public partial class PointWorker : ReceivePersistentActor
         }
 
         Recover<SnapshotOffer>(RecoverSnapshotOffer);
+        CommandAny(msg => Stash.Stash());
     }
 
     protected override void OnReplaySuccess()
     {
         _logger.Debug("[{PointId}][RECOVER] SUCCESS", EntityId);
 
-        if (_state?.Initialize == true)
+        if (_state?.Loaded == true)
         {
             Become(Ready);
+        }
+        else if (_state?.Initialize == true)
+        {
+            Become(Configure);
         }
         else
         {
             Become(Initialize);
         }
+    }
+
+    private void OnConfigure()
+    {
+        // todo load config
     }
 
     protected override void PreRestart(Exception reason, object message)

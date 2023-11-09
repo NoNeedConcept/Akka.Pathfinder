@@ -21,6 +21,14 @@ public record PointWorkerState
     private ConcurrentDictionary<Guid, DateTime> _inactivePathfinders = new();
     private ConcurrentDictionary<Guid, int> _pathfinderPathCost = new();
 
+    public static PointWorkerState FromInitialize(int pointId, Guid collectionId)
+        => new(new Dictionary<Direction, DirectionConfig>())
+        {
+            PointId = pointId,
+            CollectionId = collectionId,
+            Initialize = true
+        };
+
     public static PointWorkerState FromSnapshot(PersistedPointWorkerState msg)
         => new(msg.DirectionConfigs)
         {
@@ -28,6 +36,7 @@ public record PointWorkerState
             Cost = msg.Cost,
             State = msg.State,
             Initialize = true,
+            Loaded = true
         };
 
     public static PointWorkerState FromConfig(PointConfig config, PointState? state)
@@ -37,6 +46,7 @@ public record PointWorkerState
             Cost = config.Cost,
             State = state ?? PointState.None,
             Initialize = true,
+            Loaded = true
         };
 
     public PointWorkerState(IReadOnlyDictionary<Direction, DirectionConfig> configs)
@@ -46,9 +56,13 @@ public record PointWorkerState
 
     public int PointId { get; internal set; } = 0;
 
+    public Guid CollectionId { get; internal set; }
+
     public uint Cost { get; internal set; } = 0;
 
     public bool Initialize { get; internal set; }
+
+    public bool Loaded { get; internal set; }
 
     public bool IsBlocked => State is PointState.Blocked;
 
@@ -204,7 +218,7 @@ public record PointWorkerState
         return results.OrderBy(x => x.Directions.Select(x => (int)x.Cost).Sum()).ToList();
     }
 
-    public PersistedPointWorkerState GetPersistenceState() => new(PointId, Cost, _directionConfigs.AsReadOnly(), State);
+    public PersistedPointWorkerState GetPersistenceState() => new(PointId, CollectionId, Cost, _directionConfigs.AsReadOnly(), State);
 
     private static Direction Invert(Direction direction) => direction switch
     {

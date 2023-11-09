@@ -7,7 +7,6 @@ public record PathFound(Guid PathfinderId, Guid PathId, PathFinderResult Result)
 public record BestPathFound(Guid PathfinderId, Guid PathId) : PathFinderRequest(PathfinderId);
 public record BestPathFailed(Guid PathfinderId, Exception Exception) : PathFinderRequest(PathfinderId);
 public record FickDichPatrick(Guid PathfinderId) : IPathfinderId;
-
 public record MapIsReady(Guid PathfinderId) : PathFinderRequest(PathfinderId);
 public abstract record PathFinderRequest(Guid PathfinderId) : IPathfinderId;
 
@@ -16,6 +15,5 @@ public enum PathFinderResult : byte
     Unknown,
     Success,
     PathBlocked,
-    LoopDetected,
     MindBlown
 }

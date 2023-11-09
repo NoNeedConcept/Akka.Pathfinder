@@ -34,3 +34,6 @@ public record InitializePoint(PointConfig Config) : PointRequest(Config.Id);
 public record UpdatePointDirection(PointConfig Config) : PointRequest(Config.Id);
 public record ResetPoint(PointConfig Config) : PointRequest(Config.Id);
 public record FindPathRequest(Guid PathfinderId, Guid PathId, int NextPointId, int TargetPointId, IReadOnlyList<PathPoint> Directions) : PointRequest(NextPointId);
+
+// new init process
+public record NEWInitializePoint(int PointId, Guid CollectionId);
