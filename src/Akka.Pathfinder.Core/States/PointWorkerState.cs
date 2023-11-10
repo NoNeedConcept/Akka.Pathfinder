@@ -199,7 +199,7 @@ public record PointWorkerState
     //     return success;
     // }
 
-    public IReadOnlyList<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
+    public IOrderedEnumerable<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
     {
         var results = new List<FindPathRequest>();
         var infoIds = request.Directions
@@ -215,7 +215,7 @@ public record PointWorkerState
             results.Add(findPathRequest);
         }
 
-        return results.OrderBy(x => x.Directions.Select(x => (int)x.Cost).Sum()).ToList();
+        return results.OrderByDescending(x => x.Directions.Select(x => (int)x.Cost).Sum());
     }
 
     public PersistedPointWorkerState GetPersistenceState() => new(PointId, CollectionId, Cost, _directionConfigs.AsReadOnly(), State);

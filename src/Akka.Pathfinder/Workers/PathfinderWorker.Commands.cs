@@ -1,6 +1,8 @@
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Actor;
+using Akka.Pathfinder.Core;
+using LanguageExt;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -11,7 +13,7 @@ public partial class PathfinderWorker
         _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         _state = PathfinderWorkerState.FromRequest(msg);
-        _sender = Sender;
+        _senderManagerClient.Forward(new SavePathfinderSender(msg.PathfinderId));
 
         IReadOnlyList<PathPoint> startPointList = new List<PathPoint>()
         {
@@ -20,6 +22,7 @@ public partial class PathfinderWorker
 
         var findPathRequest = new FindPathRequest(Guid.Parse(EntityId), Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList);
         _mapManagerClient.Tell(findPathRequest, Self);
+        PersistState();
     }
 
     private void FindPathRequestStarted(FindPathRequestStarted msg)
@@ -78,7 +81,7 @@ public partial class PathfinderWorker
         _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Void);
         Stash.UnstashAll();
-        Sender.Tell(new PathFinderDone(msg.PathfinderId, msg.PathId, true));
+        _senderManagerClient.Tell(new FowardToPathfinderSender(msg.PathfinderId, new PathFinderDone(msg.PathfinderId, msg.PathId, true)));
     }
 
     public void BestPathFailedHandler(BestPathFailed msg)
