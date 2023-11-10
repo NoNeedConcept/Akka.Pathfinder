@@ -32,4 +32,4 @@ public partial class PathfinderWorker : ReceivePersistentActor
         Command<PathFound>(FoundPathHandler);
         CommandAsync<PathfinderTimeout>(PathfinderTimeoutHandler);
     }
-}
+ }
