@@ -35,14 +35,4 @@
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="Always" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Features\Map2.feature.cs">
-      <DependentUpon>Map2.feature</DependentUpon>
-      <AutoGen>true</AutoGen>
-      <DesignTime>true</DesignTime>
-      <Visible>true</Visible>
-    </Compile>
-  </ItemGroup>
-
 </Project>

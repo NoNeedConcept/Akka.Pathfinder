@@ -31,7 +31,7 @@ public class CommonSteps
         Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
         var mapToLoad = new MapProvider().MapConfigs.GetValueOrDefault(mapId)!;
         using var scope = _akkaDriver.Host.Services.CreateScope();
-        scope.ServiceProvider.GetRequiredService<IMapConfigWriter>().AddOrUpdate(mapToLoad.Id, new MapConfig(Guid.NewGuid(), mapToLoad.Configs.Keys.ToList(), mapToLoad.Configs.Values.SelectMany(x => x).Count()));
+        scope.ServiceProvider.GetRequiredService<IMapConfigWriter>().AddOrUpdate(mapToLoad.Id, new MapConfig(Guid.NewGuid(), mapToLoad.PointConfigsIds, mapToLoad.Count));
         var pointConfigWriter = scope.ServiceProvider.GetRequiredService<IPointConfigWriter>();
         foreach (var (key, value) in mapToLoad.Configs)
         {
