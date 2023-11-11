@@ -11,7 +11,7 @@ public partial class PointWorker
 {
     private void PathfinderDeactivatedHandler(PathfinderDeactivated msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Debug("[{PointId}][{MessageType}][{PathfinderId}] received", EntityId, msg.GetType().Name, msg.PathfinderId);
         _state.AddInactivePathfinder(msg.PathfinderId);
         _state.RemovePathfinderPathCost(msg.PathfinderId);
         _state.RemoveOldPathfinderIds(TimeSpan.FromMinutes(10));

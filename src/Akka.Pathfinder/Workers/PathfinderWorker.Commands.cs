@@ -2,6 +2,7 @@ using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Actor;
 using LanguageExt;
+using Akka.Persistence;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -54,7 +55,7 @@ public partial class PathfinderWorker
         if (!_state.HasPathFound)
         {
             _logger.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", EntityId, _state.SourcePointId, _state.TargetPointId);
-            Sender.Tell(new PathFinderDone(msg.PathfinderId, Guid.Empty, false, "Frag mich doch nicht"));
+            _senderManagerClient.Tell(new ForwardToPathfinderSender(msg.PathfinderId, new PathFinderDone(msg.PathfinderId, Guid.Empty, false, "Frag mich doch nicht")));
             Become(Void);
             Stash.UnstashAll();
             return;
@@ -95,4 +96,12 @@ public partial class PathfinderWorker
 
         Sender.Tell(new PathFinderDone(msg.PathfinderId, Guid.Empty, false, "Frag mich doch nicht"));
     }
+
+    private void SaveSnapshotFailureHandler(SaveSnapshotFailure msg)
+    => _logger.Error("[{PathfinderId}] failed to create snapshot [{SequenceNr}]",
+            EntityId, msg.Metadata.SequenceNr);
+
+    private void SaveSnapshotSuccessHandler(SaveSnapshotSuccess msg)
+        => _logger.Information("[{PathfinderId}] successfully create snapshot [{SequenceNr}]",
+                EntityId, msg.Metadata.SequenceNr);
 }

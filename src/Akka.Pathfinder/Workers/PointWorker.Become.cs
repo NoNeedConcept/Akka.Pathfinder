@@ -42,6 +42,7 @@ public partial class PointWorker
         // Sender -> MapManager 
         Command<CostRequest>(CostRequestHandler);
         Command<PointCommandRequest>(PointCommandRequestHandler);
+        Command<InitializePoint>(InitializePointHandler);
         Command<UpdatePointDirection>(UpdatePointDirectionHandler);
         Command<ResetPoint>(ResetPointHandler);
         // Sender -> SnapshotStore

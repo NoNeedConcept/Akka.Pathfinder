@@ -15,3 +15,5 @@ Feature: Map1
         Given Map is 1
         When You are on Point 1 and have the direction 0 want to find a Path to Point 2 PathfinderId 1dff208f-7090-4c5f-bb61-b6bbc4e09a5c Seconds 1
         Then the path for PathfinderId 1dff208f-7090-4c5f-bb61-b6bbc4e09a5c should cost 420
+        When You are on Point 2 and have the direction 0 want to find a Path to Point 1 PathfinderId bf71b1b2-766f-4f25-8d3c-7ec9536fe9c0 Seconds 1
+        Then the path for PathfinderId bf71b1b2-766f-4f25-8d3c-7ec9536fe9c0 should cost 84

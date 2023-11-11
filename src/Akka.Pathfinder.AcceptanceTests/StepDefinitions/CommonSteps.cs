@@ -16,7 +16,7 @@ public class CommonSteps
 {
     private readonly ScenarioContext _context;
     private readonly AkkaDriver _akkaDriver;
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<CommonSteps>();
+    private readonly ILogger _logger = Log.Logger.ForContext<CommonSteps>();
 
     public CommonSteps(ScenarioContext context)
     {

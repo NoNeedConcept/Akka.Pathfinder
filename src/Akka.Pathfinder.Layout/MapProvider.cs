@@ -12,7 +12,7 @@ public class MapProvider
         {
             { 0, Map0()},
             { 1, Map1()},
-            { 2, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost, new MapSize(3, 3, 3), new Dictionary<Direction, uint>(), 15), true)},
+            { 2, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(3, 3, 3), new Dictionary<Direction, uint>(), 15), true)},
             { 3, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(15, 15, 15), new Dictionary<Direction, uint>(), 20), true)}
         };
 
