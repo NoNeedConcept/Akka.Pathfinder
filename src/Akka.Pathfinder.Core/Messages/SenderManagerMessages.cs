@@ -1,7 +1,4 @@
-﻿using Akka.Pathfinder.Core.Messages;
-
-namespace Akka.Pathfinder.Core;
+﻿namespace Akka.Pathfinder.Core.Messages;
 
 public record SavePathfinderSender(Guid PathfinderId);
-
-public record FowardToPathfinderSender(Guid PathfinderId, PathFinderDone Message);
+public record ForwardToPathfinderSender(Guid PathfinderId, PathFinderDone Message);

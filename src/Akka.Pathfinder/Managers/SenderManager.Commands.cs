@@ -1,5 +1,5 @@
 ﻿using Akka.Actor;
-using Akka.Pathfinder.Core;
+using Akka.Pathfinder.Core.Messages;
 
 namespace Akka.Pathfinder.Managers;
 
@@ -11,12 +11,13 @@ public partial class SenderManager
         _pathfinderSender.Add(msg.PathfinderId, Sender);
     }
 
-    private void FowardToPathfinderSenderHandler(FowardToPathfinderSender msg)
+    private void ForwardToPathfinderSenderHandler(ForwardToPathfinderSender msg)
     {
         _logger.Debug("[SenderManager][{MessageType}] received", msg.GetType().Name);
-        if(_pathfinderSender.TryGetValue(msg.PathfinderId, out var sender))
+        if (_pathfinderSender.TryGetValue(msg.PathfinderId, out var sender))
         {
             sender.Tell(msg.Message);
+            _pathfinderSender.Remove(msg.PathfinderId);
         }
     }
 }

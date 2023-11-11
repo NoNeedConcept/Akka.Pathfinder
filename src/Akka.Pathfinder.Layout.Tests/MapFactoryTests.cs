@@ -1,6 +1,3 @@
-using System.Diagnostics;
-using System.Linq;
-
 namespace Akka.Pathfinder.Layout.Tests;
 
 public class MapFactoryTests

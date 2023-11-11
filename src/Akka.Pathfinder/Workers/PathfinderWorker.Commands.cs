@@ -1,7 +1,6 @@
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Actor;
-using Akka.Pathfinder.Core;
 using LanguageExt;
 
 namespace Akka.Pathfinder.Workers;
@@ -81,7 +80,7 @@ public partial class PathfinderWorker
         _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Void);
         Stash.UnstashAll();
-        _senderManagerClient.Tell(new FowardToPathfinderSender(msg.PathfinderId, new PathFinderDone(msg.PathfinderId, msg.PathId, true)));
+        _senderManagerClient.Tell(new ForwardToPathfinderSender(msg.PathfinderId, new PathFinderDone(msg.PathfinderId, msg.PathId, true)));
     }
 
     public void BestPathFailedHandler(BestPathFailed msg)

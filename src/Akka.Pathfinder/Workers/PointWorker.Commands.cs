@@ -79,7 +79,7 @@ public partial class PointWorker
         };
     }
 
-    private async Task CreatePathPointRequestPathHandler(FindPathRequest msg)
+    private async Task FindPathRequestHandler(FindPathRequest msg)
     {
         _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
 

@@ -1,5 +1,5 @@
 ﻿using Akka.Actor;
-using Akka.Pathfinder.Core;
+using Akka.Pathfinder.Core.Messages;
 
 namespace Akka.Pathfinder.Managers;
 
@@ -10,6 +10,6 @@ public partial class SenderManager : ReceiveActor
     public SenderManager()
     {
         Receive<SavePathfinderSender>(SavePathfinderSenderHandler);
-        Receive<FowardToPathfinderSender>(FowardToPathfinderSenderHandler);
+        Receive<ForwardToPathfinderSender>(ForwardToPathfinderSenderHandler);
     }
 }

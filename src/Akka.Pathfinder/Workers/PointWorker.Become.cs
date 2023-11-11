@@ -37,7 +37,7 @@ public partial class PointWorker
     {
         _logger.Debug("[{PointId}][READY]", EntityId);
         // Sender -> PathfinderWorker
-        CommandAsync<FindPathRequest>(CreatePathPointRequestPathHandler);
+        CommandAsync<FindPathRequest>(FindPathRequestHandler);
         Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
         // Sender -> MapManager 
         Command<CostRequest>(CostRequestHandler);

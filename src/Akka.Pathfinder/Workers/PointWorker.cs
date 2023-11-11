@@ -54,7 +54,7 @@ public partial class PointWorker : ReceivePersistentActor
     {
         _pointConfigReader
         .Get(_state.CollectionId, _state.PointId)
-        .PipeTo(Self, Self, config => config is not null ? new LocalPointConfig(config): new LocalPointConfig(null!));
+        .PipeTo(Self, Self, config => config is not null ? new LocalPointConfig(config) : new LocalPointConfig(null!));
     }
 
     protected override void PreRestart(Exception reason, object message)

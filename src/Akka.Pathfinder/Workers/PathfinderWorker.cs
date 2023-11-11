@@ -1,4 +1,3 @@
-using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Pathfinder.Core;
 using Akka.Persistence;
