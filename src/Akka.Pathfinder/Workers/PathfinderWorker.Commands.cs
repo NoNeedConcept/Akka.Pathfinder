@@ -28,7 +28,7 @@ public partial class PathfinderWorker
     private void FindPathRequestStarted(FindPathRequestStarted msg)
     {
         _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
-        Context.System.Scheduler.ScheduleTellOnce(_state.Timeout, Self, new PathfinderTimeout(_state.PathfinderId), _sender);
+        Context.System.Scheduler.ScheduleTellOnce(_state.Timeout, Self, new PathfinderTimeout(_state.PathfinderId), Self);
     }
 
     public void FoundPathHandler(PathFound msg)
@@ -37,7 +37,7 @@ public partial class PathfinderWorker
 
         switch (msg.Result)
         {
-            case PathFinderResult.Success:
+            case PathfinderResult.Success:
                 _state.IncrementFoundPathCounter();
                 break;
             default:
@@ -65,7 +65,7 @@ public partial class PathfinderWorker
 
         await _pathReader
         .GetByPathfinderIdAsync(msg.PathfinderId)
-        .PipeTo(Self, Sender,
+        .PipeTo(Self, Self,
         result =>
         {
             var paths = result.ToList();

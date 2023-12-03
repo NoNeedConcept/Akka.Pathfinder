@@ -16,8 +16,6 @@ public partial class PathfinderWorker : ReceivePersistentActor
     private readonly IActorRef _senderManagerClient = ActorRefs.Nobody;
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PathfinderWorker>();
     private PathfinderWorkerState _state = null!;
-    private IActorRef _sender = ActorRefs.Nobody;
-
 
     public PathfinderWorker(string entityId, IServiceScopeFactory serviceScopeFactory)
     {

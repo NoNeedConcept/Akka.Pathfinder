@@ -116,9 +116,9 @@ public record PointWorkerState
 
     public bool IsBlockedAndGetResponse(FindPathRequest request, out PathFound response)
     {
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.PathBlocked);
+        response = new PathFound(request.PathfinderId, request.PathId, PathfinderResult.PathBlocked);
         if (IsBlocked) return true;
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
+        response = new PathFound(request.PathfinderId, request.PathId, PathfinderResult.MindBlown);
         if (_directionConfigs.IsEmpty && PointId != request.TargetPointId) return true;
         response = null!;
         return false;
@@ -159,11 +159,11 @@ public record PointWorkerState
         if (!success)
         {
             _logger.Debug("[{PathId}][{PathfinderId}] update path failed", request.PathId, request.PathfinderId);
-            response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
+            response = new PathFound(request.PathfinderId, request.PathId, PathfinderResult.MindBlown);
             return true;
         }
 
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.Success);
+        response = new PathFound(request.PathfinderId, request.PathId, PathfinderResult.Success);
         return true;
     }
 

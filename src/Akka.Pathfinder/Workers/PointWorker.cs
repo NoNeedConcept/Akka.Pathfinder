@@ -13,10 +13,11 @@ public partial class PointWorker : ReceivePersistentActor
 {
     public override string PersistenceId => $"PointWorker_{EntityId}";
     public string EntityId;
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
-    private PointWorkerState _state = null!;
+
     private readonly IPointConfigReader _pointConfigReader;
     private readonly IPathWriter _pathWriter;
+    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
+    private PointWorkerState _state = null!;
 
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
