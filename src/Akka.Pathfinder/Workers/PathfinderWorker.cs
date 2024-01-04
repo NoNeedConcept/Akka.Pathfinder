@@ -21,19 +21,20 @@ public partial class PathfinderWorker : ReceivePersistentActor
     {
         EntityId = entityId;
         using var scope = serviceScopeFactory.CreateScope();
-        _pathReader = scope.ServiceProvider.GetRequiredService<IPathReader>();
+        var provider = scope.ServiceProvider;
+        _pathReader = provider.GetRequiredService<IPathReader>();
 
         var registry = Context.System.GetRegistry();
         _mapManagerClient = registry.Get<MapManagerProxy>();
         _senderManagerClient = registry.Get<SenderManagerProxy>();
-        
+
         Recover<SnapshotOffer>(RecoverSnapshotOffer);
         CommandAny(msg => Stash.Stash());
     }
 
     protected override void OnReplaySuccess()
     {
-        _logger.Debug("[{PathfinderId}][RECOVER] SUCCESS", EntityId);
+        _logger.Information("[{PathfinderId}][RECOVER] SUCCESS", EntityId);
         Become(Ready);
     }
 

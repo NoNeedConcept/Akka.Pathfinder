@@ -1,4 +1,6 @@
-﻿namespace Akka.Pathfinder.Workers;
+﻿using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
+
+namespace Akka.Pathfinder.Workers;
 
 public partial class PointWorker
 {
@@ -8,6 +10,7 @@ public partial class PointWorker
         SaveSnapshot(persistedWorkerState);
     }
 
-    private (bool Success, Guid PathId) PersistPath(Core.Persistence.Data.Path path)
-        => (_pathWriter.AddOrUpdate(path), path.Id);
+    private bool PersistPath(Path path)
+        => _pathWriter.Write(path);
 }
+

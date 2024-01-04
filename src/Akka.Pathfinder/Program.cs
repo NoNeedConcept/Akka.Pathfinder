@@ -80,19 +80,22 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
             })
             .WithSqlPersistence(connectionString!, LinqToDB.ProviderName.PostgreSQL15, PersistenceMode.Both, autoInitialize: true, tagStorageMode: TagMode.Both)
             .WithJournalAndSnapshot(shardingJournalOptions, shardingSnapshotOptions)
-            .WithShardRegion<PointWorker>("PointWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PointWorker>(x), new MessageExtractor(), new ShardOptions()
+            .WithShardRegion<PointWorker>("PointWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PointWorker>(x), new MessageExtractor(3000), new ShardOptions()
             {
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
                 Role = "KEKW",
-                ShouldPassivateIdleEntities = true
+                ShouldPassivateIdleEntities = true,
+                PassivateIdleEntityAfter = TimeSpan.FromMinutes(1)
             })
-            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor())
+            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor(3000))
             .WithShardRegion<PathfinderWorker>("PathfinderWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PathfinderWorker>(x), new MessageExtractor(), new ShardOptions()
             {
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
-                Role = "KEKW"
+                Role = "KEKW",
+                ShouldPassivateIdleEntities = true,
+                PassivateIdleEntityAfter = TimeSpan.FromMinutes(1)
             })
             .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor())
             .WithSingleton<MapManager>("MapManager", (_, _, dependecyResolver) => dependecyResolver.Props<MapManager>(), new ClusterSingletonOptions() { Role = "KEKW" }, false)
@@ -103,6 +106,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
 
 
 var host = builder.Build();
+await CreateIndexes(host.Services);
 host.UseHealthChecks("/health/ready", new HealthCheckOptions() { AllowCachingResponses = false, Predicate = _ => true });
 await host.RunAsync().ConfigureAwait(false);
 
@@ -118,15 +122,13 @@ public partial class Program
         if (Interlocked.Increment(ref _registered) == 1)
             BsonShit.Register();
     }
-}
 
-namespace Akka.Pathfinder
-{
-    public record PointWorkerProxy;
+    private static async Task CreateIndexes(IServiceProvider provider)
+    {
+        var mapConfigs = provider.GetRequiredService<IMongoCollection<MapConfig>>();
+        var paths = provider.GetRequiredService<IMongoCollection<Path>>();
 
-    public record PathfinderProxy;
-
-    public record MapManagerProxy;
-
-    public record SenderManagerProxy;
+        await mapConfigs.CreateIndexAsync(builder => builder.Ascending(item => item.Id));
+        await paths.CreateIndexAsync(builder => builder.Ascending(item => item.Id).Ascending(item => item.PathfinderId));
+    }
 }

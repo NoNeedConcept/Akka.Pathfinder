@@ -41,12 +41,13 @@ public class EnvironmentSetupHooks
         AkkaPathfinder.SetEnvironmentVariable("mongodb", mongoDBString);
         AkkaPathfinder.SetEnvironmentVariable("postgre", postgreSQLString);
 
+        AkkaDriver = new();
         await AkkaDriver.InitializeAsync();
 
         PathfinderApplicationFactory = new();
         await PathfinderApplicationFactory.InitializeAsync();
 
-        await Task.Delay(2500);
+        await Task.Delay(5000);
     }
 
     [AfterScenario]

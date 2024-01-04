@@ -10,7 +10,7 @@ public partial class PathfinderWorker
 {
     public void FindPathHandler(PathfinderStartRequest msg)
     {
-        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         _state = PathfinderWorkerState.FromRequest(msg);
         _senderManagerClient.Forward(new SavePathfinderSender(msg.PathfinderId));
@@ -27,13 +27,13 @@ public partial class PathfinderWorker
 
     private void FindPathRequestStarted(FindPathRequestStarted msg)
     {
-        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Context.System.Scheduler.ScheduleTellOnce(_state.Timeout, Self, new PathfinderTimeout(_state.PathfinderId), Self);
     }
 
     public void FoundPathHandler(PathFound msg)
     {
-        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         switch (msg.Result)
         {
@@ -48,7 +48,7 @@ public partial class PathfinderWorker
 
     public async Task PathfinderTimeoutHandler(PathfinderTimeout msg)
     {
-        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(WhilePathEvaluation);
         Context.System.EventStream.Publish(new PathfinderDeactivated(_state.PathfinderId));
 
@@ -78,7 +78,7 @@ public partial class PathfinderWorker
 
     public void BestPathFoundHandler(BestPathFound msg)
     {
-        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Void);
         Stash.UnstashAll();
         _senderManagerClient.Tell(new ForwardToPathfinderSender(msg.PathfinderId, new PathFinderDone(msg.PathfinderId, msg.PathId, true)));
@@ -86,7 +86,7 @@ public partial class PathfinderWorker
 
     public void BestPathFailedHandler(BestPathFailed msg)
     {
-        _logger.Debug("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PathfinderId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Void);
         Stash.UnstashAll();
         if (msg.Exception is not null)

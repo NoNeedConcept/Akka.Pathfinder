@@ -5,22 +5,28 @@ namespace Akka.Pathfinder.Core.Services;
 
 public interface IPointConfigWriter : IPointConfigReader
 {
-    public void AddPointConfigs(Guid CollectionId, List<PointConfig> pointConfigs);
-    public void AddPointConfig(Guid CollectionId, PointConfig pointConfig);
+    public Task AddPointConfigsAsync(Guid collectionId, List<PointConfig> pointConfigs, CancellationToken cancellationToken = default);
+    public Task AddPointConfigAsync(Guid collectionId, PointConfig pointConfig, CancellationToken cancellationToken = default);
 }
+
 public class PointConfigWriter : PointConfigReader, IPointConfigWriter
 {
-
     public PointConfigWriter(IMongoDatabase database) : base(database)
     { }
 
-    public void AddPointConfigs(Guid CollectionId, List<PointConfig> pointConfigs)
-        => Database
-        .GetCollection<PointConfig>(CollectionId.ToString())
-        .InsertMany(pointConfigs, new InsertManyOptions() { IsOrdered = true });
+    public async Task AddPointConfigsAsync(Guid collectionId, List<PointConfig> pointConfigs, CancellationToken cancellationToken = default)
+    {
+        var collection = Database.GetCollection<PointConfig>(collectionId.ToString());
 
-    public void AddPointConfig(Guid CollectionId, PointConfig pointConfig)
-        => Database
-        .GetCollection<PointConfig>(CollectionId.ToString())
-        .InsertOne(pointConfig);
+        await collection.CreateIndexAsync(builder => builder.Ascending(item => item.Id), cancellationToken);
+        await collection.InsertManyAsync(pointConfigs, new InsertManyOptions() { IsOrdered = true }, cancellationToken);
+    }
+
+    public async Task AddPointConfigAsync(Guid collectionId, PointConfig pointConfig, CancellationToken cancellationToken = default)
+    {
+        var collection = Database.GetCollection<PointConfig>(collectionId.ToString());
+
+        await collection.CreateIndexAsync(builder => builder.Ascending(item => item.Id), cancellationToken);
+        await collection.InsertOneAsync(pointConfig, cancellationToken: cancellationToken);
+    }
 }

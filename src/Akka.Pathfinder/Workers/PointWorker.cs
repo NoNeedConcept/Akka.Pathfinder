@@ -19,10 +19,10 @@ public partial class PointWorker : ReceivePersistentActor
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
     private PointWorkerState _state = null!;
 
-    public PointWorker(string entityId, IServiceProvider serviceProvider)
+    public PointWorker(string entityId, IServiceScopeFactory serviceScopeFactory)
     {
         EntityId = entityId;
-        using var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
+        using var scope = serviceScopeFactory.CreateScope();
         var provider = scope.ServiceProvider;
         _pointConfigReader = provider.GetRequiredService<IPointConfigReader>();
         _pathWriter = provider.GetRequiredService<IPathWriter>();

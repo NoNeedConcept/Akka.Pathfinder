@@ -1,23 +1,25 @@
 ﻿using Akka.Pathfinder.Core.Configs;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace Akka.Pathfinder.Core;
 
 public interface IMapConfigReader
 {
-    IQueryable<MapConfig> Get();
-    MapConfig Get(Guid MapId);
+    IMongoQueryable<MapConfig> Get();
+    Task<MapConfig> GetAsync(Guid mapId, CancellationToken cancellationToken = default);
 }
 
 public class MapConfigReader : IMapConfigReader
 {
-    protected IMongoCollection<MapConfig> Collection { get; init; }
-    public MapConfigReader(IMongoCollection<MapConfig> collection) 
+    public MapConfigReader(IMongoCollection<MapConfig> collection)
         => Collection = collection;
 
-    public IQueryable<MapConfig> Get()
+    protected IMongoCollection<MapConfig> Collection { get; }
+
+    public IMongoQueryable<MapConfig> Get()
         => Collection.AsQueryable();
 
-    public MapConfig Get(Guid MapId)
-        => Get().Single(x => x.Id == MapId);
+    public Task<MapConfig> GetAsync(Guid mapId, CancellationToken cancellationToken = default)
+        => Get().Where(x => x.Id == mapId).SingleOrDefaultAsync(cancellationToken);
 }

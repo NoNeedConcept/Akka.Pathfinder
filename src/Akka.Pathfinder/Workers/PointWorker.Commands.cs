@@ -11,7 +11,7 @@ public partial class PointWorker
 {
     private void PathfinderDeactivatedHandler(PathfinderDeactivated msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}][{PathfinderId}] received", EntityId, msg.GetType().Name, msg.PathfinderId);
+        _logger.Verbose("[{PointId}][{MessageType}][{PathfinderId}] received", EntityId, msg.GetType().Name, msg.PathfinderId);
         _state.AddInactivePathfinder(msg.PathfinderId);
         _state.RemovePathfinderPathCost(msg.PathfinderId);
         _state.RemoveOldPathfinderIds(TimeSpan.FromMinutes(10));
@@ -19,7 +19,7 @@ public partial class PointWorker
 
     private void LocalPointConfigHandler(LocalPointConfig msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         _state = PointWorkerState.FromConfig(msg.Config, _state?.State);
         PersistState();
         Become(Ready);
@@ -27,7 +27,7 @@ public partial class PointWorker
 
     private void InitializePointHandler(InitializePoint msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         _state = PointWorkerState.FromInitialize(msg.PointId, msg.CollectionId);
         PersistState();
         Become(Configure);
@@ -35,7 +35,7 @@ public partial class PointWorker
 
     private void UpdatePointDirectionHandler(UpdatePointDirection msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Configure);
         var updatedConfig = msg.Config with
         {
@@ -47,14 +47,14 @@ public partial class PointWorker
 
     private void ResetPointHandler(ResetPoint msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Configure);
         Self.Forward(new LocalPointConfig(msg.Config));
     }
 
     private void CostRequestHandler(CostRequest msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         var success = msg switch
         {
@@ -69,7 +69,7 @@ public partial class PointWorker
 
     private void PointCommandRequestHandler(PointCommandRequest msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         _ = msg switch
         {
@@ -114,10 +114,8 @@ public partial class PointWorker
     }
 
     private void SaveSnapshotFailureHandler(SaveSnapshotFailure msg)
-        => _logger.Error("[{PointId}] failed to create snapshot [{SequenceNr}]",
-                EntityId, msg.Metadata.SequenceNr);
+        => _logger.Error("[{PointId}] failed to create snapshot [{SequenceNr}]", EntityId, msg.Metadata.SequenceNr);
 
     private void SaveSnapshotSuccessHandler(SaveSnapshotSuccess msg)
-        => _logger.Information("[{PointId}] successfully create snapshot [{SequenceNr}]",
-                EntityId, msg.Metadata.SequenceNr);
+        => _logger.Information("[{PointId}] successfully create snapshot [{SequenceNr}]", EntityId, msg.Metadata.SequenceNr);
 }

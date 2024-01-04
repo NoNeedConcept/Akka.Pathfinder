@@ -41,7 +41,9 @@ public class PathfinderWorkerState
 
     public bool HasPathFound => _counter != 0;
 
-    public void IncrementFoundPathCounter() => ++_counter;
+    public void IncrementFoundPathCounter() 
+        => ++_counter;
 
-    public PersistedPathfinderWorkerState GetPersistenceState() => new(PathfinderId, StartDirection, SourcePointId, TargetPointId, Timeout, _counter);
+    public PersistedPathfinderWorkerState GetPersistenceState() 
+        => new(PathfinderId, StartDirection, SourcePointId, TargetPointId, Timeout, _counter);
 }

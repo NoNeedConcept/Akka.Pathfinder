@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Layout", "A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Layout.Tests", "Akka.Pathfinder.Layout.Tests\Akka.Pathfinder.Layout.Tests.csproj", "{247E513D-2636-428A-8AE9-914A7857D527}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Algorithms", "Akka.Pathfinder.Algorithms\Akka.Pathfinder.Algorithms.csproj", "{A344E7AA-C0ED-4575-9DAA-825C657236A2}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,10 +39,6 @@ Global
 		{247E513D-2636-428A-8AE9-914A7857D527}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{247E513D-2636-428A-8AE9-914A7857D527}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{247E513D-2636-428A-8AE9-914A7857D527}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A344E7AA-C0ED-4575-9DAA-825C657236A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A344E7AA-C0ED-4575-9DAA-825C657236A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A344E7AA-C0ED-4575-9DAA-825C657236A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A344E7AA-C0ED-4575-9DAA-825C657236A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

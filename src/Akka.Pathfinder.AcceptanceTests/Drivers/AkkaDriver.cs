@@ -48,7 +48,6 @@ public class AkkaDriver : Hosting.TestKit.TestKit
     {
         builder
             .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor())
-            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor())
             .WithSingletonProxy<MapManagerProxy>("MapManager", new ClusterSingletonOptions() { Role = "KEKW" });
     }
 
@@ -73,17 +72,10 @@ public class AkkaDriver : Hosting.TestKit.TestKit
         pathfinderClient.Tell(request, TestActor);
     }
 
-    public void TellPointWorker(object request)
-    {
-        var pointWorkerClient = Host.Services.GetRequiredService<IActorRegistry>().Get<PointWorkerProxy>();
-        pointWorkerClient.Tell(request, TestActor);
-    }
-
     public void TellMapManager(object request)
     {
         var mapManagerClient = Host.Services.GetRequiredService<IActorRegistry>().Get<MapManagerProxy>();
         mapManagerClient.Tell(request, TestActor);
-        
     }
 
     public T Expect<T>(int seconds) => ExpectMsg<T>(TimeSpan.FromSeconds(seconds));

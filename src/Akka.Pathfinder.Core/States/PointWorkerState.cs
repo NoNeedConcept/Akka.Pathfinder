@@ -149,13 +149,13 @@ public record PointWorkerState
         return false;
     }
 
-    public bool TryIsArrivedTargetPoint(FindPathRequest request, Func<Path, (bool, Guid)> writer, out PathFound response)
+    public bool TryIsArrivedTargetPoint(FindPathRequest request, Func<Path, bool> writer, out PathFound response)
     {
         response = null!;
         if (!request.TargetPointId.Equals(PointId)) return false;
         var paths = request.Directions.ToList();
         var path = new Path(request.PathId, request.PathfinderId, paths);
-        var (success, pathId) = writer(path);
+        var success = writer(path);
         if (!success)
         {
             _logger.Debug("[{PathId}][{PathfinderId}] update path failed", request.PathId, request.PathfinderId);
@@ -238,3 +238,5 @@ public static class DictionaryExtensions
     public static void RemoveAll<TKey, TValue>(this IDictionary<TKey, TValue> dic, Func<TKey, TValue, bool> predicate)
         => dic.Where(pair => predicate(pair.Key, pair.Value)).ForEach(x => dic.Remove(x));
 }
+
+internal record PersistResult(bool Success, Guid PathId);

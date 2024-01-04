@@ -10,7 +10,7 @@ public partial class PathfinderWorker
     {
         try
         {
-            _logger.Debug("[{PathfinderId}][RECOVER][SnapshotOffer<{SnapshotType}>][{SequenceNr}]",
+            _logger.Information("[{PathfinderId}][RECOVER][SnapshotOffer<{SnapshotType}>][{SequenceNr}]",
                     EntityId, msg.Snapshot.GetType().Name, msg.Metadata.SequenceNr);
 
             if (msg.Snapshot is PersistedPathfinderWorkerState persisted)

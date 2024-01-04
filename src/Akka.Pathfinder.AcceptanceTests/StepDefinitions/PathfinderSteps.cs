@@ -6,7 +6,6 @@ using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using TechTalk.SpecFlow;
-using TechTalk.SpecFlow.Infrastructure;
 
 namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
 

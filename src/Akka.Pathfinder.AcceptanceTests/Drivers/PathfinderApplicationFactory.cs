@@ -52,12 +52,12 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         var overallTimeoutPolicy = Policy.TimeoutAsync(timeout.Value);
         var customPolicy = Policy
             .Handle<Exception>()
-            .WaitAndRetryAsync(retry, _ => delay.Value,
-                (ex, span, retries) =>
+            .WaitAndRetryAsync(
+                retry,
+                _ => delay.Value,
+                (ex, span, index, _) =>
                 {
-                    Log.Error(ex,
-                        "[Polly][{Retries}] Request failed. Trying again in {TimeSpan} seconds.",
-                        retries.Count, span);
+                    Log.Error("[Polly][{Retries}] Request failed. Trying again in {TimeSpan} seconds.", index, span);
                 });
 
         var policy = overallTimeoutPolicy.WrapAsync(customPolicy);

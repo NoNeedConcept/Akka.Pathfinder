@@ -26,20 +26,21 @@ public class CommonSteps
     }
 
     [Given(@"Map is (.*)")]
-    public void GivenMapIs(int mapId)
+    public async Task GivenMapIs(int mapId)
     {
-        Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
+        _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
         var mapToLoad = new MapProvider().MapConfigs.GetValueOrDefault(mapId)!;
         using var scope = _akkaDriver.Host.Services.CreateScope();
-        scope.ServiceProvider.GetRequiredService<IMapConfigWriter>().AddOrUpdate(mapToLoad.Id, new MapConfig(Guid.NewGuid(), mapToLoad.PointConfigsIds, mapToLoad.Count));
+        var mapConfigWriter = scope.ServiceProvider.GetRequiredService<IMapConfigWriter>();
+        await mapConfigWriter.WriteAsync(new MapConfig(mapToLoad.Id, mapToLoad.PointConfigsIds, mapToLoad.Count));
         var pointConfigWriter = scope.ServiceProvider.GetRequiredService<IPointConfigWriter>();
         foreach (var (key, value) in mapToLoad.Configs)
         {
-            pointConfigWriter.AddPointConfigs(key, value);
+            await pointConfigWriter.AddPointConfigsAsync(key, value);
         }
-        _akkaDriver.TellMapManager(new LoadMap(mapToLoad.Id));
-        _ = _akkaDriver.Expect<MapLoaded>(15000);
 
-        Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapLoaded", mapId);
+        _akkaDriver.TellMapManager(new LoadMap(mapToLoad.Id));
+        _akkaDriver.Expect<MapLoaded>(15000);
+        _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapLoaded");
     }
 }

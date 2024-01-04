@@ -6,7 +6,8 @@ namespace Akka.Pathfinder.Managers;
 public partial class MapManager : ReceivePersistentActor
 {
     private void Ready()
-    {
+    {   
+        _logger.Information("[MapManager][READY]");
         CommandAsync<LoadMap>(LoadMapHandler);
         CommandAsync<UpdateMap>(UpdateMapHandler);
         CommandAsync<ResetMap>(ResetMapHandler);

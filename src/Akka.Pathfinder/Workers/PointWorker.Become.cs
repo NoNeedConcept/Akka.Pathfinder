@@ -9,7 +9,7 @@ public partial class PointWorker
 {
     private void Initialize()
     {
-        _logger.Debug("[{PointId}][INITIALIZE]", EntityId);
+        _logger.Information("[{PointId}][INITIALIZE]", EntityId);
         Command<InitializePoint>(InitializePointHandler);
         Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
         CommandAny(msg => Stash.Stash());
@@ -17,7 +17,7 @@ public partial class PointWorker
 
     private void Configure()
     {
-        _logger.Debug("[{PointId}][CONFIGURE]", EntityId);
+        _logger.Information("[{PointId}][CONFIGURE]", EntityId);
         Command<LocalPointConfig>(LocalPointConfigHandler);
         CommandAny(msg => Stash.Stash());
         OnConfigure();
@@ -25,7 +25,7 @@ public partial class PointWorker
 
     private void Failure()
     {
-        _logger.Debug("[{PointId}][FAILURE]", EntityId);
+        _logger.Information("[{PointId}][FAILURE]", EntityId);
         Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
         CommandAny(msg =>
         {
@@ -35,7 +35,7 @@ public partial class PointWorker
 
     private void Ready()
     {
-        _logger.Debug("[{PointId}][READY]", EntityId);
+        _logger.Information("[{PointId}][READY]", EntityId);
         // Sender -> PathfinderWorker
         CommandAsync<FindPathRequest>(FindPathRequestHandler);
         Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);

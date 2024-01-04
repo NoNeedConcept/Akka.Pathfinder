@@ -10,7 +10,7 @@ public partial class PointWorker
     {
         try
         {
-            _logger.Debug("[{PointId}][RECOVER][SnapshotOffer<{SnapshotType}>][{SequenceNr}]",
+            _logger.Information("[{PointId}][RECOVER][SnapshotOffer<{SnapshotType}>][{SequenceNr}]",
                     EntityId, msg.Snapshot.GetType().Name, msg.Metadata.SequenceNr);
 
             if (msg.Snapshot is PersistedPointWorkerState persisted)
