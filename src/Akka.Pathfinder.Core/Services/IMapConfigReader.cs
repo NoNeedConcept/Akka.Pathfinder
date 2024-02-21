@@ -1,29 +1,25 @@
 ﻿using Akka.Pathfinder.Core.Configs;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace Akka.Pathfinder.Core;
 
 public interface IMapConfigReader
 {
-    IQueryable<MapConfig> Get();
-    IQueryable<PointConfig> Get(Guid MapId);
-    IQueryable<PointConfig> GetPointWithChanges(Guid MapId);
+    IMongoQueryable<MapConfig> Get();
+    Task<MapConfig> GetAsync(Guid mapId, CancellationToken cancellationToken = default);
 }
 
 public class MapConfigReader : IMapConfigReader
 {
-    protected IMongoCollection<MapConfig> Collection { get; init; }
-    protected IMongoDatabase Database { get; init; }
-    public MapConfigReader(IMongoCollection<MapConfig> collection, IMongoDatabase database)
-    {
-        Collection = collection;
-        Database = database;
-    }
+    public MapConfigReader(IMongoCollection<MapConfig> collection)
+        => Collection = collection;
 
-    public IQueryable<MapConfig> Get() => Collection.AsQueryable();
+    protected IMongoCollection<MapConfig> Collection { get; }
 
-    public IQueryable<PointConfig> Get(Guid MapId) 
-    => Get().Single(x => x.Id == MapId).PointConfigsIds.SelectMany(x => Database.GetCollection<PointConfig>(x.ToString()).AsQueryable()).AsQueryable();
+    public IMongoQueryable<MapConfig> Get()
+        => Collection.AsQueryable();
 
-    public IQueryable<PointConfig> GetPointWithChanges(Guid MapId) => Get(MapId).Where(x => x.HasChanges);
+    public Task<MapConfig> GetAsync(Guid mapId, CancellationToken cancellationToken = default)
+        => Get().Where(x => x.Id == mapId).SingleOrDefaultAsync(cancellationToken);
 }

@@ -1,16 +1,8 @@
 namespace Akka.Pathfinder.Core.Messages;
 
-public record LoadMap(Guid MapId);
-public record MapLoaded(Guid MapId);
-public record UpdateMap(Guid MapId);
-public record ResetMap(Guid MapId);
+public record LoadMap(Guid MapId) : MapRequestBase<MapLoaded>();
+public record MapLoaded(Guid RequestId, Guid MapId) : ResponseBase(RequestId);
+public record UpdateMap(Guid MapId) : MapRequestBase<MapUpdated>();
+public record MapUpdated(Guid RequestId, Guid MapId) : ResponseBase(RequestId);
 
-public record IsMapReady(Guid PathFinderId);
-
-public abstract record AllPoints();
-
-public record AllPointsInitialized() : AllPoints;
-
-public record NotAllPointsInitialized() : AllPoints;
-
-public record PointInitialized(int PointId);
+public abstract record MapRequestBase<TRequest>() : RequestBase<TRequest>(Guid.NewGuid()), IMapManagerRequest<TRequest> where TRequest : IResponse;

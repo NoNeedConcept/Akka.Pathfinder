@@ -1,9 +1,11 @@
 using System.Net;
-using Google.Protobuf.WellKnownTypes;
+using Grpc.Net.Client;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Polly;
 using Polly.Timeout;
 using Serilog;
+using static Akka.Pathfinder.Grpc.MapManager;
+using static Akka.Pathfinder.Grpc.Pathfinder;
 
 namespace Akka.Pathfinder.AcceptanceTests.Drivers;
 
@@ -26,7 +28,7 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
 
         var cts = new CancellationTokenSource();
         cts.CancelAfter(TimeSpan.FromSeconds(120));
-        var isReady = await IsUrlAsync(client, "/health/ready", 20, TimeSpan.FromSeconds(2), TimeSpan.FromMinutes(1), cancellationToken: cts.Token);
+        var isReady = await IsUrlAsync(client, "/health/ready", 20, TimeSpan.FromSeconds(15), TimeSpan.FromMinutes(1), cancellationToken: cts.Token);
         if (!isReady)
         {
             Log.Fatal("[TEST][PathfinderApplicationFactory] application NOT healthy!");
@@ -42,6 +44,12 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         await base.DisposeAsync();
     }
 
+    public GrpcChannel GetGrpcChannel() => GrpcChannel.ForAddress(Server.BaseAddress, new GrpcChannelOptions { HttpHandler = Server.CreateHandler() });
+
+    public MapManagerClient GetMapManagerClient() => new(GetGrpcChannel());
+
+    public PathfinderClient GetPathfinderClient() => new(GetGrpcChannel());
+
     public static async Task<bool> IsUrlAsync(HttpClient client, string relativeUri, int retry = 5,
         TimeSpan? delay = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
@@ -53,12 +61,12 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         var overallTimeoutPolicy = Policy.TimeoutAsync(timeout.Value);
         var customPolicy = Policy
             .Handle<Exception>()
-            .WaitAndRetryAsync(retry, _ => delay.Value,
-                (ex, span, retries) =>
+            .WaitAndRetryAsync(
+                retry,
+                _ => delay.Value,
+                (ex, span, index, _) =>
                 {
-                    Log.Error(ex,
-                        "[Polly][{Retries}] Request failed. Trying again in {TimeSpan} seconds.",
-                        retries.Count, span);
+                    Log.Error("[Polly][{Retries}] Request failed. Trying again in {TimeSpan} seconds.", index, span);
                 });
 
         var policy = overallTimeoutPolicy.WrapAsync(customPolicy);

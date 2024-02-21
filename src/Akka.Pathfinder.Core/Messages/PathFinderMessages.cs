@@ -2,20 +2,23 @@ using Akka.Pathfinder.Core.Configs;
 
 namespace Akka.Pathfinder.Core.Messages;
 
-public record PathfinderStartRequest(Guid PathfinderId, int SourcePointId, int TargetPointId, Direction Direction, TimeSpan? Timeout = default) : PathFinderRequest(PathfinderId);
-public record PathFound(Guid PathfinderId, Guid PathId, PathFinderResult Result) : PathFinderRequest(PathfinderId);
-public record BestPathFound(Guid PathfinderId, Guid PathId) : PathFinderRequest(PathfinderId);
-public record BestPathFailed(Guid PathfinderId, Exception Exception) : PathFinderRequest(PathfinderId);
-public record FickDichPatrick(Guid PathfinderId) : IPathfinderId;
+public record PathFound(Guid RequestId, Guid PathfinderId, Guid PathId, PathfinderResult Result) : ResponseBase(RequestId), IPathfinderId;
 
-public record MapIsReady(Guid PathfinderId) : PathFinderRequest(PathfinderId);
-public abstract record PathFinderRequest(Guid PathfinderId) : IPathfinderId;
+public record PathfinderRequest(Guid PathfinderId, int SourcePointId, int TargetPointId, Direction Direction, TimeSpan? Timeout = default) : PathfinderRequestBase<PathfinderResponse>(PathfinderId);
 
-public enum PathFinderResult : byte
+public record PathfinderResponse(Guid RequestId, Guid PathfinderId, bool Success, Guid? PathId = default, string? ErrorMessage = default) : ResponseBase(RequestId);
+
+public record DeletePathfinderRequest(Guid RequestId, Guid PathfinderId) : RequestBase<DeletePathfinderResponse>(RequestId), IPathfinderId;
+public record DeletePathfinderResponse(Guid RequestId, Guid PathfinderId, bool Success = false, Exception? Error = default) : ResponseBase(RequestId);
+
+public abstract record PathfinderRequestBase<TResponse>(Guid PathfinderId) : RequestBase<TResponse>(Guid.NewGuid()), IPathfinderRequest<TResponse> where TResponse : IResponse;
+
+public enum PathfinderResult : byte
 {
     Unknown,
     Success,
-    PathBlocked,
-    LoopDetected,
-    MindBlown
+    PathBlocked
 }
+
+// over EventStream
+public record PathfinderDeactivated(Guid PathfinderId);

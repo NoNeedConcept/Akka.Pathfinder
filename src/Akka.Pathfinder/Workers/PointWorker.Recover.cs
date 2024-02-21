@@ -10,8 +10,8 @@ public partial class PointWorker
     {
         try
         {
-            _logger.Debug("[{PointId}][RECOVER][SnapshotOffer<{SnapshotType}>][{SequenceNr}]",
-                    EntityId, msg.Snapshot.GetType().Name, msg.Metadata.SequenceNr);
+            _logger.Verbose("[{PointId}][RECOVER][{SequenceNr}]",
+                    EntityId, msg.Metadata.SequenceNr);
 
             if (msg.Snapshot is PersistedPointWorkerState persisted)
             {
@@ -19,11 +19,11 @@ public partial class PointWorker
                 return;
             }
 
-            _logger.Warning("[{PointId}][RECOVER][{MessageType}] Invalid snapshot type!", EntityId, msg.Snapshot.GetType().Name);
+            _logger.Warning("[{PointId}][RECOVER] Invalid snapshot type!", EntityId);
         }
         catch (Exception ex)
         {
-            _logger.Fatal(ex, "[{PointId}][RECOVER][{MessageType}] Failed to recover", EntityId, msg.GetType().Name);
+            _logger.Fatal(ex, "[{PointId}][RECOVER] Failed to recover", EntityId);
             Become(Failure);
         }
     }

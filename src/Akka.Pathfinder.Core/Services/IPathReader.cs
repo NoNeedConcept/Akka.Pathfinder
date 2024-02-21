@@ -1,32 +1,30 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 
-namespace Akka.Pathfinder.Core.Services;
+namespace Akka.Pathfinder.Core;
 
 public interface IPathReader
 {
-    IQueryable<Path> Get();
-    IQueryable<Path> Get(Guid id);
-    Task<IEnumerable<Path>> GetByPathfinderIdAsync(Guid pathfinderId, CancellationToken cancellationToken = default);
-
-    long GetPathCost(Guid id);
+    IMongoQueryable<Path> Get();
+    IMongoQueryable<Path> Get(Guid id);
+    Task<long> GetPathCostAsync(Guid id, CancellationToken cancellationToken = default);
+    IEnumerable<Path> GetByPathfinderId(Guid pathfinderId, CancellationToken cancellationToken = default);
 }
 
 public class PathReader : IPathReader
 {
-    private IMongoCollection<Path> _mongoCollection { get; set; }
-
     public PathReader(IMongoCollection<Path> collection)
-    {
-        _mongoCollection = collection;
-    }
+        => Collection = collection;
 
-    public IQueryable<Path> Get() => _mongoCollection.AsQueryable();
+    protected IMongoCollection<Path> Collection { get; }
 
-    public IQueryable<Path> Get(Guid id) => Get().Where(x => x.Id == id);
-
-    public async Task<IEnumerable<Path>> GetByPathfinderIdAsync(Guid pathfinderId, CancellationToken cancellationToken = default) => (await _mongoCollection.FindAsync(x => x.PathfinderId == pathfinderId, cancellationToken: cancellationToken)).ToEnumerable(cancellationToken: cancellationToken);
-
-    public long GetPathCost(Guid id) => Get(id).SelectMany(x => x.Directions).Sum(x => x.Cost);
+    public IMongoQueryable<Path> Get()
+        => Collection.AsQueryable();
+    public IMongoQueryable<Path> Get(Guid id)
+        => Get().Where(x => x.Id == id);
+    public async Task<long> GetPathCostAsync(Guid id, CancellationToken cancellationToken = default)
+        => await Get(id).SelectMany(x => x.Directions).SumAsync(x => x.Cost, cancellationToken);
+    public IEnumerable<Path> GetByPathfinderId(Guid pathfinderId, CancellationToken cancellationToken = default)
+        => Get().Where(x => x.PathfinderId == pathfinderId).ToList(cancellationToken);
 }

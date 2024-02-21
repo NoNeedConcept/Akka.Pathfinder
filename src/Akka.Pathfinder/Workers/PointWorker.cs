@@ -1,52 +1,68 @@
-﻿using Akka.Pathfinder.Core.Configs;
-using Akka.Pathfinder.Core.Messages;
-using Akka.Persistence;
+﻿using Akka.Pathfinder.Core.Messages;
+using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.States;
+using Akka.Persistence;
 using Akka.Actor;
-using Akka.Cluster.Sharding;
 using Akka.Pathfinder.Core;
+using Akka.Pathfinder.Core.Persistence;
 
 namespace Akka.Pathfinder.Workers;
 
-public record LocalPointConfig(PointConfig Config);
+public abstract record LocalPointConfig(PointConfig? Config = default);
+
+public record LocalPointConfigSuccess(PointConfig Config) : LocalPointConfig(Config);
+public record LocalPointConfigFailed(Exception Exception) : LocalPointConfig();
 
 public partial class PointWorker : ReceivePersistentActor
 {
     public override string PersistenceId => $"PointWorker_{EntityId}";
     public string EntityId;
+
+    private readonly IPointConfigReader _pointConfigReader;
+    private readonly IPathWriter _pathWriter;
+    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
     private PointWorkerState _state = null!;
 
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
-    private readonly IActorRef _mapManagerClient = ActorRefs.Nobody;
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
-        Context.SetReceiveTimeout(TimeSpan.FromSeconds(20));
         EntityId = entityId;
-        _serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-        _mapManagerClient = Context.System.GetRegistry().Get<MapManagerProxy>();
+        var provider = serviceProvider;
+        _pointConfigReader = provider.GetRequiredService<IPointConfigReader>();
+        _pathWriter = provider.GetRequiredService<IPathWriter>();
 
         var result = Context.System.EventStream.Subscribe(Self, typeof(PathfinderDeactivated));
         if (!result)
         {
             _logger.Error("[{PointId}] Subscribe [PathfinderDeactivated] failed", entityId);
         }
-
+        Recover<PersistedInitializedPointState>(state => _state = PointWorkerState.FromPersistedPointState(state));
         Recover<SnapshotOffer>(RecoverSnapshotOffer);
+        CommandAny(msg => Stash.Stash());
     }
 
     protected override void OnReplaySuccess()
     {
-        _logger.Debug("[{PointId}][RECOVER] SUCCESS", EntityId);
+        _logger.Verbose("[{PointId}][RECOVER] SUCCESS", EntityId);
 
-        if (_state?.Initialize == true)
+        if (_state is not null || _state?.Loaded is true)
         {
+            _logger.Verbose("[{PointId}][RECOVER] Ready", EntityId);
             Become(Ready);
         }
         else
         {
+            _logger.Verbose("[{PointId}][RECOVER] Initialize", EntityId);
             Become(Initialize);
         }
+    }
+
+    private void OnConfigure()
+    {
+        _logger.Verbose("[{PointId}][RECOVER] Initialize", EntityId);
+
+        _pointConfigReader
+        .Get(_state.CollectionId, _state.PointId)
+        .PipeTo(Self, Self, config => config is not null ? new LocalPointConfigSuccess(config) : new LocalPointConfigFailed(null!), ex => new LocalPointConfigFailed(ex));
     }
 
     protected override void PreRestart(Exception reason, object message)

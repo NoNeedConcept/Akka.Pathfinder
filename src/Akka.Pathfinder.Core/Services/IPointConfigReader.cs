@@ -1,25 +1,28 @@
 ﻿using Akka.Pathfinder.Core.Configs;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
-namespace Akka.Pathfinder.Core.Services;
+namespace Akka.Pathfinder.Core;
 
 public interface IPointConfigReader
 {
-    public IQueryable<PointConfig> Get(Guid CollectionId);
+    public IMongoQueryable<PointConfig> Get(Guid collectionId);
 
-    public IQueryable<PointConfig> Get(Guid CollectionId, int pointId);
+    public Task<PointConfig?> Get(Guid collectionId, int pointId, CancellationToken cancellationToken = default);
 }
 
 public class PointConfigReader : IPointConfigReader
 {
     protected IMongoDatabase Database { get; init; }
-    public PointConfigReader(IMongoDatabase database)
-    {
-        Database = database;
-    }
+    public PointConfigReader(IMongoDatabase database) 
+        => Database = database;
+    
+    private IMongoCollection<PointConfig> GetCollection(Guid collectionId)
+        => Database.GetCollection<PointConfig>(collectionId.ToString());
 
-    public IQueryable<PointConfig> Get(Guid CollectionId) => Database.GetCollection<PointConfig>(CollectionId.ToString()).AsQueryable();
+    public IMongoQueryable<PointConfig> Get(Guid collectionId)
+        => GetCollection(collectionId).AsQueryable();
 
-    public IQueryable<PointConfig> Get(Guid CollectionId, int pointId) => Get(CollectionId).Where(x => x.Id == pointId);
-
+    public async Task<PointConfig?> Get(Guid collectionId, int pointId, CancellationToken cancellationToken = default)
+        => await GetCollection(collectionId).AsQueryable().Where(x => x.Id == pointId).SingleOrDefaultAsync(cancellationToken);
 }

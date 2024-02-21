@@ -2,7 +2,7 @@
 
 public static class Extensions
 {
-    private class ChunkedEnumerable<T> : IEnumerable<T>
+    private class ChunkedEnumerable<T>(EnumeratorWrapper<T> wrapper, int chunkSize, int start) : IEnumerable<T>
     {
         private class ChildEnumerator : IEnumerator<T>
         {
@@ -68,30 +68,18 @@ public static class Extensions
             }
         }
 
-        private readonly EnumeratorWrapper<T> wrapper;
-        private readonly int chunkSize;
-        private readonly int start;
-
-        public ChunkedEnumerable(EnumeratorWrapper<T> wrapper, int chunkSize, int start)
-        {
-            this.wrapper = wrapper;
-            this.chunkSize = chunkSize;
-            this.start = start;
-        }
+        private readonly EnumeratorWrapper<T> wrapper = wrapper;
+        private readonly int chunkSize = chunkSize;
+        private readonly int start = start;
 
         public IEnumerator<T> GetEnumerator() => new ChildEnumerator(this);
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    private class EnumeratorWrapper<T>
+    private class EnumeratorWrapper<T>(IEnumerable<T> source)
     {
-        public EnumeratorWrapper(IEnumerable<T> source)
-        {
-            SourceEumerable = source;
-        }
-
-        private IEnumerable<T> SourceEumerable { get; set; }
+        private IEnumerable<T> SourceEumerable { get; set; } = source;
 
         private Enumeration currentEnumeration = default!;
 
@@ -111,10 +99,7 @@ public static class Extensions
                 currentEnumeration = null!;
             }
 
-            if (currentEnumeration == null)
-            {
-                currentEnumeration = new Enumeration { Position = -1, Source = SourceEumerable.GetEnumerator(), AtEnd = false };
-            }
+            currentEnumeration ??= new Enumeration { Position = -1, Source = SourceEumerable.GetEnumerator(), AtEnd = false };
 
             item = default!;
             if (currentEnumeration.AtEnd)

@@ -1,25 +1,25 @@
 ﻿using MongoDB.Driver;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 
-namespace Akka.Pathfinder.Core.Services;
+namespace Akka.Pathfinder.Core;
 
 public interface IPathWriter : IPathReader
 {
-    public bool AddOrUpdate(Path path);
+    public bool Write(Path path, CancellationToken cancellationToken = default);
 }
 
 public class PathWriter : PathReader, IPathWriter
 {
-    private IMongoCollection<Path> _mongoCollection { get; set; }
+    public PathWriter(IMongoCollection<Path> collection) : base(collection) { }
 
-    public PathWriter(IMongoCollection<Path> collection) : base(collection)
+    public bool Write(Path path, CancellationToken cancellationToken = default)
     {
-        _mongoCollection = collection;
-    }
+        var update = Builders<Path>.Update
+        .Set(x => x.Directions, path.Directions)
+        .Set(x => x.PathfinderId, path.PathfinderId)
+        .Set(x => x.Id, path.Id);
 
-    public bool AddOrUpdate(Path path)
-    {
-        var result =  _mongoCollection.ReplaceOne(p => path.Id == p.Id, path, options: new ReplaceOptions() { IsUpsert = true });
+        var result = Collection.UpdateOne(x => x.Id == path.Id, update, new UpdateOptions() { IsUpsert = true, }, cancellationToken);
         return result.IsAcknowledged;
     }
 }

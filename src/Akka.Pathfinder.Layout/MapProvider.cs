@@ -6,29 +6,30 @@ public class MapProvider
 {
     private const uint BaseCost = 42;
 
-    private static readonly IMapFactoryProvider _factoryProvider = MapFactoryProvider.Instance;
+    private static readonly MapFactoryProvider _factoryProvider = MapFactoryProvider.Instance;
 
     public Dictionary<int, MapConfigWithPoints> MapConfigs => new()
         {
             { 0, Map0()},
             { 1, Map1()},
-            { 2, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost, new MapSize(3, 3, 3), new Dictionary<Direction, uint>(), 15), true)},
-            { 3, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(15, 15, 15), new Dictionary<Direction, uint>(), 20), true)}
+            { 2, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(3, 3, 3), [], 15), true)},
+            { 3, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(15, 15, 15), [], 20), true)},
+            { 4, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(25, 25, 25), [], 20), true)}
         };
 
-    private MapConfigWithPoints Map0()
+    private static MapConfigWithPoints Map0()
     {
         var value = new List<PointConfig>(){
                 new(1, BaseCost, new Dictionary<Direction, DirectionConfig>()
                 {
                     { Direction.Front, new DirectionConfig(2, BaseCost) },
                 }),
-                new(2, BaseCost, new Dictionary<Direction, DirectionConfig>()),
+                new(2, BaseCost, []),
             };
         return new MapConfigWithPoints(Guid.NewGuid(), new Dictionary<Guid, List<PointConfig>>() { { Guid.NewGuid(), value } });
     }
 
-    private MapConfigWithPoints Map1()
+    private static MapConfigWithPoints Map1()
     {
         return new MapConfigWithPoints(Guid.NewGuid(), new Dictionary<Guid, List<PointConfig>>(){{ Guid.NewGuid(), new List<PointConfig>()
         {

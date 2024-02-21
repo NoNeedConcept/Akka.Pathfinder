@@ -1,6 +1,7 @@
 using Akka.Pathfinder.AcceptanceTests.Containers;
 using Akka.Pathfinder.AcceptanceTests.Drivers;
 using Akka.Pathfinder.Core;
+using BoDi;
 using Serilog;
 using TechTalk.SpecFlow;
 
@@ -9,82 +10,70 @@ namespace Akka.Pathfinder.AcceptanceTests.Hooks;
 [Binding]
 public class EnvironmentSetupHooks
 {
-    public static MongoDbContainer MongoDbContainer = null!;
-    public static PostgreContainer PostgreContainer = null!;
-    public static LighthouseNodeContainer SeedNodeContainer = null!;
-    public static PathfinderApplicationFactory PathfinderApplicationFactory = null!;
-    public static AkkaDriver AkkaDriver = null!;
-
     [BeforeFeature]
-    public static async Task BeforeFeature()
+    public static async Task BeforeFeature(ObjectContainer container)
     {
         Log.Logger = CreateLogger();
         Log.Information("[TEST][EnvironmentSetupHooks][BeforeFeature]");
-        MongoDbContainer = new();
-        PostgreContainer = new();
-        AkkaDriver = new();
-        SeedNodeContainer = new();
+        var mongoDbContainer = new MongoDbContainer();
+        var postgreContainer = new PostgreContainer();
+        var seedNodeContainer = new LighthouseNodeContainer();
 
-        var lighthouseTask = SeedNodeContainer.InitializeAsync();
-        var mongoTask = MongoDbContainer.InitializeAsync();
-        var postgreTask = PostgreContainer.InitializeAsync();
+        var lighthouseTask = seedNodeContainer.InitializeAsync();
+        var mongoTask = mongoDbContainer.InitializeAsync();
+        var postgreTask = postgreContainer.InitializeAsync();
 
         await lighthouseTask;
         await mongoTask;
         await postgreTask;
 
-        await AkkaDriver.InitializeAsync();
+        var mongoDBString = mongoDbContainer.GetConnectionString();
+        var postgreSQLString = postgreContainer.GetConnectionString();
 
-        var mongoDBString = MongoDbContainer.GetConnectionString();
-        var postgreSQLString = PostgreContainer.GetConnectionString();
-
-        Log.Debug("[TEST][EnvironmentSetupHooks] - MongoDb: {ConnectionString}", mongoDBString);
-        Log.Debug("[TEST][EnvironmentSetupHooks] - Postgre: {ConnectionString}", postgreSQLString);
+        Log.Information("[TEST][EnvironmentSetupHooks] - MongoDb: {ConnectionString}", mongoDBString);
+        Log.Information("[TEST][EnvironmentSetupHooks] - Postgre: {ConnectionString}", postgreSQLString);
         AkkaPathfinder.SetEnvironmentVariable("mongodb", mongoDBString);
         AkkaPathfinder.SetEnvironmentVariable("postgre", postgreSQLString);
 
-        PathfinderApplicationFactory = new();
-        await PathfinderApplicationFactory.InitializeAsync();
+        //var akkaDriver = new AkkaDriver();
+        //await akkaDriver.InitializeAsync();
 
-        await Task.Delay(2500);
+        var pathfinderApplicationFactory = new PathfinderApplicationFactory();
+        await pathfinderApplicationFactory.InitializeAsync();
+
+        container.RegisterInstanceAs(mongoDbContainer);
+        container.RegisterInstanceAs(postgreContainer);
+        //container.RegisterInstanceAs(akkaDriver);
+        container.RegisterInstanceAs(seedNodeContainer);
+        container.RegisterInstanceAs(pathfinderApplicationFactory);
+
+        await Task.Delay(5000);
     }
 
     [AfterScenario]
     public static void AfterScenario() => Log.Information("[TEST][EnvironmentSetupHooks][AfterScenario]");
 
     [AfterFeature]
-    public static async Task AfterFeature()
+    public static async Task AfterFeature(ObjectContainer container)
     {
         Log.Information("[TEST][EnvironmentSetupHooks][AfterFeature]");
 
-        await PathfinderApplicationFactory.DisposeAsync();
-        PathfinderApplicationFactory = null!;
-        await MongoDbContainer.DisposeAsync();
-        MongoDbContainer = null!;
-        await PostgreContainer.DisposeAsync();
-        PostgreContainer = null!;
-        await SeedNodeContainer.DisposeAsync();
-        SeedNodeContainer = null!;
-    }
-
-    [AfterTestRun]
-    public static async Task AfterTestRun()
-    {
-        Log.Information("[TEST][EnvironmentSetupHooks][AfterFeature]");
-
-        await (PathfinderApplicationFactory?.DisposeAsync() ?? ValueTask.CompletedTask);
-        PathfinderApplicationFactory = null!;
-        await (MongoDbContainer?.DisposeAsync() ?? Task.CompletedTask);
-        MongoDbContainer = null!;
-        await (PostgreContainer?.DisposeAsync() ?? Task.CompletedTask);
-        PostgreContainer = null!;
-        await (SeedNodeContainer?.DisposeAsync() ?? Task.CompletedTask);
-        SeedNodeContainer = null!;
+        var pathfinderApplicationFactory = container.Resolve<PathfinderApplicationFactory>();
+        await pathfinderApplicationFactory.DisposeAsync();
+        //var akkaDriver = container.Resolve<AkkaDriver>();
+        //await akkaDriver.DisposeAsync();
+        var mongoDbContainer = container.Resolve<MongoDbContainer>();
+        await mongoDbContainer.DisposeAsync();
+        var postgreContainer = container.Resolve<PostgreContainer>();
+        await postgreContainer.DisposeAsync();
+        var seedNodeContainer = container.Resolve<LighthouseNodeContainer>();
+        await seedNodeContainer.DisposeAsync();
+        await Task.Delay(2500);
     }
 
     private static ILogger CreateLogger()
         => new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Information()
             .Enrich.FromLogContext()
             .WriteTo.Console()
             .WriteTo.Debug()
