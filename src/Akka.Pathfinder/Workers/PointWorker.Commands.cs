@@ -1,9 +1,9 @@
-﻿using System.Reactive.Linq;
-using Akka.Actor;
-using Akka.Pathfinder.Core;
-using Akka.Pathfinder.Core.Messages;
+﻿using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
+using Akka.Pathfinder.Core;
 using Akka.Persistence;
+using Akka.Actor;
+using Akka.Pathfinder.Core.Persistence;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -11,7 +11,7 @@ public partial class PointWorker
 {
     private void PathfinderDeactivatedHandler(PathfinderDeactivated msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}][{PathfinderId}] received", EntityId, msg.GetType().Name, msg.PathfinderId);
         _state.AddInactivePathfinder(msg.PathfinderId);
         _state.RemovePathfinderPathCost(msg.PathfinderId);
         _state.RemoveOldPathfinderIds(TimeSpan.FromMinutes(10));
@@ -19,42 +19,51 @@ public partial class PointWorker
 
     private void LocalPointConfigHandler(LocalPointConfig msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
-        _state = PointWorkerState.FromConfig(msg.Config, _state?.State);
-        PersistState();
-        Become(Ready);
-        _mapManagerClient.Tell(new PointInitialized(msg.Config.Id));
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        if (msg is LocalPointConfigFailed item)
+        {
+            _logger.Error(item.Exception, "[{PointId}]", EntityId);
+        }
+        else if (msg is LocalPointConfigSuccess success)
+        {
+            _state = PointWorkerState.FromConfig(success.Config!, _state?.State);
+            PersistState();
+            Become(Ready);
+        }
     }
 
     private void InitializePointHandler(InitializePoint msg)
     {
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _state = PointWorkerState.FromInitialize(msg.PointId, msg.CollectionId);
+        Persist(new PersistedInitializedPointState(msg.PointId, msg.CollectionId), _ => { });
+        Sender.Tell(new PointInitialized(msg.RequestId, msg.PointId));
         Become(Configure);
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
-        Self.Forward(new LocalPointConfig(msg.Config));
     }
 
     private void UpdatePointDirectionHandler(UpdatePointDirection msg)
     {
-        Become(Configure);
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        Become(Update);
         var updatedConfig = msg.Config with
         {
             DirectionConfigs = _state.MergeDirectionConfigs(msg.Config.DirectionConfigs)
         };
 
-        Self.Forward(new LocalPointConfig(updatedConfig));
+        Sender.Tell(new PointDirectionUpdated(msg.RequestId, msg.Config.Id));
+        Self.Forward(new LocalPointConfigSuccess(updatedConfig));
     }
 
-    private void ResetPointHandler(ResetPoint msg)
+    private void ReloadPointHandler(ReloadPoint msg)
     {
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
         Become(Configure);
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
-        Self.Forward(new LocalPointConfig(msg.Config));
+        Sender.Tell(new PointReloaded(msg.RequestId, msg.PointId));
     }
 
     private void CostRequestHandler(CostRequest msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         var success = msg switch
         {
@@ -63,13 +72,13 @@ public partial class PointWorker
             _ => throw new NotImplementedException(),
         };
 
-        Sender.Tell(new UpdateCostResponse(msg.PointId, success));
+        Sender.Tell(new UpdateCostResponse(msg.RequestId, msg.PointId, success));
         PersistState();
     }
 
     private void PointCommandRequestHandler(PointCommandRequest msg)
     {
-        _logger.Debug("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
+        _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
         _ = msg switch
         {
@@ -79,7 +88,7 @@ public partial class PointWorker
         };
     }
 
-    private async Task CreatePathPointRequestPathHandler(FindPathRequest msg)
+    private void FindPathRequestHandler(FindPathRequest msg)
     {
         _logger.Verbose("[{PointId}][{MessageType}] received", EntityId, msg.GetType().Name);
 
@@ -93,7 +102,7 @@ public partial class PointWorker
 
         if (_state.TryLoopDetection(msg))
         {
-            _logger.Debug("[{PointId}] LoopDetection", EntityId);
+            _logger.Warning("[{PointId}][{PathfinderId}] LoopDetection", EntityId, msg.PathfinderId);
             return;
         }
 
@@ -108,16 +117,17 @@ public partial class PointWorker
         }
 
         var pointWorkerClient = Context.System.GetRegistry().Get<PointWorkerProxy>();
-        await _state
-        .GetAllForwardMessages(newRequest)
-        .Throttle(pointWorkerClient.Forward, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1));
+        var items = _state.GetAllForwardMessages(newRequest);
+        foreach (var item in items)
+        {
+            pointWorkerClient.Forward(item);
+        }
+
     }
 
     private void SaveSnapshotFailureHandler(SaveSnapshotFailure msg)
-        => _logger.Error("[{PointId}] failed to create snapshot [{SequenceNr}]",
-                EntityId, msg.Metadata.SequenceNr);
+        => _logger.Error(msg.Cause, "[{PointId}][SNAPSHOTFAILURE][{SequenceNr}]", EntityId, msg.Metadata.SequenceNr);
 
     private void SaveSnapshotSuccessHandler(SaveSnapshotSuccess msg)
-        => _logger.Information("[{PointId}] successfully create snapshot [{SequenceNr}]",
-                EntityId, msg.Metadata.SequenceNr);
+        => _logger.Information("[{PointId}][SNAPSHOTSUCCESS][{SequenceNr}]", EntityId, msg.Metadata.SequenceNr);
 }

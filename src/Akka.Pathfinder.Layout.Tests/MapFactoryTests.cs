@@ -1,5 +1,4 @@
-using System.Diagnostics;
-using System.Linq;
+using Akka.Pathfinder.Core.Configs;
 
 namespace Akka.Pathfinder.Layout.Tests;
 
@@ -15,17 +14,10 @@ public class MapFactoryTests
             { Direction.Bottom, 100 }
         }), true);
 
-        foreach (var item in mapConfig.Configs.SelectMany(x => x.Value))
-        {
-            Debug.Write($"Point: {item.Id} ");
-            Debug.Write($"Count: {item.DirectionConfigs.Count} ");
-            Debug.WriteLine($"Directions: {string.Join(",", item.DirectionConfigs.Values.Select(x => x.TargetPointId.ToString()))}");
-        }
-
         Assert.NotNull(mapConfig);
         Assert.NotEqual(Guid.Empty, mapConfig.Id);
-        Assert.NotNull(mapConfig.PointConfigsIds);
-        Assert.True(mapConfig.PointConfigsIds.Any());
+        Assert.NotNull(mapConfig.CollectionIds);
+        Assert.True(mapConfig.CollectionIds.Any());
         Assert.Equal(27, mapConfig.Configs.Values.SelectMany(x => x).Count());
     }
 
@@ -55,8 +47,8 @@ public class MapFactoryTests
 
         Assert.NotNull(mapConfig);
         Assert.NotEqual(Guid.Empty, mapConfig.Id);
-        Assert.NotNull(mapConfig.PointConfigsIds);
-        Assert.True(mapConfig.PointConfigsIds.Any());
+        Assert.NotNull(mapConfig.CollectionIds);
+        Assert.True(mapConfig.CollectionIds.Any());
         Assert.Contains(mapConfig.Configs.Values, x => x.Any(t => t.Id == 1));
         Assert.Equal(3, mapConfig.Configs.Values.SelectMany(x => x).Single(x => x.Id == 1).DirectionConfigs.Count);
     }
@@ -73,8 +65,8 @@ public class MapFactoryTests
 
         Assert.NotNull(mapConfig);
         Assert.NotEqual(Guid.Empty, mapConfig.Id);
-        Assert.NotNull(mapConfig.PointConfigsIds);
-        Assert.True(mapConfig.PointConfigsIds.Any());
+        Assert.NotNull(mapConfig.CollectionIds);
+        Assert.True(mapConfig.CollectionIds.Any());
         Assert.Equal(1953125 , mapConfig.Configs.Values.SelectMany(x => x).Count());
     }
 }

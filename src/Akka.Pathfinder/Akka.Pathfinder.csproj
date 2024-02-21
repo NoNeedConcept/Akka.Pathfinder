@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="*" />
     <PackageReference Include="Akka" Version="1.5.*" />
     <PackageReference Include="Akka.Quartz.Actor" Version="1.5.*" />
     <PackageReference Include="Akka.HealthCheck.Hosting" Version="1.5.*" />
@@ -22,7 +23,6 @@
     <PackageReference Include="Akka.Logger.Serilog" Version="1.5.*" />
     <PackageReference Include="Akka.Persistence.Hosting" Version="1.5.*" />
     <PackageReference Include="Akka.Persistence.Sql.Hosting" Version="1.5.*" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0-dev-00923" />
     <PackageReference Include="Serilog.AspNetCore" Version="*" />
     <PackageReference Include="Npgsql" Version="7.0.6" />
   </ItemGroup>
@@ -30,6 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Akka.Pathfinder.Core\Akka.Pathfinder.Core.csproj" />
     <ProjectReference Include="..\Akka.Pathfinder.Layout\Akka.Pathfinder.Layout.csproj" />
+    <ProjectReference Include="..\Akka.Pathfinder.Common\Akka.Pathfinder.Common.csproj" />
   </ItemGroup>
 
 </Project>

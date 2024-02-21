@@ -1,11 +1,8 @@
 using Akka.Pathfinder.AcceptanceTests.Drivers;
-using Akka.Pathfinder.AcceptanceTests.Hooks;
-using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
-using Akka.Pathfinder.Core.Messages;
-using Akka.Pathfinder.Core.Services;
+using Akka.Pathfinder.Grpc;
 using Akka.Pathfinder.Layout;
-using Microsoft.Extensions.DependencyInjection;
+using BoDi;
 using Serilog;
 using TechTalk.SpecFlow;
 
@@ -15,31 +12,36 @@ namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
 public class CommonSteps
 {
     private readonly ScenarioContext _context;
-    private readonly AkkaDriver _akkaDriver;
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<CommonSteps>();
+    private readonly DatabaseDriver _databaseDriver;
+    private readonly PathfinderApplicationFactory _applicationFactory;
+    private readonly ILogger _logger = Log.Logger.ForContext<CommonSteps>();
 
-    public CommonSteps(ScenarioContext context)
+    public CommonSteps(ScenarioContext context, IObjectContainer container)
     {
         _logger.Information("[TEST][CommonStepDefinitions][ctor]", GetType().Name);
         _context = context;
-        _akkaDriver = EnvironmentSetupHooks.AkkaDriver;
+        _databaseDriver = container.Resolve<DatabaseDriver>();
+        _applicationFactory = container.Resolve<PathfinderApplicationFactory>();
     }
 
     [Given(@"Map is (.*)")]
     public async Task GivenMapIs(int mapId)
     {
-        Log.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
+        _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
         var mapToLoad = new MapProvider().MapConfigs.GetValueOrDefault(mapId)!;
-        using var scope = _akkaDriver.Host.Services.CreateScope();
-        scope.ServiceProvider.GetRequiredService<IMapConfigWriter>().AddOrUpdate(mapToLoad.Id, new MapConfig(mapToLoad.Id, mapToLoad.PointConfigsIds));
-        var pointConfigWriter = scope.ServiceProvider.GetRequiredService<IPointConfigWriter>();
+
+        var mapConfigWriter = _databaseDriver.CreateMapConfigWriter();
+        await mapConfigWriter.WriteAsync(new MapConfig(mapToLoad.Id, mapToLoad.CollectionIds, mapToLoad.Count));
+        var pointConfigWriter = _databaseDriver.CreatePointConfigWriter();
         foreach (var (key, value) in mapToLoad.Configs)
         {
-            pointConfigWriter.AddPointConfigs(key, value);
+            await pointConfigWriter.AddPointConfigsAsync(key, value);
         }
-        _akkaDriver.TellMapManager(new LoadMap(mapToLoad.Id));
-        _ = _akkaDriver.Expect<MapLoaded>(1500);
 
-        await Task.Delay(1500000);
+        var mapManagerClient = _applicationFactory.GetMapManagerClient();
+        var result = mapManagerClient.Load(new MapRequest() { MapId = mapToLoad.Id.ToString() });
+        
+        Assert.True(result.Success);
+        _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapLoaded");
     }
 }

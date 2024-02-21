@@ -16,9 +16,11 @@ public static class PointStateExtensions
         };
     }
 
-    public static bool ChangePointCost(this PointWorkerState state, uint value, ChangeMethod changeMethod) => state.ApplyCommit(new PointCommit(value, changeMethod));
+    public static bool ChangePointCost(this PointWorkerState state, uint value, ChangeMethod changeMethod)
+        => state.ApplyCommit(new PointCommit(value, changeMethod));
 
-    public static bool ChangeDirectionCost(this PointWorkerState state, uint value, Direction direction, ChangeMethod changeMethod) => state.ApplyCommit(new DirectionCommit(value, direction, changeMethod));
+    public static bool ChangeDirectionCost(this PointWorkerState state, uint value, Direction direction, ChangeMethod changeMethod)
+        => state.ApplyCommit(new DirectionCommit(value, direction, changeMethod));
 
     public static Dictionary<Direction, DirectionConfig> MergeDirectionConfigs(this PointWorkerState state, IDictionary<Direction, DirectionConfig> configs)
     {

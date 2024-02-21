@@ -5,13 +5,22 @@ namespace Akka.Pathfinder.Core;
 
 public interface IMapConfigWriter : IMapConfigReader
 {
-    bool AddOrUpdate(Guid Id, MapConfig config);
+    Task<bool> WriteAsync(MapConfig config, CancellationToken cancellationToken = default);
 }
 
 public class MapConfigWriter : MapConfigReader, IMapConfigWriter
 {
-    public MapConfigWriter(IMongoCollection<MapConfig> collection, IMongoDatabase database) : base(collection, database)
+    public MapConfigWriter(IMongoCollection<MapConfig> collection) : base(collection)
     { }
 
-    public bool AddOrUpdate(Guid Id, MapConfig config) => Collection.ReplaceOne(x => x.Id == Id, config, new ReplaceOptions() { IsUpsert = true }).IsAcknowledged;
+    public async Task<bool> WriteAsync(MapConfig config, CancellationToken cancellationToken = default)
+    {
+        var update = Builders<MapConfig>.Update
+        .Set(x => x.Id, config.Id)
+        .Set(x => x.CollectionIds, config.CollectionIds)
+        .Set(x => x.Count, config.Count);
+
+        var result = await Collection.UpdateOneAsync(x => x.Id == config.Id, update, new UpdateOptions() { IsUpsert = true }, cancellationToken);
+        return result.IsAcknowledged;
+    }
 }

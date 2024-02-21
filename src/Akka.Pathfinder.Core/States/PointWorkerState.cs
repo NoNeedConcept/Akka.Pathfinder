@@ -6,6 +6,7 @@ using Akka.Pathfinder.Core.Persistence;
 using Akka.Util.Internal;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 using MongoDB.Driver.Linq;
+using Akka.Pathfinder.Core.Persistence.Data;
 
 namespace Akka.Pathfinder.Core.States;
 
@@ -18,8 +19,16 @@ public record PointWorkerState
 {
     private readonly ConcurrentDictionary<Direction, DirectionConfig> _directionConfigs;
     private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorkerState>();
-    private ConcurrentDictionary<Guid, DateTime> _inactivePathfinders = new();
-    private ConcurrentDictionary<Guid, int> _pathfinderPathCost = new();
+    private readonly ConcurrentDictionary<Guid, DateTime> _inactivePathfinders = new();
+    private readonly ConcurrentDictionary<Guid, int> _pathfinderPathCost = new();
+
+    public static PointWorkerState FromInitialize(int pointId, Guid collectionId)
+        => new(new Dictionary<Direction, DirectionConfig>())
+        {
+            PointId = pointId,
+            CollectionId = collectionId,
+            Initialize = true
+        };
 
     public static PointWorkerState FromSnapshot(PersistedPointWorkerState msg)
         => new(msg.DirectionConfigs)
@@ -27,7 +36,16 @@ public record PointWorkerState
             PointId = msg.PointId,
             Cost = msg.Cost,
             State = msg.State,
-            Initialize = true,
+            Loaded = msg.Loaded,
+            Initialize = true
+        };
+
+    public static PointWorkerState FromPersistedPointState(PersistedInitializedPointState state)
+        => new(new Dictionary<Direction, DirectionConfig>())
+        {
+            PointId = state.PointId,
+            CollectionId = state.CollectionId,
+            Initialize = true
         };
 
     public static PointWorkerState FromConfig(PointConfig config, PointState? state)
@@ -37,6 +55,7 @@ public record PointWorkerState
             Cost = config.Cost,
             State = state ?? PointState.None,
             Initialize = true,
+            Loaded = true
         };
 
     public PointWorkerState(IReadOnlyDictionary<Direction, DirectionConfig> configs)
@@ -46,9 +65,13 @@ public record PointWorkerState
 
     public int PointId { get; internal set; } = 0;
 
+    public Guid CollectionId { get; internal set; }
+
     public uint Cost { get; internal set; } = 0;
 
     public bool Initialize { get; internal set; }
+
+    public bool Loaded { get; internal set; }
 
     public bool IsBlocked => State is PointState.Blocked;
 
@@ -102,9 +125,9 @@ public record PointWorkerState
 
     public bool IsBlockedAndGetResponse(FindPathRequest request, out PathFound response)
     {
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.PathBlocked);
+        response = new PathFound(request.RequestId, request.PathfinderId, request.PathId, PathfinderResult.PathBlocked);
         if (IsBlocked) return true;
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
+        response = new PathFound(request.RequestId, request.PathfinderId, request.PathId, PathfinderResult.Unknown);
         if (_directionConfigs.IsEmpty && PointId != request.TargetPointId) return true;
         response = null!;
         return false;
@@ -123,7 +146,7 @@ public record PointWorkerState
     {
         findPathRequest = request;
         if (request.Directions.Count == 1) return false;
-        var pathList = request.Directions.ToConcurrentDictionary(x => x.PointId, x => x);
+        var pathList = request.Directions.ToConcurrentDictionary(x => x.PointId);
         var pointInfo = pathList.GetValueOrDefault(PointId);
         if (pointInfo is null) return true;
         pathList.AddOrUpdate(PointId, pointInfo with { Cost = Cost + pointInfo.Cost }, (key, old) => old with { Cost = Cost + old.Cost });
@@ -135,21 +158,21 @@ public record PointWorkerState
         return false;
     }
 
-    public bool TryIsArrivedTargetPoint(FindPathRequest request, Func<Path, (bool, Guid)> writer, out PathFound response)
+    public bool TryIsArrivedTargetPoint(FindPathRequest request, Func<Path, bool> writer, out PathFound response)
     {
         response = null!;
         if (!request.TargetPointId.Equals(PointId)) return false;
         var paths = request.Directions.ToList();
         var path = new Path(request.PathId, request.PathfinderId, paths);
-        var (success, pathId) = writer(path);
+        var success = writer(path);
         if (!success)
         {
             _logger.Debug("[{PathId}][{PathfinderId}] update path failed", request.PathId, request.PathfinderId);
-            response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.MindBlown);
+            response = new PathFound(request.RequestId, request.PathfinderId, request.PathId, PathfinderResult.Unknown);
             return true;
         }
 
-        response = new PathFound(request.PathfinderId, request.PathId, PathFinderResult.Success);
+        response = new PathFound(request.RequestId, request.PathfinderId, request.PathId, PathfinderResult.Success);
         return true;
     }
 
@@ -185,7 +208,7 @@ public record PointWorkerState
     //     return success;
     // }
 
-    public IReadOnlyList<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
+    public IEnumerable<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
     {
         var results = new List<FindPathRequest>();
         var infoIds = request.Directions
@@ -195,16 +218,17 @@ public record PointWorkerState
 
         foreach (var (key, value) in _directionConfigs.ExceptBy(infoIds, x => x.Value.TargetPointId).ToDictionary(x => x.Key, x => x.Value))
         {
-            _logger.Debug("[{PointId}][{PathId}] TargetPointId [{Id}]", PointId, request.PathId, value.TargetPointId);
+            _logger.Verbose("[{PointId}][{PathId}] TargetPointId [{Id}]", PointId, request.PathId, value.TargetPointId);
             var directions = request.Directions.ToArray().Append(new PathPoint(value.TargetPointId, value.Cost, key)).ToList();
             var findPathRequest = new FindPathRequest(request.PathfinderId, Guid.NewGuid(), value.TargetPointId, request.TargetPointId, directions);
             results.Add(findPathRequest);
         }
 
-        return results.OrderBy(x => x.Directions.Select(x => (int)x.Cost).Sum()).ToList();
+        return results;
+        //return results.OrderByDescending(x => x.Directions.Select(x => (int)x.Cost).Sum());
     }
 
-    public PersistedPointWorkerState GetPersistenceState() => new(PointId, Cost, _directionConfigs.AsReadOnly(), State);
+    public PersistedPointWorkerState GetPersistenceState() => new(PointId, CollectionId, Cost, _directionConfigs.ToDictionary(), State, Loaded);
 
     private static Direction Invert(Direction direction) => direction switch
     {
@@ -224,3 +248,5 @@ public static class DictionaryExtensions
     public static void RemoveAll<TKey, TValue>(this IDictionary<TKey, TValue> dic, Func<TKey, TValue, bool> predicate)
         => dic.Where(pair => predicate(pair.Key, pair.Value)).ForEach(x => dic.Remove(x));
 }
+
+internal record PersistResult(bool Success, Guid PathId);

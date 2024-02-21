@@ -108,7 +108,7 @@ public class MapFactory : IMapFactory
                     }
 
                     index++;
-                    List<Direction> directionsToCheck = new();
+                    List<Direction> directionsToCheck = [];
 
                     if (width > 0) directionsToCheck.Add(Direction.Left);
                     if (height > 0) directionsToCheck.Add(Direction.Front);

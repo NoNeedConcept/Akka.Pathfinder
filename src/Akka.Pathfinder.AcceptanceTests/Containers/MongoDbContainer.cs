@@ -18,7 +18,7 @@ public class MongoDbContainer : IAsyncLifetime
         Log.Information("[TEST][{MongoDbContainerName}] ctor", GetType().Name);
         Container = new ContainerBuilder()
             .WithName($"mongodb_{Guid.NewGuid():D}")
-            .WithImage("mongo:latest")
+            .WithImage("mongo:6.0")
             .WithAutoRemove(true)
             .WithPortBinding(InternalPort, true)
             .WithEnvironment("MONGO_INITDB_ROOT_USERNAME", $"{MongoUser}")
