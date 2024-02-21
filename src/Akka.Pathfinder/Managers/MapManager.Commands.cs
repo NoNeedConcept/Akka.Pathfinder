@@ -21,9 +21,10 @@ public partial class MapManager
 
         var startTime = DateTime.UtcNow;
         _ = await Source.From(mapConfig.CollectionIds)
-        .SelectMany(collectionId => _pointConfigReader.Get(collectionId).Select(x => x.Id).ToList().Select(pointId => new InitializePoint(pointId, collectionId)))
+        .SelectMany(collectionId => _pointConfigReader.Get(collectionId).Select(x => x.Id).ToList().Select(pointId => Tuple.Create(pointId, collectionId)))
+        .SelectAsync(32, x => Task.FromResult(new InitializePoint(x.Item1, x.Item2)))
         .Buffer(256, OverflowStrategy.Backpressure)
-        .Ask<PointInitialized>(Context.GetRegistry().Get<PointWorkerProxy>(), TimeSpan.FromSeconds(15), 128)
+        .Ask<PointInitialized>(Context.GetRegistry().Get<PointWorkerProxy>(), TimeSpan.FromSeconds(15), 32)
         .RunWith(Sink.Ignore<PointInitialized>(), Context.Materializer());
         var endTime = DateTime.UtcNow;
 
