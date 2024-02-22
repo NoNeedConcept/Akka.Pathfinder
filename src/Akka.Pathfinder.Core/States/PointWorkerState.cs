@@ -218,12 +218,12 @@ public record PointWorkerState
 
         foreach (var (key, value) in _directionConfigs.ExceptBy(infoIds, x => x.Value.TargetPointId).ToDictionary(x => x.Key, x => x.Value))
         {
-            _logger.Verbose("[{PointId}][{PathId}] TargetPointId [{Id}]", PointId, request.PathId, value.TargetPointId);
             var directions = request.Directions.ToArray().Append(new PathPoint(value.TargetPointId, value.Cost, key)).ToList();
             var findPathRequest = new FindPathRequest(request.PathfinderId, Guid.NewGuid(), value.TargetPointId, request.TargetPointId, directions);
             results.Add(findPathRequest);
         }
 
+        _logger.Verbose("[{PointId}][{PathId}] To Targets [{KEKW}]", PointId, request.PathId, string.Join(",", results.Select(x => x.NextPointId)));
         return results;
         //return results.OrderByDescending(x => x.Directions.Select(x => (int)x.Cost).Sum());
     }

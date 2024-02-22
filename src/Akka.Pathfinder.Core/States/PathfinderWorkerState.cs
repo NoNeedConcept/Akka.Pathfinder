@@ -14,7 +14,8 @@ public class PathfinderWorkerState
             SourcePointId = msg.SourcePointId,
             StartDirection = msg.Direction,
             StartTime = DateTime.UtcNow,
-            Timeout = msg.Timeout ?? TimeSpan.FromSeconds(20),
+            Timeout = msg.Options.Timeout ?? TimeSpan.FromSeconds(30),
+            Mode = msg.Options.Mode,
         };
 
     public static PathfinderWorkerState FromSnapshot(PersistedPathfinderWorkerState msg)
@@ -37,8 +38,9 @@ public class PathfinderWorkerState
     public Direction StartDirection { get; init; }
     public int SourcePointId { get; init; }
     public int TargetPointId { get; init; }
-    public TimeSpan Timeout { get; init; }
     public DateTime StartTime { get; init; }
+    public TimeSpan Timeout { get; init; }
+    public AlgoMode Mode { get; init; }
 
     public int Count => _counter;
 

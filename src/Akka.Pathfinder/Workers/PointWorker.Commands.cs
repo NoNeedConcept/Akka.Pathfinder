@@ -122,7 +122,6 @@ public partial class PointWorker
         {
             pointWorkerClient.Forward(item);
         }
-
     }
 
     private void SaveSnapshotFailureHandler(SaveSnapshotFailure msg)

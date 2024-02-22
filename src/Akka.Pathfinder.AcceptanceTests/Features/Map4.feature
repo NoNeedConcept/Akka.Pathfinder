@@ -8,7 +8,7 @@
 
     Scenario: Find multiple long Paths on Map 4
         Given Map is 4
-        When You are on Point 1 and have the direction 0 want to find a Path to Point 3000 PathfinderId fe022be3-ca51-4d00-899d-e32da084899f Seconds 3
-        When You are on Point 1 and have the direction 0 want to find a Path to Point 15000 PathfinderId eac8a4fe-4b83-4f51-9f20-c8c8aae96f1d Seconds 8
-        Then the path for PathfinderId fe022be3-ca51-4d00-899d-e32da084899f should cost 5922
-        Then the path for PathfinderId eac8a4fe-4b83-4f51-9f20-c8c8aae96f1d should cost 8946
+        When You are on Point 1 and have the direction 0 want to find a Path to Point 3000 PathfinderId 1fc137d8-9899-4fc2-8aa1-82a10fc1d504 Seconds 3
+        When You are on Point 1 and have the direction 0 want to find a Path to Point 15000 PathfinderId fc0cd339-7d4e-4681-89a1-356461742def Seconds 8
+        Then the path for PathfinderId 1fc137d8-9899-4fc2-8aa1-82a10fc1d504 should cost 5922
+        Then the path for PathfinderId fc0cd339-7d4e-4681-89a1-356461742def should cost 8946

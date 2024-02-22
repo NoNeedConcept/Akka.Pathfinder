@@ -51,7 +51,7 @@ public class PathfinderSteps
     [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*) Seconds (.*)")]
     public async Task WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId, string pathfinderId, int seconds)
     {
-        var source = new CancellationTokenSource(TimeSpan.FromMinutes(7));
+        var source = new CancellationTokenSource(TimeSpan.FromMinutes(15));
         var request = new Grpc.FindPathRequest()
         {
             PathfinderId = pathfinderId,

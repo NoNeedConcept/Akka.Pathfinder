@@ -3,8 +3,8 @@ Feature: Map5
 
     Scenario: Find long Path on Map 5
         Given Map is 5
-        When You are on Point 1 and have the direction 0 want to find a Path to Point 25000 PathfinderId d91fabeb-9d8b-4491-a9fe-4bc174d7795f Seconds 10
-        Then the path for PathfinderId d91fabeb-9d8b-4491-a9fe-4bc174d7795f should cost 7560
+        When You are on Point 1 and have the direction 0 want to find a Path to Point 25000 PathfinderId e39cb9e2-7ab1-4e71-a603-2869e99939bb Seconds 10
+        Then the path for PathfinderId e39cb9e2-7ab1-4e71-a603-2869e99939bb should cost 7560
 
     Scenario: Find multiple long Paths on Map 5
         Given Map is 5
