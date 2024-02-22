@@ -14,7 +14,8 @@ public class PathfinderWorkerState
             SourcePointId = msg.SourcePointId,
             StartDirection = msg.Direction,
             StartTime = DateTime.UtcNow,
-            Timeout = msg.Timeout ?? TimeSpan.FromSeconds(20),
+            Timeout = msg.Options.Timeout ?? TimeSpan.FromSeconds(30),
+            Mode = msg.Options.Mode,
         };
 
     public static PathfinderWorkerState FromSnapshot(PersistedPathfinderWorkerState msg)
@@ -26,27 +27,23 @@ public class PathfinderWorkerState
             StartDirection = msg.StartDirection,
             StartTime = msg.StartTime,
             Timeout = msg.Timeout,
-            _counter = msg.FoundPathCounter
+            Count = msg.FoundPathCounter,
+            IsFinished = msg.IsFinished,
         };
 
-    private int _counter;
-
-    internal PathfinderWorkerState() => _counter = 0;
-
-    public Guid PathfinderId { get; init; }
-    public Direction StartDirection { get; init; }
-    public int SourcePointId { get; init; }
-    public int TargetPointId { get; init; }
-    public TimeSpan Timeout { get; init; }
-    public DateTime StartTime { get; init; }
-
-    public int Count => _counter;
-
-    public bool HasPathFound => _counter != 0;
-
-    public void IncrementFoundPathCounter()
-        => ++_counter;
+    public Guid PathfinderId { get; private init; }
+    public Directions StartDirection { get; private init; }
+    public int SourcePointId { get; private init; }
+    public int TargetPointId { get; private init; }
+    public DateTime StartTime { get; private init; }
+    public TimeSpan Timeout { get; private init; }
+    public AlgoMode Mode { get; init; }
+    public bool IsFinished { get; private set; }
+    public int Count { get; private set; }
+    public bool HasPathFound => Count != 0;
+    public void IncrementFoundPathCounter() => ++Count;
+    public void SetFinished() => IsFinished = true;
 
     public PersistedPathfinderWorkerState GetPersistenceState()
-        => new(PathfinderId, StartDirection, SourcePointId, TargetPointId, Timeout, _counter, StartTime);
+        => new(PathfinderId, StartDirection, SourcePointId, TargetPointId, Timeout, Count, StartTime);
 }

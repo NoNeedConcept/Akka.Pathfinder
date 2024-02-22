@@ -8,24 +8,20 @@ public interface ICommit
     uint AdditionalCost { get; }
 }
 
-public class DirectionCommit(uint additionalCost, Direction direction, ChangeMethod change) : ICommit
+public class DirectionCommit(uint additionalCost, Directions direction, ChangeMethod change) : ICommit
 {
-    private readonly ChangeMethod _changeMethod = change;
-
-    public Direction Direction { get; init; } = direction;
+    public Directions Direction { get; init; } = direction;
 
     public uint AdditionalCost { get; init; } = additionalCost;
 
-    ChangeMethod ICommit.ChangeMethod => _changeMethod;
+    ChangeMethod ICommit.ChangeMethod { get; } = change;
 }
 
 public class PointCommit(uint additionalCost, ChangeMethod change) : ICommit
 {
-    private readonly ChangeMethod _changeMethod = change;
-
     public uint AdditionalCost { get; init; } = additionalCost;
 
-    ChangeMethod ICommit.ChangeMethod => _changeMethod;
+    ChangeMethod ICommit.ChangeMethod { get; } = change;
 }
 
 public enum ChangeMethod

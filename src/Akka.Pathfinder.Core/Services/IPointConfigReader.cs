@@ -2,11 +2,11 @@
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
-namespace Akka.Pathfinder.Core;
+namespace Akka.Pathfinder.Core.Services;
 
 public interface IPointConfigReader
 {
-    public IMongoQueryable<PointConfig> Get(Guid collectionId);
+    public IQueryable<PointConfig> Get(Guid collectionId);
 
     public Task<PointConfig?> Get(Guid collectionId, int pointId, CancellationToken cancellationToken = default);
 }
@@ -20,7 +20,7 @@ public class PointConfigReader : IPointConfigReader
     private IMongoCollection<PointConfig> GetCollection(Guid collectionId)
         => Database.GetCollection<PointConfig>(collectionId.ToString());
 
-    public IMongoQueryable<PointConfig> Get(Guid collectionId)
+    public IQueryable<PointConfig> Get(Guid collectionId)
         => GetCollection(collectionId).AsQueryable();
 
     public async Task<PointConfig?> Get(Guid collectionId, int pointId, CancellationToken cancellationToken = default)

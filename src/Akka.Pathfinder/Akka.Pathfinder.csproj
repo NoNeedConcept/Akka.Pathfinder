@@ -1,36 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore" Version="*" />
-    <PackageReference Include="Akka" Version="1.5.*" />
-    <PackageReference Include="Akka.Quartz.Actor" Version="1.5.*" />
-    <PackageReference Include="Akka.HealthCheck.Hosting" Version="1.5.*" />
-    <PackageReference Include="Akka.HealthCheck.Cluster" Version="1.5.*" />
-    <PackageReference Include="Akka.HealthCheck.Hosting.Web" Version="1.5.*" />
-    <PackageReference Include="Akka.HealthCheck" Version="1.5.*" />
-    <PackageReference Include="Akka.Cluster.Sharding" Version="1.5.*" />
-    <PackageReference Include="Akka.Cluster.Hosting" Version="1.5.*" />
-    <PackageReference Include="Akka.Cluster" Version="1.5.*" />
-    <PackageReference Include="Akka.DependencyInjection" Version="1.5.*" />
-    <PackageReference Include="Akka.Hosting" Version="1.5.*" />
-    <PackageReference Include="Akka.Logger.Extensions.Logging" Version="1.4.22" />
-    <PackageReference Include="Akka.Logger.Serilog" Version="1.5.*" />
-    <PackageReference Include="Akka.Persistence.Hosting" Version="1.5.*" />
-    <PackageReference Include="Akka.Persistence.Sql.Hosting" Version="1.5.*" />
-    <PackageReference Include="Serilog.AspNetCore" Version="*" />
-    <PackageReference Include="Npgsql" Version="7.0.6" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore"/>
+        <PackageReference Include="Akka.Cluster.Sharding"/>
+        <PackageReference Include="Akka.Cluster.Hosting"/>
+        <PackageReference Include="Akka.Hosting"/>
+        <PackageReference Include="Akka.Logger.Serilog"/>
+        <PackageReference Include="Akka.Persistence.Mongodb.Hosting"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Akka.Pathfinder.Core\Akka.Pathfinder.Core.csproj" />
-    <ProjectReference Include="..\Akka.Pathfinder.Layout\Akka.Pathfinder.Layout.csproj" />
-    <ProjectReference Include="..\Akka.Pathfinder.Common\Akka.Pathfinder.Common.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Akka.Pathfinder.Core\Akka.Pathfinder.Core.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
 
 </Project>

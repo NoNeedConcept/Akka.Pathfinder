@@ -1,14 +1,18 @@
 
-namespace Akka.Pathfinder.Core;
+using Servus.Core.Diagnostics;
 
-public interface IMessage
+namespace Akka.Pathfinder.Core.Messages;
+
+public interface IMessage : IWithTracing
 {
     Guid MessageId { get; init; }
 }
 
-public abstract record MessageBase() : IMessage
+public abstract record MessageBase : IMessage
 {
     public Guid MessageId { get; init; } = Guid.NewGuid();
+    public string? TraceId { get; set; }
+    public string? SpanId { get; set; }
 }
 
 public interface IRequest : IMessage
@@ -28,7 +32,7 @@ public interface IPathfinderRequest<TResponse> : IRequest<TResponse>, IPathfinde
 public interface IMapManagerRequest : IRequest; 
 public interface IMapManagerRequest<TResponse> : IRequest<TResponse>, IMapManagerRequest where TResponse : IResponse;
 
-public abstract record RequestBase<TResponse>(Guid RequestId) : MessageBase(), IRequest<TResponse> where TResponse : IResponse
+public abstract record RequestBase<TResponse>(Guid RequestId) : MessageBase, IRequest<TResponse> where TResponse : IResponse
 {
     public Type ResponseType => typeof(TResponse);
 }
@@ -38,8 +42,7 @@ public interface IResponse : IMessage
     Guid RequestId { get; init; }
 }
 
-public abstract record ResponseBase(Guid RequestId) : MessageBase(), IResponse
-{ }
+public abstract record ResponseBase(Guid RequestId) : MessageBase, IResponse;
 
 
 // Sharding entities

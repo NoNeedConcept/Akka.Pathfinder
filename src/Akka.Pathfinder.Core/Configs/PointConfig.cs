@@ -1,15 +1,15 @@
 ﻿namespace Akka.Pathfinder.Core.Configs;
 
-public record PointConfig(int Id, uint Cost, Dictionary<Direction, DirectionConfig> DirectionConfigs, bool HasChanges = false);
+public record PointConfig(int Id, uint Cost, Dictionary<Directions, DirectionConfig> DirectionConfigs, bool HasChanges = false);
 
 public record DirectionConfig(int TargetPointId, uint Cost)
 {
-    internal DirectionConfig Increase(uint Value) => this with { Cost = Cost + Value };
-    internal DirectionConfig Decrease(uint Value) => this with { Cost = Cost - Value };
+    internal DirectionConfig Increase(uint value) => this with { Cost = Cost + value };
+    internal DirectionConfig Decrease(uint value) => this with { Cost = Cost - value };
 }
 
 [Flags]
-public enum Direction : byte
+public enum Directions : byte
 {
     None = 0,
     Top = 1 << 0,

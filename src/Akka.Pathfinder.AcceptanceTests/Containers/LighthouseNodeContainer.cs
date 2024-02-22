@@ -9,10 +9,12 @@ namespace Akka.Pathfinder.AcceptanceTests.Containers;
 public sealed class LighthouseNodeContainer : IAsyncLifetime
 {
     public const int Port = 42000;
-    public const string Hostname = "127.0.0.1";
+    public const string Hostname = "host.docker.internal";
+    public readonly string _actorSystem;
 
-    public LighthouseNodeContainer(string actorSystem = "Zeus")
+    public LighthouseNodeContainer(string actorSystem = "zeus")
     {
+        _actorSystem = actorSystem;
         Log.Information("[TEST][{LighthouseNodeContainer}] ctor", GetType().Name);
 
         // PetaBridge uses different tag for arm64
@@ -38,12 +40,16 @@ public sealed class LighthouseNodeContainer : IAsyncLifetime
 
     public IContainer Container { get; }
 
+    public string GetSeedNodeString()
+    {
+        return $"akka.tcp://{_actorSystem}@{Hostname}:{Port}";
+    }
+
     public async Task InitializeAsync()
     {
         Log.Information("[TEST][{LighthouseNodeContainer}] InitializeAsync", GetType().Name);
 
-        var timeoutCts = new CancellationTokenSource();
-        timeoutCts.CancelAfter(TimeSpan.FromMinutes(1));
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
         await Container.StartAsync(timeoutCts.Token).ConfigureAwait(false);
 
         Log.Information("[TEST][{LighthouseNodeContainer}] started and ready on Port [{Hostname}:{PublicPort}]",
@@ -61,15 +67,10 @@ public sealed class LighthouseNodeContainer : IAsyncLifetime
     }
 }
 
-public sealed class WaitUntilLogMessage : IWaitUntil
+public sealed class WaitUntilLogMessage(string logMessage) : IWaitUntil
 {
-    private static readonly string[] LineEndings = { "\r\n", "\n" };
-    private readonly string _logMessage;
-
-    public WaitUntilLogMessage(string logMessage)
-    {
-        _logMessage = logMessage ?? throw new ArgumentNullException(nameof(logMessage));
-    }
+    private static readonly string[] LineEndings = ["\r\n", "\n"];
+    private readonly string _logMessage = logMessage ?? throw new ArgumentNullException(nameof(logMessage));
 
     public async Task<bool> UntilAsync(IContainer container)
     {

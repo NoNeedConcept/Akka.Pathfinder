@@ -11,7 +11,7 @@ public partial class PathfinderWorker
         try
         {
             _logger.Information("[{PathfinderId}][RECOVER][{SequenceNr}]",
-                    EntityId, msg.Metadata.SequenceNr);
+                    _entityId, msg.Metadata.SequenceNr);
 
             if (msg.Snapshot is PersistedPathfinderWorkerState persisted)
             {
@@ -19,11 +19,11 @@ public partial class PathfinderWorker
                 return;
             }
 
-            _logger.Warning("[{PathfinderId}][RECOVER][{MessageType}] Invalid snapshot type!", EntityId, msg.Snapshot.GetType().Name);
+            _logger.Warning("[{PathfinderId}][RECOVER][{MessageType}] Invalid snapshot type!", _entityId, msg.Snapshot.GetType().Name);
         }
         catch (Exception ex)
         {
-            _logger.Fatal(ex, "[{PathfinderId}][RECOVER][{MessageType}] Failed to recover", EntityId, msg.GetType().Name);
+            _logger.Fatal(ex, "[{PathfinderId}][RECOVER][{MessageType}] Failed to recover", _entityId, msg.GetType().Name);
             Become(Failure);
         }
     }

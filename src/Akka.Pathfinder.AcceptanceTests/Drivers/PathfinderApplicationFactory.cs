@@ -1,11 +1,10 @@
 using System.Net;
-using Grpc.Net.Client;
+using System.Net.Sockets;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Polly;
 using Polly.Timeout;
 using Serilog;
-using static Akka.Pathfinder.Grpc.MapManager;
-using static Akka.Pathfinder.Grpc.Pathfinder;
 
 namespace Akka.Pathfinder.AcceptanceTests.Drivers;
 
@@ -13,22 +12,26 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
 {
     public PathfinderApplicationFactory()
     {
-        Log.Information("[TEST][PathfinderApplicationFactory][ctor]", GetType().Name);
+        Log.Information("[TEST][PathfinderApplicationFactory][ctor]");
+    }
 
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        //builder.UseEnvironment("Production");
+        builder.UseEnvironment("Development");
+        builder.UseSetting("akka:remote:dot-netty:tcp:port", PortFinder.FindFreeLocalPort().ToString());
     }
 
     public async Task InitializeAsync()
     {
         Log.Information("[TEST][PathfinderApplicationFactory][InitializeAsync]");
-
         var client = CreateClient();
         Log.Information("[TEST][PathfinderApplicationFactory] client ready [{BaseAddress}]",
             client.BaseAddress?.ToString());
 
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(120));
-        var isReady = await IsUrlAsync(client, "/health/ready", 20, TimeSpan.FromSeconds(15), TimeSpan.FromMinutes(1), cancellationToken: cts.Token);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+        var isReady = await IsUrlAsync(client, "/health", 20, TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(1),
+            cancellationToken: cts.Token);
         if (!isReady)
         {
             Log.Fatal("[TEST][PathfinderApplicationFactory] application NOT healthy!");
@@ -43,13 +46,7 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         Log.Information("[TEST][PathfinderApplicationFactory][DisposeAsync]");
         await base.DisposeAsync();
     }
-
-    public GrpcChannel GetGrpcChannel() => GrpcChannel.ForAddress(Server.BaseAddress, new GrpcChannelOptions { HttpHandler = Server.CreateHandler() });
-
-    public MapManagerClient GetMapManagerClient() => new(GetGrpcChannel());
-
-    public PathfinderClient GetPathfinderClient() => new(GetGrpcChannel());
-
+    
     public static async Task<bool> IsUrlAsync(HttpClient client, string relativeUri, int retry = 5,
         TimeSpan? delay = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
@@ -88,5 +85,31 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         {
             return false;
         }
+    }
+}
+
+public class PortFinder
+{
+    /// <summary>
+    /// Returns a unused local port on the current host
+    /// </summary>
+    /// <returns>Port number or 0 if no free port was found.</returns>
+    public static int FindFreeLocalPort()
+    {
+        int port;
+        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        try
+        {
+            var endpoint = new IPEndPoint(IPAddress.Any, 0);
+            socket.Bind(endpoint);
+            endpoint = (IPEndPoint)socket.LocalEndPoint!;
+            port = endpoint.Port;
+        }
+        finally
+        {
+            socket.Close();
+        }
+
+        return port;
     }
 }

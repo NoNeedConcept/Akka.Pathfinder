@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 
-namespace Akka.Pathfinder.Core;
+namespace Akka.Pathfinder.Core.Services;
 
 public interface IPathWriter : IPathReader
 {
@@ -19,7 +19,7 @@ public class PathWriter : PathReader, IPathWriter
         .Set(x => x.PathfinderId, path.PathfinderId)
         .Set(x => x.Id, path.Id);
 
-        var result = Collection.UpdateOne(x => x.Id == path.Id, update, new UpdateOptions() { IsUpsert = true, }, cancellationToken);
+        var result = Collection.UpdateOne(x => x.Id == path.Id, update, new UpdateOptions { IsUpsert = true, }, cancellationToken);
         return result.IsAcknowledged;
     }
 }
