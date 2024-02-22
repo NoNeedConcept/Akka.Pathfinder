@@ -8,7 +8,7 @@ namespace Akka.Pathfinder;
 public static partial class Conversions
 {
     public static PathfinderRequest To(this Grpc.FindPathRequest value)
-        => new(value.PathfinderId.To(), value.SourcePointId, value.TargetPointId, value.Direction.To(), value.Duration.ToTimeSpan());
+        => new(value.PathfinderId.To(), value.SourcePointId, value.TargetPointId, value.Direction.To(), new PathfinderOptions(AlgoMode.OnlyTimeout, value.Duration.ToTimeSpan()));
 
     public static FindPathResponse To(this PathfinderResponse value)
         => new()
