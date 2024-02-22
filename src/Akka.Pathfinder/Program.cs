@@ -49,8 +49,6 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
             ProviderName = LinqToDB.ProviderName.PostgreSQL15,
             TagStorageMode = TagMode.TagTable,
             AutoInitialize = true,
-            WriteIsolationLevel = System.Data.IsolationLevel.ReadCommitted,
-            ReadIsolationLevel = System.Data.IsolationLevel.ReadCommitted
         };
 
         var shardingSnapshotOptions = new Akka.Persistence.Sql.Hosting.SqlSnapshotOptions(true)
@@ -58,8 +56,6 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
             ConnectionString = connectionString,
             ProviderName = LinqToDB.ProviderName.PostgreSQL15,
             AutoInitialize = true,
-            WriteIsolationLevel = System.Data.IsolationLevel.ReadCommitted,
-            ReadIsolationLevel = System.Data.IsolationLevel.ReadCommitted
         };
 
         builder.ConfigureLoggers(setup =>
@@ -82,15 +78,15 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
             })
             .WithSqlPersistence(connectionString!, LinqToDB.ProviderName.PostgreSQL15, PersistenceMode.Both, autoInitialize: true, tagStorageMode: TagMode.Both)
             .WithJournalAndSnapshot(shardingJournalOptions, shardingSnapshotOptions)
-            .WithShardRegion<PointWorker>("PointWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PointWorker>(x), new MessageExtractor(100), new ShardOptions()
+            .WithShardRegion<PointWorker>("PointWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PointWorker>(x), new MessageExtractor(128), new ShardOptions()
             {
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
                 Role = "KEKW",
-                ShouldPassivateIdleEntities = false,
-                //PassivateIdleEntityAfter = TimeSpan.FromSeconds(30)
+                ShouldPassivateIdleEntities = true,
+                PassivateIdleEntityAfter = TimeSpan.FromSeconds(30),
             })
-            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor(100))
+            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor(128))
             .WithShardRegion<PathfinderWorker>("PathfinderWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PathfinderWorker>(x), new MessageExtractor(), new ShardOptions()
             {
                 JournalOptions = shardingJournalOptions,
@@ -109,6 +105,7 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
                 registry.Register<RequestForwarder>(system.Props<RequestForwarder>());
             });
     });
+
 builder.Services.AddGrpc();
 builder.Services.AddTransient<IMapManagerGatewayService, MapManagerGatewayService>();
 builder.Services.AddTransient<IPathfinderGatewayService, PathfinderGatewayService>();

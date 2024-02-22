@@ -129,5 +129,5 @@ public partial class PointWorker
         => _logger.Error(msg.Cause, "[{PointId}][SNAPSHOTFAILURE][{SequenceNr}]", EntityId, msg.Metadata.SequenceNr);
 
     private void SaveSnapshotSuccessHandler(SaveSnapshotSuccess msg)
-        => _logger.Information("[{PointId}][SNAPSHOTSUCCESS][{SequenceNr}]", EntityId, msg.Metadata.SequenceNr);
+        => _logger.Verbose("[{PointId}][SNAPSHOTSUCCESS][{SequenceNr}]", EntityId, msg.Metadata.SequenceNr);
 }

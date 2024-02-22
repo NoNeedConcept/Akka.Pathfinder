@@ -1,5 +1,5 @@
 ﻿Feature: Map4
- 150*150*150 Points map... basic function test for pathfinder
+ 25*25*25 Points map... basic function test for pathfinder
 
     Scenario: Find long Path on Map 4
         Given Map is 4
