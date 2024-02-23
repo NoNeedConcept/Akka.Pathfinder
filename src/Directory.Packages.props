@@ -1,0 +1,34 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enable central package management, https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="Google.Protobuf" Version="3.33.2" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.76.0" />
+    <PackageVersion Include="Grpc.Tools" Version="2.76.0" />
+    <PackageVersion Include="Grpc.AspNetCore" Version="2.76.0" />
+    <PackageVersion Include="Akka.Cluster.Sharding" Version="1.5.57" />
+    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.57" />
+    <PackageVersion Include="Akka.DependencyInjection" Version="1.5.57" />
+    <PackageVersion Include="Akka.Hosting" Version="1.5.57" />
+    <PackageVersion Include="Akka.Logger.Serilog" Version="1.5.25" />
+    <PackageVersion Include="Akka.Persistence.Mongodb.Hosting" Version="1.5.55.1" />
+    <PackageVersion Include="moin.akka.endpoint" Version="0.1.1" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageVersion Include="MongoDB.Driver" Version="3.5.2" />
+    <PackageVersion Include="Servus.Akka" Version="0.3.5" />
+    <!-- TESTING UTILS-->
+    <PackageVersion Include="Akka.Hosting.TestKit" Version="1.5.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.20" />
+    <PackageVersion Include="Polly" Version="8.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageVersion Include="Testcontainers" Version="4.9.0" />
+    <PackageVersion Include="Reqnroll.xUnit" Version="3.3.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+  </ItemGroup>
+</Project>

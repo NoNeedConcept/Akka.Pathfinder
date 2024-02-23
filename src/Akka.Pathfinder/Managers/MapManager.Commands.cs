@@ -2,10 +2,9 @@
 using Akka.Pathfinder.Core.States;
 using Akka.Actor;
 using Akka.Streams.Dsl;
-using MongoDB.Driver;
 using Akka.Streams;
-using LinqToDB;
-using Akka.Pathfinder.Core;
+using moin.akka.endpoint;
+using MongoDB.Driver.Linq;
 
 namespace Akka.Pathfinder.Managers;
 
@@ -21,14 +20,16 @@ public partial class MapManager
 
         var startTime = DateTime.UtcNow;
         _ = await Source.From(mapConfig.CollectionIds)
-        .SelectMany(collectionId => _pointConfigReader.Get(collectionId).Select(x => x.Id).ToList().Select(pointId => Tuple.Create(pointId, collectionId)))
-        .SelectAsync(32, x => Task.FromResult(new InitializePoint(x.Item1, x.Item2)))
-        .Buffer(256, OverflowStrategy.Backpressure)
-        .Ask<PointInitialized>(Context.GetRegistry().Get<PointWorkerProxy>(), TimeSpan.FromSeconds(15), 32)
-        .RunWith(Sink.Ignore<PointInitialized>(), Context.Materializer());
+            .SelectAsync(4,
+                async collectionId => Tuple.Create(collectionId,
+                    await _pointConfigReader.Get(collectionId).Select(x => x.Id).ToListAsync()))
+            .SelectMany(tuple => tuple.Item2.Select(pointId => new InitializePoint(pointId, tuple.Item1)).ToArray())
+            .Ask<PointInitialized>(_registry.GetClient<Endpoint.PointWorker>(), TimeSpan.FromSeconds(15), 128)
+            .RunWith(Sink.Ignore<PointInitialized>(), Context.Materializer());
         var endTime = DateTime.UtcNow;
 
-        _logger.Information("[{ActorName}][{MapId}] Maploaded TotalSeconds [{TotalSeconds}]", GetType().Name, msg.MapId, (endTime - startTime).TotalSeconds);
+        _logger.Information("[{ActorName}][{MapId}] Maploaded TotalSeconds [{TotalSeconds}]", GetType().Name, msg.MapId,
+            (endTime - startTime).TotalSeconds);
         _state.SetMapIsReady();
         Sender.Tell(new MapLoaded(msg.RequestId, msg.MapId));
         Become(Ready);
@@ -51,7 +52,6 @@ public partial class MapManager
             return;
         }
 
-        Context.GetRegistry().Get<PointWorkerProxy>().Forward(msg);
+        _registry.GetClient<Endpoint.PointWorker>().Forward(msg);
     }
 }
-

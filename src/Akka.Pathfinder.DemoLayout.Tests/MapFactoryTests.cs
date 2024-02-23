@@ -1,4 +1,4 @@
-using Akka.Pathfinder.Core.Configs;
+using Akka.Pathfinder.DemoLayout;
 
 namespace Akka.Pathfinder.Layout.Tests;
 
@@ -7,8 +7,8 @@ public class MapFactoryTests
     [Fact]
     public void CreateRandomMapConfig()
     {
-        int x = 3;
-        var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(42, 20, new MapSize(x, x, x), new Dictionary<Direction, uint>()
+        var x = 3;
+        var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(42, 20, new MapSize(x, x, x), new Dictionary<Direction, uint>
         {
             { Direction.Top, 100 },
             { Direction.Bottom, 100 }
@@ -25,7 +25,7 @@ public class MapFactoryTests
     public void CreateMapConfigFromArray()
     {
         var mapSize = new MapSize(3, 3, 2);
-        var mapSettings = new MapSettings(42, 20, mapSize, new Dictionary<Direction, uint>()
+        var mapSettings = new MapSettings(42, 20, mapSize, new Dictionary<Direction, uint>
         {
             { Direction.Top, 100 },
             { Direction.Bottom, 100 }
@@ -56,8 +56,8 @@ public class MapFactoryTests
      [Fact]
     public void CreateLargeMapConfig()
     {
-        int x = 125;
-        var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(42, 20, new MapSize(x, x, x), new Dictionary<Direction, uint>()
+        var x = 125;
+        var mapConfig = MapFactoryProvider.Instance.CreateFactory().Create(new MapSettings(42, 20, new MapSize(x, x, x), new Dictionary<Direction, uint>
         {
             { Direction.Top, 100 },
             { Direction.Bottom, 100 }

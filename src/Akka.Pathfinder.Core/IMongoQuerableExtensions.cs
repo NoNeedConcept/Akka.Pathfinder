@@ -5,7 +5,7 @@ namespace Akka.Pathfinder.Core;
 
 public static class IMongoQueryableExtensions
 {
-    public static async Task ThrottleAsync<T>(this IMongoQueryable<T> values, Action<T> action, TimeSpan? initialDelay = null, TimeSpan? interval = null)
+    public static async Task ThrottleAsync<T>(this IQueryable<T> values, Action<T> action, TimeSpan? initialDelay = null, TimeSpan? interval = null)
     {
         initialDelay ??= TimeSpan.Zero;
         interval ??= TimeSpan.FromMicroseconds(5);
@@ -19,10 +19,9 @@ public static class IMongoQueryableExtensions
         }
     }
 
-    public static async Task CreateIndexAsync<T>(this IMongoCollection<T> collection, Func<IndexKeysDefinitionBuilder<T>, IndexKeysDefinition<T>> selector, string indexName, CancellationToken cancellationToken = default)
+    public static void CreateIndex<T>(this IMongoCollection<T> collection, Func<IndexKeysDefinitionBuilder<T>, IndexKeysDefinition<T>> selector, string indexName)
     {
         var indexKeysDefinition = selector.Invoke(Builders<T>.IndexKeys);
-
-        await collection.Indexes.CreateOneAsync(new CreateIndexModel<T>(indexKeysDefinition, new CreateIndexOptions() {  Name = indexName,  }), cancellationToken: cancellationToken);
+        collection.Indexes.CreateOne(new CreateIndexModel<T>(indexKeysDefinition, new CreateIndexOptions {  Name = indexName,  }));
     }
 }

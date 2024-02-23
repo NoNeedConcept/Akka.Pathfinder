@@ -15,8 +15,9 @@ public static class StreamsExtensions
             var response = await actorRef.Ask<TResponse>(request, cancellationToken);
             return outputItemCreator.Invoke(response, item);
         })
+        .Log("")
         .Named("AskTransform");
 
         return source.ViaMaterialized(flow, Keep.Left);
     }
-}   
+}

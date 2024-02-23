@@ -11,21 +11,21 @@ namespace Akka.Pathfinder.Workers;
 public abstract record LocalPointConfig(PointConfig? Config = default);
 
 public record LocalPointConfigSuccess(PointConfig Config) : LocalPointConfig(Config);
-public record LocalPointConfigFailed(Exception Exception) : LocalPointConfig();
+public record LocalPointConfigFailed(Exception Exception) : LocalPointConfig;
 
 public partial class PointWorker : ReceivePersistentActor
 {
-    public override string PersistenceId => $"PointWorker_{EntityId}";
-    public string EntityId;
-
+    public override string PersistenceId => $"PointWorker_{_entityId}";
+    private string _entityId;
     private readonly IPointConfigReader _pointConfigReader;
     private readonly IPathWriter _pathWriter;
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
+    private readonly Serilog.ILogger _logger;
     private PointWorkerState _state = null!;
 
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
-        EntityId = entityId;
+        _entityId = entityId;
+        _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
         var provider = serviceProvider;
         _pointConfigReader = provider.GetRequiredService<IPointConfigReader>();
         _pathWriter = provider.GetRequiredService<IPathWriter>();
@@ -42,23 +42,22 @@ public partial class PointWorker : ReceivePersistentActor
 
     protected override void OnReplaySuccess()
     {
-        _logger.Verbose("[{PointId}][RECOVER] SUCCESS", EntityId);
-
-        if (_state is not null || _state?.Loaded is true)
+        _logger.Verbose("[{PointId}][RECOVER] SUCCESS", _entityId);
+        if (_state is not null && _state.Loaded)
         {
-            _logger.Verbose("[{PointId}][RECOVER] Ready", EntityId);
+            _logger.Verbose("[{PointId}][RECOVER] Ready", _entityId);
             Become(Ready);
         }
         else
         {
-            _logger.Verbose("[{PointId}][RECOVER] Initialize", EntityId);
+            _logger.Verbose("[{PointId}][RECOVER] Initialize", _entityId);
             Become(Initialize);
         }
     }
 
     private void OnConfigure()
     {
-        _logger.Verbose("[{PointId}][RECOVER] Initialize", EntityId);
+        _logger.Verbose("[{PointId}][RECOVER] Initialize", _entityId);
 
         _pointConfigReader
         .Get(_state.CollectionId, _state.PointId)
@@ -67,13 +66,14 @@ public partial class PointWorker : ReceivePersistentActor
 
     protected override void PreRestart(Exception reason, object message)
         => _logger.Error("[{PointId}] PreRestart(): [{RestartReason}] on [{MessageType}][{MessageData}]",
-            EntityId, reason.Message, message.GetType().Name, message);
+            _entityId, reason.Message, message.GetType().Name, message);
 
     protected override void OnPersistFailure(Exception cause, object @event, long sequenceNr)
         => _logger.Error("[{PointId}] OnPersistFailure(): [{ExceptionMessage}] on [{MessageType}][{MessageData}][{SeqNr}]",
-            EntityId, cause.Message, @event.GetType().Name, @event, sequenceNr);
+            _entityId, cause.Message, @event.GetType().Name, @event, sequenceNr);
 
     protected override void OnPersistRejected(Exception cause, object @event, long sequenceNr)
         => _logger.Error("[{PointId}] OnPersistRejected(): [{ExceptionMessage}] on [{MessageType}][{MessageData}][{SeqNr}]",
-            EntityId, cause.Message, @event.GetType().Name, @event, sequenceNr);
+            _entityId, cause.Message, @event.GetType().Name, @event, sequenceNr);
+
 }

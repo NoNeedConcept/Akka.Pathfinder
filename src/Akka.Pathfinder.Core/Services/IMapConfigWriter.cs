@@ -20,7 +20,7 @@ public class MapConfigWriter : MapConfigReader, IMapConfigWriter
         .Set(x => x.CollectionIds, config.CollectionIds)
         .Set(x => x.Count, config.Count);
 
-        var result = await Collection.UpdateOneAsync(x => x.Id == config.Id, update, new UpdateOptions() { IsUpsert = true }, cancellationToken);
+        var result = await Collection.UpdateOneAsync(x => x.Id == config.Id, update, new UpdateOptions { IsUpsert = true }, cancellationToken);
         return result.IsAcknowledged;
     }
 }

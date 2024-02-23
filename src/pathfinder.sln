@@ -9,11 +9,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.AcceptanceT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Core", "Akka.Pathfinder.Core\Akka.Pathfinder.Core.csproj", "{5441C267-50EE-45EC-B5CD-B51ABD14CAD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Layout", "Akka.Pathfinder.Layout\Akka.Pathfinder.Layout.csproj", "{700D307C-4BFC-47CE-9D17-E4697C6EE8EF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.DemoLayout", "Akka.Pathfinder.DemoLayout\Akka.Pathfinder.DemoLayout.csproj", "{700D307C-4BFC-47CE-9D17-E4697C6EE8EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Layout.Tests", "Akka.Pathfinder.Layout.Tests\Akka.Pathfinder.Layout.Tests.csproj", "{247E513D-2636-428A-8AE9-914A7857D527}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.DemoLayout.Tests", "Akka.Pathfinder.DemoLayout.Tests\Akka.Pathfinder.DemoLayout.Tests.csproj", "{247E513D-2636-428A-8AE9-914A7857D527}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Common", "Akka.Pathfinder.Common\Akka.Pathfinder.Common.csproj", "{B2C3E4D3-8115-4399-9212-D12C7D243B8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Service", "Akka.Pathfinder.Service\Akka.Pathfinder.Service.csproj", "{B2C3E4D3-8115-4399-9212-D12C7D243B8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Client", "Akka.Pathfinder.Client\Akka.Pathfinder.Client.csproj", "{428008ED-16C7-4F9E-BEBB-6717519CB86D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{B2C3E4D3-8115-4399-9212-D12C7D243B8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2C3E4D3-8115-4399-9212-D12C7D243B8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2C3E4D3-8115-4399-9212-D12C7D243B8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{428008ED-16C7-4F9E-BEBB-6717519CB86D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{428008ED-16C7-4F9E-BEBB-6717519CB86D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{428008ED-16C7-4F9E-BEBB-6717519CB86D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{428008ED-16C7-4F9E-BEBB-6717519CB86D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,24 @@
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>False</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Google.Protobuf"/>
+        <PackageReference Include="Grpc.Net.Client"/>
+        <PackageReference Include="Grpc.Tools">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+
+        <Protobuf Include="Protos\pathfinder.proto" GrpcServices="Service"/>
+        <Protobuf Include="Protos\mapmanager.proto" GrpcServices="Service"/>
+        <Protobuf Include="Protos\common.proto" GrpcServices="Service"/>
+    </ItemGroup>
+
+</Project>

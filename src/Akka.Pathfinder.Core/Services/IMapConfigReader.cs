@@ -6,7 +6,7 @@ namespace Akka.Pathfinder.Core;
 
 public interface IMapConfigReader
 {
-    IMongoQueryable<MapConfig> Get();
+    IQueryable<MapConfig> Get();
     Task<MapConfig> GetAsync(Guid mapId, CancellationToken cancellationToken = default);
 }
 
@@ -17,7 +17,7 @@ public class MapConfigReader : IMapConfigReader
 
     protected IMongoCollection<MapConfig> Collection { get; }
 
-    public IMongoQueryable<MapConfig> Get()
+    public IQueryable<MapConfig> Get()
         => Collection.AsQueryable();
 
     public Task<MapConfig> GetAsync(Guid mapId, CancellationToken cancellationToken = default)

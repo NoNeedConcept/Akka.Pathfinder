@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Sockets;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Polly;
@@ -13,9 +14,7 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
 {
     public PathfinderApplicationFactory()
     {
-        Log.Information("[TEST][PathfinderApplicationFactory][ctor]", GetType().Name);
-
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+        Log.Information("[TEST][PathfinderApplicationFactory][ctor]");
     }
 
     public async Task InitializeAsync()
@@ -26,9 +25,9 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         Log.Information("[TEST][PathfinderApplicationFactory] client ready [{BaseAddress}]",
             client.BaseAddress?.ToString());
 
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(120));
-        var isReady = await IsUrlAsync(client, "/health/ready", 20, TimeSpan.FromSeconds(15), TimeSpan.FromMinutes(1), cancellationToken: cts.Token);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+        var isReady = await IsUrlAsync(client, "/health/ready", 20, TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(1),
+            cancellationToken: cts.Token);
         if (!isReady)
         {
             Log.Fatal("[TEST][PathfinderApplicationFactory] application NOT healthy!");
@@ -44,7 +43,8 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         await base.DisposeAsync();
     }
 
-    public GrpcChannel GetGrpcChannel() => GrpcChannel.ForAddress(Server.BaseAddress, new GrpcChannelOptions { HttpHandler = Server.CreateHandler() });
+    public GrpcChannel GetGrpcChannel() => GrpcChannel.ForAddress(Server.BaseAddress,
+        new GrpcChannelOptions { HttpHandler = Server.CreateHandler() });
 
     public MapManagerClient GetMapManagerClient() => new(GetGrpcChannel());
 
@@ -88,5 +88,31 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
         {
             return false;
         }
+    }
+}
+
+public class PortFinder
+{
+    /// <summary>
+    /// Returns a unused local port on the current host
+    /// </summary>
+    /// <returns>Port number or 0 if no free port was found.</returns>
+    public static int FindFreeLocalPort()
+    {
+        int port;
+        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        try
+        {
+            var endpoint = new IPEndPoint(IPAddress.Any, 0);
+            socket.Bind(endpoint);
+            endpoint = (IPEndPoint)socket.LocalEndPoint!;
+            port = endpoint.Port;
+        }
+        finally
+        {
+            socket.Close();
+        }
+
+        return port;
     }
 }

@@ -20,7 +20,7 @@ public static class BsonShit
              _ => true);
             
         BsonSerializer.RegisterSerializer(new UInt32Serializer(BsonType.Int64, new RepresentationConverter(false, true)));
-        BsonDefaults.GuidRepresentationMode = GuidRepresentationMode.V3;
+        //BsonDefaults.GuidRepresentationMode = GuidRepresentationMode.V3;
         BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
     }
 }

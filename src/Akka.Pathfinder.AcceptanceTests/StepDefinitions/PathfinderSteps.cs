@@ -1,9 +1,9 @@
 using Akka.Pathfinder.AcceptanceTests.Drivers;
 using Akka.Pathfinder.Core.Configs;
-using BoDi;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using TechTalk.SpecFlow;
+using Reqnroll;
+using Reqnroll.BoDi;
 
 namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
 
@@ -28,13 +28,15 @@ public class PathfinderSteps
     {
         var pathFound = _context.Get<Grpc.FindPathResponse>($"Result_{pathfinderId}");
         Assert.NotNull(pathFound);
-        Assert.Equal(pathfinderId, pathFound.PathfinderId.ToString());
+        Assert.Equal(pathfinderId, pathFound.PathfinderId);
         Assert.True(pathFound.Success);
 
         var pathReader = _databaseDriver.CreatePathWriter();
         Assert.True(Guid.TryParse(pathFound.PathId, out var pathId));
         var result = pathReader.Get(pathId).Single();
-        int actualCost = result.Directions.Select(p => (int)p.Cost).Sum();
+        Assert.NotNull(result);
+        if (expectedCost == 0) return;
+        var actualCost = result.Directions.Select(p => (int)p.Cost).Sum();
         Assert.Equal(expectedCost, actualCost);
     }
 
@@ -51,8 +53,8 @@ public class PathfinderSteps
     [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*) Seconds (.*)")]
     public async Task WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Direction direction, int targetPointId, string pathfinderId, int seconds)
     {
-        var source = new CancellationTokenSource(TimeSpan.FromMinutes(15));
-        var request = new Grpc.FindPathRequest()
+        using var source = new CancellationTokenSource(TimeSpan.FromMinutes(15));
+        var request = new Grpc.FindPathRequest
         {
             PathfinderId = pathfinderId,
             Direction = direction.To(),
@@ -65,15 +67,17 @@ public class PathfinderSteps
         var result = pathfinderClient.FindPath(cancellationToken: source.Token);
         try
         {
-            await result.RequestStream.WriteAsync(request);
-            await foreach (var response in result.ResponseStream.ReadAllAsync())
+            await result.RequestStream.WriteAsync(request, source.Token);
+            await foreach (var response in result.ResponseStream.ReadAllAsync(cancellationToken: source.Token))
             {
                 _context.Add($"Result_{pathfinderId}", response!);
                 await result.RequestStream.CompleteAsync();
-                source.Cancel();
             }
+
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
-        { }
+        {
+            Assert.Fail(ex.Message);
+        }
     }
 }

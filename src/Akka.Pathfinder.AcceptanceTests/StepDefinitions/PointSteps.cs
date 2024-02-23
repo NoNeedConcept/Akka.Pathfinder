@@ -1,5 +1,5 @@
-﻿using BoDi;
-using TechTalk.SpecFlow;
+﻿using Reqnroll;
+using Reqnroll.BoDi;
 
 namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
 

@@ -5,7 +5,7 @@ namespace Akka.Pathfinder.Core.Messages;
 public record PathFound(Guid RequestId, Guid PathfinderId, Guid PathId, PathfinderResult Result) : ResponseBase(RequestId), IPathfinderId;
 
 public record PathfinderRequest(Guid PathfinderId, int SourcePointId, int TargetPointId, Direction Direction, PathfinderOptions Options) : PathfinderRequestBase<PathfinderResponse>(PathfinderId);
-public record PathfinderOptions(AlgoMode Mode = AlgoMode.OnlyTimeout, TimeSpan? Timeout = default);
+public record PathfinderOptions(AlgoMode Mode = AlgoMode.Timeout, TimeSpan? Timeout = default);
 public record PathfinderResponse(Guid RequestId, Guid PathfinderId, bool Success, Guid? PathId = default, string? ErrorMessage = default) : ResponseBase(RequestId);
 
 public record DeletePathfinderRequest(Guid RequestId, Guid PathfinderId) : RequestBase<DeletePathfinderResponse>(RequestId), IPathfinderId;
@@ -15,9 +15,8 @@ public abstract record PathfinderRequestBase<TResponse>(Guid PathfinderId) : Req
 
 public enum AlgoMode : byte
 {
-    FirstFound,
-    YEN,
-    OnlyTimeout
+    First,
+    Timeout
 }
 
 public enum PathfinderResult : byte

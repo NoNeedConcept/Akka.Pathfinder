@@ -1,9 +1,6 @@
-using Akka.Pathfinder.Core.Configs;
-using LanguageExt.Pipes;
+namespace Akka.Pathfinder.DemoLayout;
 
-namespace Akka.Pathfinder.Layout;
-
-public class MongoConstantLengthForCollections
+public static class MongoConstantLengthForCollections
 {
     public const int Length = 1500000;
 }
@@ -233,7 +230,7 @@ public class MapFactory : IMapFactory
         }
         else
         {
-            result = new Dictionary<Guid, List<PointConfig>>()
+            result = new Dictionary<Guid, List<PointConfig>>
             {
                 { Guid.NewGuid(), listOfPoints }
             };
