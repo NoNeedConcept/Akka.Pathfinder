@@ -28,7 +28,7 @@ public partial class MapManager
         .RunWith(Sink.Ignore<PointInitialized>(), Context.Materializer());
         var endTime = DateTime.UtcNow;
 
-        _logger.Information("[{ActorName}][{MapId}] Maploaded TotalSeconds [{TotalMilliseconds}]", GetType().Name, msg.MapId, (endTime - startTime).TotalMilliseconds);
+        _logger.Information("[{ActorName}][{MapId}] Maploaded TotalSeconds [{TotalSeconds}]", GetType().Name, msg.MapId, (endTime - startTime).TotalSeconds);
         _state.SetMapIsReady();
         Sender.Tell(new MapLoaded(msg.RequestId, msg.MapId));
         Become(Ready);

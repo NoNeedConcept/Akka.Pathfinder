@@ -2,7 +2,7 @@
 
 public partial class PathfinderWorker 
 {
-    private void PersistState()
+    private void SnapshotState()
     {
         var persistedWorkerState = _state.GetPersistenceState();
         SaveSnapshot(persistedWorkerState);

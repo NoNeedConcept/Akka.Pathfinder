@@ -21,10 +21,10 @@ public partial class PathfinderWorker
             new(_state.SourcePointId, 0, _state.StartDirection)
         ];
 
-        var findPathRequest = new FindPathRequest(Guid.Parse(EntityId), Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList);
+        var findPathRequest = new FindPathRequest(msg.RequestId, msg.PathfinderId, Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList);
         _mapManagerClient.Tell(findPathRequest, Self);
         Context.System.Scheduler.ScheduleTellOnce(_state.Timeout, Self, new Timeout(msg.RequestId, _state.PathfinderId), Self);
-        PersistState();
+        SnapshotState();
     }
 
     public void FoundPathHandler(PathFound msg)
@@ -34,7 +34,7 @@ public partial class PathfinderWorker
         switch (msg.Result)
         {
             case PathfinderResult.Success:
-                _logger.Information("[{PathfinderId}] I found a path [{PathId}][{TotalMilliseconds}]", EntityId, msg.PathId, (DateTime.UtcNow - _state.StartTime).TotalMilliseconds);
+                _logger.Information("[{PathfinderId}] I found a path [{PathId}][{TotalSeconds}]", EntityId, msg.PathId, (DateTime.UtcNow - _state.StartTime).TotalSeconds);
                 _state.IncrementFoundPathCounter();
                 break;
             default:
@@ -73,7 +73,7 @@ public partial class PathfinderWorker
             _logger.Error(ex, "[{PathfinderId}] -> Exception: {@Exception}", EntityId, ex);
             ForwardToPathfinderSender(new PathfinderResponse(msg.RequestId, msg.PathfinderId, false, null, ex.Message));
         }
-        // send response
+        
     }
 
     private void ForwardToPathfinderSender(PathfinderResponse message) => _senderManagerClient.Tell(new ForwardToPathfinderSender(message.PathfinderId, message));

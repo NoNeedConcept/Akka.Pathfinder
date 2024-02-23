@@ -163,7 +163,7 @@ public record PointWorkerState
         response = null!;
         if (!request.TargetPointId.Equals(PointId)) return false;
         var paths = request.Directions.ToList();
-        var path = new Path(request.PathId, request.PathfinderId, paths);
+        var path = new Path(request.PathId, request.PathfinderId, request.RequestId, paths);
         var success = writer(path);
         if (!success)
         {
@@ -212,15 +212,14 @@ public record PointWorkerState
     {
         var results = new List<FindPathRequest>();
         var infoIds = request.Directions
-        .GroupJoin(_directionConfigs, x => x.PointId, x => x.Value.TargetPointId, (info, points) => { return points.Any() ? info.PointId : int.MinValue; })
+        .GroupJoin(_directionConfigs, x => x.PointId, x => x.Value.TargetPointId, (info, points) => points.Any() ? info.PointId : int.MinValue)
         .Where(x => x != int.MinValue)
         .ToList();
 
         foreach (var (key, value) in _directionConfigs.ExceptBy(infoIds, x => x.Value.TargetPointId).ToDictionary(x => x.Key, x => x.Value))
         {
             var directions = request.Directions.ToArray().Append(new PathPoint(value.TargetPointId, value.Cost, key)).ToList();
-            var findPathRequest = new FindPathRequest(request.PathfinderId, Guid.NewGuid(), value.TargetPointId, request.TargetPointId, directions);
-            results.Add(findPathRequest);
+            results.Add(new FindPathRequest(request.RequestId, request.PathfinderId, Guid.NewGuid(), value.TargetPointId, request.TargetPointId, directions));
         }
 
         _logger.Verbose("[{PointId}][{PathId}] To Targets [{KEKW}]", PointId, request.PathId, string.Join(",", results.Select(x => x.NextPointId)));

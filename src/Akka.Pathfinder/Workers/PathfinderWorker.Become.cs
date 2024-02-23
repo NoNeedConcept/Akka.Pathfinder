@@ -10,7 +10,6 @@ public partial class PathfinderWorker
     private void Ready()
     {
         _logger.Information("[{PathfinderId}][READY]", EntityId);
-        // Sender -> MapManager
         Command<PathfinderRequest>(PathfinderRequestHandler);
         Command<PathFound>(FoundPathHandler);
         // Sender -> Self
