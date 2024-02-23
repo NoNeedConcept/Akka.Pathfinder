@@ -1,8 +1,8 @@
 ﻿using Akka.Pathfinder.AcceptanceTests.Containers;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
-using BoDi;
 using MongoDB.Driver;
+using Reqnroll.BoDi;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 
 namespace Akka.Pathfinder.AcceptanceTests;

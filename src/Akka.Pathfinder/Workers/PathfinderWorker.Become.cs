@@ -9,7 +9,7 @@ public partial class PathfinderWorker
 {
     private void Ready()
     {
-        _logger.Information("[{PathfinderId}][READY]", EntityId);
+        _logger.Information("[{PathfinderId}][READY]", _entityId);
         Command<PathfinderRequest>(PathfinderRequestHandler);
         Command<PathFound>(FoundPathHandler);
         // Sender -> Self
@@ -23,14 +23,14 @@ public partial class PathfinderWorker
 
     private void Void()
     {
-        _logger.Debug("[{PathfinderId}][VOID]", EntityId);
+        _logger.Debug("[{PathfinderId}][VOID]", _entityId);
         Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
-        CommandAny(msg => _logger.Debug("[{PathfinderId}][{MessageType}] message received -> VOID", EntityId, msg.GetType().Name));
+        CommandAny(msg => _logger.Debug("[{PathfinderId}][{MessageType}] message received -> VOID", _entityId, msg.GetType().Name));
     }
 
     private void Failure()
     {
-        _logger.Warning("[{PathfinderId}][FAILURE]", EntityId);
+        _logger.Warning("[{PathfinderId}][FAILURE]", _entityId);
         var deleteSender = ActorRefs.NoSender;
         DeletePathfinderRequest request = null!;
         Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
@@ -52,7 +52,7 @@ public partial class PathfinderWorker
         });
         CommandAny(msg =>
         {
-            _logger.Debug("[{PathfinderId}][{MessageType}] message received -> no action in failure state", EntityId, msg.GetType().Name);
+            _logger.Debug("[{PathfinderId}][{MessageType}] message received -> no action in failure state", _entityId, msg.GetType().Name);
         });
     }
 }

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";  
+import "google/protobuf/timestamp.proto";
+import "Protos/common.proto";
+
+package Akka.Pathfinder;
+option csharp_namespace = "Akka.Pathfinder.Grpc";
+
+service MapManager {
+    rpc Load(MapRequest) returns(Ack);
+    rpc UpdateMap(MapRequest) returns(Ack);
+    rpc CreateMap(CreateMapRequest) returns (CreateMapResponse);
+}
+
+message MapRequest {
+    string map_id = 1;
+}
+
+message CreateMapRequest {
+    string map_id = 1;
+    repeated PointConfig points = 2;
+}
+
+message CreateMapResponse {
+    string map_id = 1;
+    bool success = 2;
+    string error_message = 3;
+    repeated string collection_ids = 4;
+    uint32 point_count = 5;
+}   

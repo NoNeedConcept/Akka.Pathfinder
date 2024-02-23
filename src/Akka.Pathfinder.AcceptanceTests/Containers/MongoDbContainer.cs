@@ -1,4 +1,5 @@
-﻿using DotNet.Testcontainers.Builders;
+﻿using Akka.Pathfinder.AcceptanceTests.Drivers;
+using DotNet.Testcontainers.Builders;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Serilog;
@@ -20,7 +21,7 @@ public class MongoDbContainer : IAsyncLifetime
             .WithName($"mongodb_{Guid.NewGuid():D}")
             .WithImage("mongo:6.0")
             .WithAutoRemove(true)
-            .WithPortBinding(InternalPort, true)
+            .WithPortBinding(PortFinder.FindFreeLocalPort(), InternalPort)
             .WithEnvironment("MONGO_INITDB_ROOT_USERNAME", $"{MongoUser}")
             .WithEnvironment("MONGO_INITDB_ROOT_PASSWORD", $"{MongoPassword}")
             .WithWaitStrategy(Wait.ForUnixContainer()
@@ -36,7 +37,7 @@ public class MongoDbContainer : IAsyncLifetime
 
     public string GetConnectionString()
     {
-        return $"mongodb://{MongoUser}:{MongoPassword}@{Hostname}:{Port}";
+        return $"mongodb://{MongoUser}:{MongoPassword}@{Hostname}:{Port}/{MongoDatabase}";
     }
 
     public async Task DropDataAsync()
@@ -54,16 +55,15 @@ public class MongoDbContainer : IAsyncLifetime
     {
         Log.Information("[TEST][{MongoDbContainerName}] InitializeAsync", GetType().Name);
 
-        var timeoutCts = new CancellationTokenSource();
-        timeoutCts.CancelAfter(TimeSpan.FromMinutes(1));
-
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
         await Container.StartAsync(timeoutCts.Token).ConfigureAwait(false);
 
         Port = Container.GetMappedPublicPort(InternalPort);
         Hostname = Container.Hostname;
         CreateMongoDatabaseUser();
 
-        Log.Information("[TEST][{MongoDbContainerName}] started and ready on Port [{Hostname}:{PublicPort}]", GetType().Name, Hostname, Port);
+        Log.Information("[TEST][{MongoDbContainerName}] started and ready on Port [{Hostname}:{PublicPort}]",
+            GetType().Name, Hostname, Port);
 
         Log.Information("[TEST][{MongoDbContainerName}] InitializeAsync finished", GetType().Name);
     }
@@ -103,7 +103,8 @@ public class MongoDbContainer : IAsyncLifetime
     public IMongoClient CreateMongoClient()
     {
         var connectionString = $"mongodb://{MongoUser}:{MongoPassword}@{Hostname}:{Port}";
-        Log.Debug("[TEST][{MongoDbContainerName}] MongoDB ConnectionString: {connectionString}", GetType().Name, connectionString);
+        Log.Debug("[TEST][{MongoDbContainerName}] MongoDB ConnectionString: {connectionString}", GetType().Name,
+            connectionString);
         return new MongoClient(connectionString);
     }
 

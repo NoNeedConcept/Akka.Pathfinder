@@ -6,10 +6,10 @@ namespace Akka.Pathfinder.Core;
 
 public interface IPathReader
 {
-    IMongoQueryable<Path> Get();
-    IMongoQueryable<Path> Get(Guid id);
-    Task<long> GetPathCostAsync(Guid id, CancellationToken cancellationToken = default);
-    IEnumerable<Path> GetByPathfinderId(Guid pathfinderId, CancellationToken cancellationToken = default);
+    IQueryable<Path> Get();
+    IQueryable<Path> Get(Guid id);
+    long GetPathCost(Guid id);
+    IEnumerable<Path> GetByPathfinderId(Guid pathfinderId);
 }
 
 public class PathReader : IPathReader
@@ -19,12 +19,12 @@ public class PathReader : IPathReader
 
     protected IMongoCollection<Path> Collection { get; }
 
-    public IMongoQueryable<Path> Get()
+    public IQueryable<Path> Get()
         => Collection.AsQueryable();
-    public IMongoQueryable<Path> Get(Guid id)
+    public IQueryable<Path> Get(Guid id)
         => Get().Where(x => x.Id == id);
-    public async Task<long> GetPathCostAsync(Guid id, CancellationToken cancellationToken = default)
-        => await Get(id).SelectMany(x => x.Directions).SumAsync(x => x.Cost, cancellationToken);
-    public IEnumerable<Path> GetByPathfinderId(Guid pathfinderId, CancellationToken cancellationToken = default)
-        => Get().Where(x => x.PathfinderId == pathfinderId).ToList(cancellationToken);
+    public long GetPathCost(Guid id)
+        => Get(id).SelectMany(x => x.Directions).Sum(x => x.Cost);
+    public IEnumerable<Path> GetByPathfinderId(Guid pathfinderId)
+        => Get().Where(x => x.PathfinderId == pathfinderId).ToList();
 }

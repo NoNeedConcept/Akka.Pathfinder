@@ -3,6 +3,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";  
 import "google/protobuf/timestamp.proto";
+import "Protos/common.proto";
 
 package Akka.Pathfinder;
 option csharp_namespace = "Akka.Pathfinder.Grpc";
@@ -37,28 +38,4 @@ message GetPathResponse{
     bool success = 1;
     string error_message = 2;
     repeated Point path = 3;
-}
-
-message Point{
-    int32 point_id = 1;
-    uint32 cost = 2;
-    Direction direction = 3;
-}
-
-message KEKW {
-  string message = 1;
-  google.protobuf.Timestamp time = 2;
-  google.protobuf.Duration duration = 3;
-  google.protobuf.Empty kekw = 4;
-}
-
-enum Direction
-{
-    DIRECTION_NONE = 0;
-    DIRECTION_TOP = 1;
-    DIRECTION_BOTTOM = 2;
-    DIRECTION_LEFT = 3;
-    DIRECTION_RIGHT = 4;
-    DIRECTION_FRONT = 5;
-    DIRECTION_BACK = 6;
 }

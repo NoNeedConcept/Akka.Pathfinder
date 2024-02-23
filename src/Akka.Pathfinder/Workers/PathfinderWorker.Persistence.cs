@@ -1,6 +1,6 @@
 ﻿namespace Akka.Pathfinder.Workers;
 
-public partial class PathfinderWorker 
+public partial class PathfinderWorker
 {
     private void SnapshotState()
     {

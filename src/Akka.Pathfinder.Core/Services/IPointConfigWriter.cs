@@ -18,15 +18,15 @@ public class PointConfigWriter : PointConfigReader, IPointConfigWriter
     {
         var collection = Database.GetCollection<PointConfig>(collectionId.ToString());
 
-        await collection.CreateIndexAsync(builder => builder.Ascending(item => item.Id), $"PointConfig_{collectionId}_Id", cancellationToken);
-        await collection.InsertManyAsync(pointConfigs, new InsertManyOptions() { IsOrdered = true }, cancellationToken);
+        collection.CreateIndex(builder => builder.Ascending(item => item.Id), $"PointConfig_{collectionId}_Id");
+        await collection.InsertManyAsync(pointConfigs, new InsertManyOptions { IsOrdered = true }, cancellationToken);
     }
 
     public async Task AddPointConfigAsync(Guid collectionId, PointConfig pointConfig, CancellationToken cancellationToken = default)
     {
         var collection = Database.GetCollection<PointConfig>(collectionId.ToString());
 
-        await collection.CreateIndexAsync(builder => builder.Ascending(item => item.Id), $"PointConfig_{collectionId}_Id", cancellationToken);
+        collection.CreateIndex(builder => builder.Ascending(item => item.Id), $"PointConfig_{collectionId}_Id");
         await collection.InsertOneAsync(pointConfig, cancellationToken: cancellationToken);
     }
 }

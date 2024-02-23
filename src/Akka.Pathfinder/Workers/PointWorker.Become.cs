@@ -9,15 +9,19 @@ public partial class PointWorker
 {
     private void Initialize()
     {
-        _logger.Verbose("[{PointId}][INITIALIZE]", EntityId);
+        _logger.Verbose("[{PointId}][INITIALIZE]", _entityId);
         Command<InitializePoint>(InitializePointHandler);
-        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
+        Command<ReceiveTimeout>(msg =>
+        {
+            PersistState();
+            Context.Parent.Tell(new Passivate(PoisonPill.Instance));
+        });
         CommandAny(msg => Stash.Stash());
     }
 
     private void Configure()
     {
-        _logger.Verbose("[{PointId}][CONFIGURE]", EntityId);
+        _logger.Verbose("[{PointId}][CONFIGURE]", _entityId);
         Command<LocalPointConfig>(LocalPointConfigHandler);
         CommandAny(msg => Stash.Stash());
         OnConfigure();
@@ -25,14 +29,14 @@ public partial class PointWorker
 
     private void Update()
     {
-        _logger.Verbose("[{PointId}][UPDATE]", EntityId);
+        _logger.Verbose("[{PointId}][UPDATE]", _entityId);
         Command<LocalPointConfig>(LocalPointConfigHandler);
         CommandAny(msg => Stash.Stash());
     }
 
     private void Failure()
     {
-        _logger.Verbose("[{PointId}][FAILURE]", EntityId);
+        _logger.Verbose("[{PointId}][FAILURE]", _entityId);
         var deleteSender = ActorRefs.NoSender;
         DeletePointRequest request = null!;
         Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
@@ -54,13 +58,14 @@ public partial class PointWorker
         });
         CommandAny(msg =>
         {
-            _logger.Debug("[{PointId}][{MessageType}] message received -> no action in failure state", EntityId, msg.GetType().Name);
+            _logger.Debug("[{PointId}][{MessageType}] message received -> no action in failure state", _entityId,
+                msg.GetType().Name);
         });
     }
 
     private void Ready()
     {
-        _logger.Verbose("[{PointId}][READY]", EntityId);
+        _logger.Verbose("[{PointId}][READY]", _entityId);
         // Sender -> PathfinderWorker
         Command<FindPathRequest>(FindPathRequestHandler);
         Command<PathfinderDeactivated>(PathfinderDeactivatedHandler);
@@ -73,7 +78,11 @@ public partial class PointWorker
         // Sender -> SnapshotStore
         Command<SaveSnapshotSuccess>(SaveSnapshotSuccessHandler);
         Command<SaveSnapshotFailure>(SaveSnapshotFailureHandler);
-        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
+        Command<ReceiveTimeout>(msg =>
+        {
+            PersistState();
+            Context.Parent.Tell(new Passivate(PoisonPill.Instance));
+        });
         Stash.UnstashAll();
     }
 }

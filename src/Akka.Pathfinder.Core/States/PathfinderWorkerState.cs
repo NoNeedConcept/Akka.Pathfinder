@@ -6,6 +6,9 @@ namespace Akka.Pathfinder.Core.States;
 
 public class PathfinderWorkerState
 {
+    private int _counter;
+    private bool _isFinished;
+
     public static PathfinderWorkerState FromRequest(PathfinderRequest msg)
         => new()
         {
@@ -27,10 +30,10 @@ public class PathfinderWorkerState
             StartDirection = msg.StartDirection,
             StartTime = msg.StartTime,
             Timeout = msg.Timeout,
-            _counter = msg.FoundPathCounter
+            _counter = msg.FoundPathCounter,
+            _isFinished = msg.IsFinished,
         };
 
-    private int _counter;
 
     internal PathfinderWorkerState() => _counter = 0;
 
@@ -41,14 +44,11 @@ public class PathfinderWorkerState
     public DateTime StartTime { get; init; }
     public TimeSpan Timeout { get; init; }
     public AlgoMode Mode { get; init; }
+    public bool IsFinished => _isFinished;
 
     public int Count => _counter;
-
     public bool HasPathFound => _counter != 0;
-
-    public void IncrementFoundPathCounter()
-        => ++_counter;
-
+    public void IncrementFoundPathCounter() => ++_counter;
     public PersistedPathfinderWorkerState GetPersistenceState()
         => new(PathfinderId, StartDirection, SourcePointId, TargetPointId, Timeout, _counter, StartTime);
 }
