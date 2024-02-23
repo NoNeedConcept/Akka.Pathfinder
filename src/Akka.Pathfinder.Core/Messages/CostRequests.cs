@@ -1,5 +1,6 @@
 ﻿using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Persistence.Data;
+using Hyperion.Internal;
 
 namespace Akka.Pathfinder.Core.Messages;
 
@@ -8,7 +9,7 @@ public static class CostConstants
     public const uint OccupiedCost = 420;
 }
 
-public record UpdateCostResponse(Guid RequestId, int PointId, bool Success): ResponseBase(RequestId);
+public record UpdateCostResponse(Guid RequestId, int PointId, bool Success) : ResponseBase(RequestId);
 
 public abstract record PointRequest<TResponse>(int PointId) : RequestBase<TResponse>(Guid.NewGuid()), IPointId where TResponse : IResponse;
 
@@ -38,7 +39,8 @@ public record UpdatePointDirection(PointConfig Config) : PointRequest<PointDirec
 public record PointDirectionUpdated(Guid RequestId, int PointId) : ResponseBase(RequestId);
 public record ReloadPoint(int PointId, Guid CollectionId) : PointRequest<PointReloaded>(PointId);
 public record PointReloaded(Guid RequestId, int PointId) : ResponseBase(RequestId);
-public record FindPathRequest(Guid PathfinderId, Guid PathId, int NextPointId, int TargetPointId, IReadOnlyList<PathPoint> Directions) : PointRequest<PathFound>(NextPointId);
+public record FindPathRequestBase(Guid RequestId, int PointId) : RequestBase<PathFound>(RequestId), IPointId;
+public record FindPathRequest(Guid RequestId, Guid PathfinderId, Guid PathId, int NextPointId, int TargetPointId, IReadOnlyList<PathPoint> Directions) : FindPathRequestBase(RequestId, NextPointId);
 
 public record DeletePointRequest(int PointId) : PointRequest<DeletePointResponse>(PointId);
-public record DeletePointResponse(Guid RequestId, int PointId, bool Success = false, Exception Error = default!): ResponseBase(RequestId);
+public record DeletePointResponse(Guid RequestId, int PointId, bool Success = false, Exception Error = default!) : ResponseBase(RequestId);
