@@ -181,8 +181,11 @@ public record PointWorkerState
         var currentPathCost = msg.Directions.Select(x => x.Cost).Sum(x => (int)x);
         if (_pathfinderPathCost.TryGetValue(msg.PathfinderId, out var value))
         {
-            if (value <= currentPathCost) return true;
-            _pathfinderPathCost.AddOrUpdate(msg.PathfinderId, currentPathCost, (_, _) => currentPathCost);
+            if (value < currentPathCost)
+            {
+                _pathfinderPathCost.AddOrUpdate(msg.PathfinderId, currentPathCost, (_, _) => currentPathCost);
+                return true;
+            }
         }
         else
         {
