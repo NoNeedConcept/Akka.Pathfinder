@@ -47,7 +47,7 @@ public class EnvironmentSetupHooks
         container.RegisterInstanceAs(seedNodeContainer);
         container.RegisterInstanceAs(pathfinderApplicationFactory);
 
-        await Task.Delay(5000);
+        await Task.Delay(750);
     }
 
     [AfterScenario]
@@ -75,7 +75,7 @@ public class EnvironmentSetupHooks
         => new LoggerConfiguration()
             .MinimumLevel.Information()
             .Enrich.FromLogContext()
-            .WriteTo.Console()
-            .WriteTo.Debug()
+            .WriteTo.Async(write => write.Console())
+            .WriteTo.Async(write => write.Debug())
             .CreateLogger();
 }

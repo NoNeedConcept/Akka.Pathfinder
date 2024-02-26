@@ -207,8 +207,7 @@ public record PointWorkerState
     // }
 
     public IEnumerable<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
-    {
-        var results = new List<FindPathRequest>();
+    {        
         var infoIds = request.Directions
         .GroupJoin(_directionConfigs, x => x.PointId, x => x.Value.TargetPointId, (info, points) => points.Any() ? info.PointId : int.MinValue)
         .Where(x => x != int.MinValue);
@@ -216,10 +215,8 @@ public record PointWorkerState
         foreach (var (key, value) in _directionConfigs.ExceptBy(infoIds, x => x.Value.TargetPointId))
         {
             var directions = request.Directions.ToArray().Append(new PathPoint(value.TargetPointId, value.Cost, key)).ToList();
-            results.Add(new FindPathRequest(request.RequestId, request.PathfinderId, Guid.NewGuid(), value.TargetPointId, request.TargetPointId, directions));
+            yield return new FindPathRequest(request.RequestId, request.PathfinderId, Guid.NewGuid(), value.TargetPointId, request.TargetPointId, directions);
         }
-
-        return results;
     }
 
     public PersistedPointWorkerState GetPersistenceState() => new(PointId, CollectionId, Cost, _directionConfigs.ToDictionary(), State, Loaded);

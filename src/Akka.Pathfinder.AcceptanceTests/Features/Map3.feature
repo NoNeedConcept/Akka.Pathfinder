@@ -9,6 +9,6 @@ Feature: Map3
     Scenario: Find multiple long Paths on Map 3
         Given Map is 3
         When You are on Point 1 and have the direction 0 want to find a Path to Point 3000 PathfinderId e39cb9e2-7ab1-4e71-a603-2869e99939bb Seconds 10
-        When You are on Point 1 and have the direction 0 want to find a Path to Point 2500 PathfinderId 28e45b4c-2b28-4f97-8e42-47c5ef8a94b0 Seconds 15
+        When You are on Point 1 and have the direction 0 want to find a Path to Point 2500 PathfinderId 28e45b4c-2b28-4f97-8e42-47c5ef8a94b0 Seconds 11
         Then the path for PathfinderId e39cb9e2-7ab1-4e71-a603-2869e99939bb should cost 3906
         Then the path for PathfinderId 28e45b4c-2b28-4f97-8e42-47c5ef8a94b0 should cost 2646
