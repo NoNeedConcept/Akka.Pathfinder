@@ -15,7 +15,8 @@ public class MapProvider
             { 2, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(3, 3, 3), [], 15), true)},
             { 3, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(15, 15, 15), [], 20), true)},
             { 4, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(25, 25, 25), [], 20), true)},
-            { 5, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(35, 40, 40), [], 20), true)}
+            { 5, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(35, 40, 40), [], 20), true)},
+            { 6, _factoryProvider.CreateFactory().Create(new MapSettings(BaseCost, BaseCost*2, new MapSize(256, 256, 1), [], 20), true)}
         };
 
     private static MapConfigWithPoints Map0()

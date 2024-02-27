@@ -118,7 +118,7 @@ public record PointWorkerState
 
     public void AddPathfinderPathCost(Guid pathfinderId, int cost) => _pathfinderPathCost[pathfinderId] = cost;
 
-    public void AddInactivePathfinder(Guid pathfinderId) => _inactivePathfinders.AddOrSet(pathfinderId, DateTime.UtcNow);
+    public void AddInactivePathfinder(Guid pathfinderId) => _inactivePathfinders[pathfinderId] = DateTime.UtcNow;
 
     public void RemovePathfinderPathCost(Guid pathfinderId) => _pathfinderPathCost.Remove(pathfinderId, out _);
 
@@ -136,7 +136,7 @@ public record PointWorkerState
 
     public bool TryLoopDetection(FindPathRequest request)
     {
-        var loopDetectionList = request.Directions.SkipLast(1).ToList();
+        var loopDetectionList = request.Directions.SkipLast(1);
         if (loopDetectionList.Any(x => x.PointId.Equals(PointId))) return true;
         return false;
     }
@@ -147,10 +147,10 @@ public record PointWorkerState
     {
         findPathRequest = request;
         if (request.Directions.Count == 1) return false;
-        var pathList = request.Directions.ToConcurrentDictionary(x => x.PointId);
+        var pathList = request.Directions.ToDictionary(x => x.PointId);
         var pointInfo = pathList.GetValueOrDefault(PointId);
         if (pointInfo is null) return true;
-        pathList.AddOrUpdate(PointId, pointInfo with { Cost = Cost + pointInfo.Cost }, (key, old) => old with { Cost = Cost + old.Cost });
+        pathList[PointId] = pointInfo with { Cost = Cost + pointInfo.Cost };
         findPathRequest = request with
         {
             Directions = pathList.Select(x => x.Value).ToList(),
@@ -207,7 +207,7 @@ public record PointWorkerState
     // }
 
     public IEnumerable<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
-    {        
+    {
         var infoIds = request.Directions
         .GroupJoin(_directionConfigs, x => x.PointId, x => x.Value.TargetPointId, (info, points) => points.Any() ? info.PointId : int.MinValue)
         .Where(x => x != int.MinValue);
