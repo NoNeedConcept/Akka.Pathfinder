@@ -1,6 +1,5 @@
 ﻿using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Persistence.Data;
-using Hyperion.Internal;
 
 namespace Akka.Pathfinder.Core.Messages;
 
