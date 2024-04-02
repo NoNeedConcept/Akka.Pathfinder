@@ -7,6 +7,34 @@ import "google/protobuf/timestamp.proto";
 package Akka.Pathfinder;
 option csharp_namespace = "Akka.Pathfinder.Grpc";
 
-message Ack{
+message Ack {
     bool success = 1;
+}
+
+message Point {
+    int32 id = 1;
+    uint32 cost = 2;
+    Direction direction = 3;
+}
+
+message PointConfig {
+    int32 id = 1;
+    uint32 cost = 2;
+    map<int32, DirectionConfig> direction_configs = 3;
+}
+
+message DirectionConfig {
+    int32 target_point_id = 1;
+    uint32 cost = 2;
+}
+
+enum Direction
+{
+    DIRECTION_NONE = 0;
+    DIRECTION_TOP = 1;
+    DIRECTION_BOTTOM = 2;
+    DIRECTION_LEFT = 3;
+    DIRECTION_RIGHT = 4;
+    DIRECTION_FRONT = 5;
+    DIRECTION_BACK = 6;
 }

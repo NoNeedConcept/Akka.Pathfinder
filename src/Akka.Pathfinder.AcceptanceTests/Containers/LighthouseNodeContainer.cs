@@ -61,15 +61,10 @@ public sealed class LighthouseNodeContainer : IAsyncLifetime
     }
 }
 
-public sealed class WaitUntilLogMessage : IWaitUntil
+public sealed class WaitUntilLogMessage(string logMessage) : IWaitUntil
 {
-    private static readonly string[] LineEndings = { "\r\n", "\n" };
-    private readonly string _logMessage;
-
-    public WaitUntilLogMessage(string logMessage)
-    {
-        _logMessage = logMessage ?? throw new ArgumentNullException(nameof(logMessage));
-    }
+    private static readonly string[] LineEndings = ["\r\n", "\n"];
+    private readonly string _logMessage = logMessage ?? throw new ArgumentNullException(nameof(logMessage));
 
     public async Task<bool> UntilAsync(IContainer container)
     {

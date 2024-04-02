@@ -20,12 +20,13 @@ public partial class PointWorker : ReceivePersistentActor
 
     private readonly IPointConfigReader _pointConfigReader;
     private readonly IPathWriter _pathWriter;
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PointWorker>();
+    private readonly Serilog.ILogger _logger;
     private PointWorkerState _state = null!;
 
     public PointWorker(string entityId, IServiceProvider serviceProvider)
     {
         EntityId = entityId;
+        _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
         var provider = serviceProvider;
         _pointConfigReader = provider.GetRequiredService<IPointConfigReader>();
         _pathWriter = provider.GetRequiredService<IPathWriter>();
@@ -43,7 +44,6 @@ public partial class PointWorker : ReceivePersistentActor
     protected override void OnReplaySuccess()
     {
         _logger.Verbose("[{PointId}][RECOVER] SUCCESS", EntityId);
-
         if (_state is not null || _state?.Loaded is true)
         {
             _logger.Verbose("[{PointId}][RECOVER] Ready", EntityId);

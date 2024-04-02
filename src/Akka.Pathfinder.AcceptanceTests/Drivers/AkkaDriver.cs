@@ -30,11 +30,11 @@ public class AkkaDriver : Hosting.TestKit.TestKit
             .WithRemoting("0.0.0.0", Port, Hostname)
             .WithClustering(new ClusterOptions
             {
-                Roles = new[] { "LULW" },
-                SeedNodes = new[]
-                {
+                Roles = ["LULW"],
+                SeedNodes =
+                [
                     $"akka.tcp://{_actorSystemName}@{LighthouseNodeContainer.Hostname}:{LighthouseNodeContainer.Port}"
-                }
+                ]
             });
 
         ConfigureAkkaServices(builder);
@@ -46,7 +46,7 @@ public class AkkaDriver : Hosting.TestKit.TestKit
             .WithShardRegionProxy<PathfinderProxy>("PathfinderWorker", "KEKW", new MessageExtractor())
             .WithSingletonProxy<MapManagerProxy>("MapManager", new ClusterSingletonOptions() { Role = "KEKW" });
     }
-    
+
     public void TellPathfinder(object request)
     {
         var pathfinderClient = Host.Services.GetRequiredService<IActorRegistry>().Get<PathfinderProxy>();

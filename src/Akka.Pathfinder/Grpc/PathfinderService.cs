@@ -11,10 +11,11 @@ public class PathfinderService : Grpc.Pathfinder.PathfinderBase
 {
     private readonly IPathfinderGatewayService _gateway;
     private readonly IPathReader _pathReader;
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PathfinderService>();
+    private readonly Serilog.ILogger _logger;
 
     public PathfinderService(IServiceScopeFactory scopeFactory)
     {
+        _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
         using var scope = scopeFactory.CreateScope();
         _gateway = scope.ServiceProvider.GetRequiredService<IPathfinderGatewayService>();
         _pathReader = scope.ServiceProvider.GetRequiredService<IPathReader>();

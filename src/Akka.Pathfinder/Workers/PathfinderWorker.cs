@@ -17,12 +17,13 @@ public partial class PathfinderWorker : ReceivePersistentActor
     private readonly IPathReader _pathReader;
     private readonly IActorRef _mapManagerClient = ActorRefs.Nobody;
     private readonly IActorRef _senderManagerClient = ActorRefs.Nobody;
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<PathfinderWorker>();
+    private readonly Serilog.ILogger _logger;
     private PathfinderWorkerState _state = null!;
 
     public PathfinderWorker(string entityId, IServiceScopeFactory serviceScopeFactory)
     {
         EntityId = entityId;
+        _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
         using var scope = serviceScopeFactory.CreateScope();
         var provider = scope.ServiceProvider;
         _pathReader = provider.GetRequiredService<IPathReader>();

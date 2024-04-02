@@ -78,15 +78,15 @@ builder.Services.WithAkkaHealthCheck(HealthCheckType.All)
             })
             .WithSqlPersistence(connectionString!, LinqToDB.ProviderName.PostgreSQL15, PersistenceMode.Both, autoInitialize: true, tagStorageMode: TagMode.Both)
             .WithJournalAndSnapshot(shardingJournalOptions, shardingSnapshotOptions)
-            .WithShardRegion<PointWorker>("PointWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PointWorker>(x), new MessageExtractor(128), new ShardOptions()
+            .WithShardRegion<PointWorker>("PointWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PointWorker>(x), new MessageExtractor(), new ShardOptions()
             {
                 JournalOptions = shardingJournalOptions,
                 SnapshotOptions = shardingSnapshotOptions,
                 Role = "KEKW",
-                ShouldPassivateIdleEntities = true,
-                PassivateIdleEntityAfter = TimeSpan.FromSeconds(30),
+                ShouldPassivateIdleEntities = false,
+                //PassivateIdleEntityAfter = TimeSpan.FromSeconds(15),
             })
-            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor(128))
+            .WithShardRegionProxy<PointWorkerProxy>("PointWorker", "KEKW", new MessageExtractor())
             .WithShardRegion<PathfinderWorker>("PathfinderWorker", (_, _, dependecyResolver) => x => dependecyResolver.Props<PathfinderWorker>(x), new MessageExtractor(), new ShardOptions()
             {
                 JournalOptions = shardingJournalOptions,
