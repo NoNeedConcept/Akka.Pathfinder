@@ -24,7 +24,7 @@
     <PackageReference Include="Akka.Persistence.Hosting" Version="1.5.*" />
     <PackageReference Include="Akka.Persistence.Sql.Hosting" Version="1.5.*" />
     <PackageReference Include="Serilog.AspNetCore" Version="*" />
-    <PackageReference Include="Npgsql" Version="7.0.6" />
+    <PackageReference Include="Npgsql" Version="7.0.7" />
   </ItemGroup>
 
   <ItemGroup>
