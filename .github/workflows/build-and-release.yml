@@ -90,10 +90,7 @@ jobs:
 
       # ---------- NuGet ----------
       - name: Push NuGet packages to GHCR
-        run: dotnet nuget push "./nupkgs/*.nupkg" \
-          --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-          --api-key ${{ secrets.GITHUB_TOKEN }} \
-          --skip-duplicate
+        run: dotnet nuget push --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate ${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg
       
       # ---------- Docker ----------
       - name: Login to GHCR
