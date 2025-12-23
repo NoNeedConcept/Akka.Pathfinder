@@ -1,15 +1,17 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER $APP_UID
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 5000
+ENV ASPNETCORE_HTTP_PORTS=5000
+EXPOSE 5001
+ENV ASPNETCORE_HTTPS_PORTS=5001
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Akka.Pathfinder/Akka.Pathfinder.csproj", "Akka.Pathfinder/"]
 COPY ["Akka.Pathfinder.Core/Akka.Pathfinder.Core.csproj", "Akka.Pathfinder.Core/"]
-COPY ["Akka.Pathfinder.Common/Akka.Pathfinder.Common.csproj", "Akka.Pathfinder.Common/"]
+COPY ["Akka.Pathfinder.Service/Akka.Pathfinder.Service.csproj", "Akka.Pathfinder.Service/"]
 RUN dotnet restore "Akka.Pathfinder/Akka.Pathfinder.csproj"
 COPY . .
 WORKDIR "/src/Akka.Pathfinder"
