@@ -19,6 +19,7 @@
         <PackageReference Include="Serilog.AspNetCore"/>
         <PackageReference Include="Serilog.Sinks.Async"/>
         <PackageReference Include="Servus.Akka" />
+        <PackageReference Include="Servus.Core" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,6 +1,4 @@
-using Akka.Actor;
 using Akka.Cluster.Hosting;
-using Akka.Cluster.Sharding;
 using Akka.Hosting;
 using Akka.Logger.Serilog;
 using Akka.Pathfinder.Core;
@@ -9,10 +7,19 @@ using Akka.Pathfinder.Workers;
 using Akka.Persistence.Hosting;
 using Akka.Persistence.MongoDb.Hosting;
 using Akka.Remote.Hosting;
+using Microsoft.Extensions.Options;
 using moin.akka.endpoint;
 using Servus.Akka.Startup;
 
 namespace Akka.Pathfinder.Startup;
+
+public class ZeusClusterConfig
+{
+    public string Hostname { get; set; } = string.Empty;
+    public int Port { get; set; }
+    public List<string> SeedNodes { get; set; } = [];
+    public List<string> Roles { get; set; } = [];
+}
 
 public class AkkaStartupContainer : ActorSystemSetupContainer
 {
@@ -24,6 +31,7 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
     protected override void BuildSystem(AkkaConfigurationBuilder builder, IServiceProvider serviceProvider)
     {
         var connectionString = serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("mongodb");
+        var clusterOptions = serviceProvider.GetRequiredService<IOptions<ZeusClusterConfig>>().Value;
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
         var shardingJournalOptions = new MongoDbJournalOptions(true)
         {
@@ -71,11 +79,11 @@ akka.actor.dispatchers.entity-dispatcher {
 ", HoconAddMode.Prepend)
             .WithActorSystemLivenessCheck()
             .WithAkkaClusterReadinessCheck()
-            .WithRemoting("0.0.0.0", 1337, "127.0.0.1")
+            .WithRemoting("0.0.0.0", clusterOptions.Port, clusterOptions.Hostname)
             .WithClustering(new ClusterOptions
             {
-                Roles = ["Pathfinder"],
-                SeedNodes = ["akka.tcp://zeus@127.0.0.1:42000"]
+                Roles = clusterOptions.Roles.ToArray(),
+                SeedNodes = clusterOptions.SeedNodes.ToArray(),
             })
             .WithMongoDbPersistence(connectionString)
             .WithJournalAndSnapshot(shardingJournalOptions, shardingSnapshotOptions)
