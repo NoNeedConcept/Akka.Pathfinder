@@ -10,6 +10,8 @@ public class ServiceSetupContainer : ApplicationSetupContainer<WebApplication>, 
 {
     public void SetupServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddOptions<ZeusClusterConfig>().BindConfiguration("ClusterOptions");
+        
         var connectionString = configuration.GetConnectionString("mongodb")!;
         services.AddHealthChecks();
         services.AddGrpc(options => { options.MaxReceiveMessageSize = null; });

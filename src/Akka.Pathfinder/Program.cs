@@ -5,7 +5,7 @@ using Servus.Core.Application.Startup;
 
 RegisterMongoShit();
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Async(x => x.Console())
+    .WriteTo.Console()
     .MinimumLevel.Debug()
     .CreateBootstrapLogger();
 

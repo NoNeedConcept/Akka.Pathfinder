@@ -3,22 +3,13 @@ using Servus.Core.Application.Startup;
 
 namespace Akka.Pathfinder.Startup;
 
-public class LoggingSetupContainer : ApplicationSetupContainer<WebApplication>,ILoggingSetupContainer, IServiceSetupContainer
+public class LoggingSetupContainer : IHostBuilderSetupContainer
 {
-    public void SetupLogging(ILoggingBuilder builder)
+    public void ConfigureHostBuilder(IHostBuilder builder)
     {
-        builder
-            .ClearProviders()
-            .AddSerilog();
-    }
-
-    public void SetupServices(IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddSerilog();
-    }
-
-    protected override void SetupApplication(WebApplication app)
-    {
-        app.UseSerilogRequestLogging();
+        builder.UseSerilog((context, _, configuration) =>
+        {
+            configuration.ReadFrom.Configuration(context.Configuration).Enrich.FromLogContext();
+        });
     }
 }
