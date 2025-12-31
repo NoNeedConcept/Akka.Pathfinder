@@ -18,6 +18,11 @@ public class OpenTelemetryContainer : ILoggingSetupContainer, IHostApplicationBu
 
     public void ConfigureHostApplicationBuilder(IHostApplicationBuilder builder)
     {
+        builder.Configuration.AddInMemoryCollection(
+            new Dictionary<string, string?>
+            {
+                ["OTEL_DOTNET_EXPERIMENTAL_ASPNETCORE_ENABLE_GRPC_INSTRUMENTATION"] = "true",
+            });
         builder.Services.AddOpenTelemetry()
             .WithMetrics(metrics =>
             {
@@ -35,7 +40,6 @@ public class OpenTelemetryContainer : ILoggingSetupContainer, IHostApplicationBu
                             !context.Request.Path.StartsWithSegments("/health")
                             && !context.Request.Path.StartsWithSegments("/health/alive")
                     )
-                    .AddGrpcClientInstrumentation()
                     .AddHttpClientInstrumentation()
                     .SetSampler(new AlwaysOnSampler());
             });
