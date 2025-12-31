@@ -14,6 +14,7 @@ var runner = AppBuilder.Create(WebApplication.CreateBuilder(args), b => b.Build(
     .WithSetup<LoggingSetupContainer>()
     .WithSetup<ServiceSetupContainer>()
     .WithSetup<AkkaStartupContainer>()
+    .WithSetup<OpenTelemetryContainer>()
     .WithSetup<HostConfigurationSetupContainer>();
 
 await runner.Build().RunAsync();

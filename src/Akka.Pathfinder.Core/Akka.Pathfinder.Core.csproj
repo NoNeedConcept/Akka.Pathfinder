@@ -13,6 +13,7 @@
         <PackageReference Include="Serilog.Sinks.Console"/>
         <PackageReference Include="MongoDB.Driver"/>
         <PackageReference Include="Akka.Persistence.MongoDb.Hosting"/>
+        <PackageReference Include="Servus.Core" />
     </ItemGroup>
 
 </Project>

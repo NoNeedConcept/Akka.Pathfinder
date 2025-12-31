@@ -1,6 +1,5 @@
 ﻿using Akka.Pathfinder.AcceptanceTests.Containers;
 using Akka.Pathfinder.Core;
-using Akka.Pathfinder.Core.Configs;
 using MongoDB.Driver;
 using Reqnroll.BoDi;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
@@ -17,9 +16,5 @@ public class DatabaseDriver
         _database = client.GetDatabase("pathfinder");
     }
 
-    public IPointConfigWriter CreatePointConfigWriter() => new PointConfigWriter(_database);
-
-    public IMapConfigWriter CreateMapConfigWriter() => new MapConfigWriter(_database.GetCollection<MapConfig>("map_config"));
-
-    public IPathWriter CreatePathWriter() => new PathWriter(_database.GetCollection<Path>("path"));
+    public IPathReader CreatePathReader() => new PathReader(_database.GetCollection<Path>("path"));
 }

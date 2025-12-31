@@ -4,6 +4,7 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Reqnroll;
 using Reqnroll.BoDi;
+using Serilog;
 
 namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
 
@@ -31,7 +32,7 @@ public class PathfinderSteps
         Assert.Equal(pathfinderId, pathFound.PathfinderId);
         Assert.True(pathFound.Success);
 
-        var pathReader = _databaseDriver.CreatePathWriter();
+        var pathReader = _databaseDriver.CreatePathReader();
         Assert.True(Guid.TryParse(pathFound.PathId, out var pathId));
         var result = pathReader.Get(pathId).Single();
         Assert.NotNull(result);
@@ -47,7 +48,7 @@ public class PathfinderSteps
 
         Assert.NotNull(pathFound);
         Assert.False(pathFound.Success);
-        Assert.Equal(pathfinderId, pathFound.PathfinderId.ToString());
+        Assert.Equal(pathfinderId, pathFound.PathfinderId);
     }
 
     [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*) Seconds (.*)")]

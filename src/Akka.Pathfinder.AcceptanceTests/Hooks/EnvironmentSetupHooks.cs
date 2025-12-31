@@ -25,8 +25,12 @@ public static class EnvironmentSetupHooks
         await mongoTask;
 
         var mongoDBString = mongoDbContainer.GetConnectionString();
+        var seedNodeString = seedNodeContainer.GetSeedNodeString();
         Log.Information("[TEST][EnvironmentSetupHooks] - MongoDb: {ConnectionString}", mongoDBString);
         Environment.SetEnvironmentVariable("ConnectionStrings__mongodb", mongoDBString);
+        Environment.SetEnvironmentVariable("akka__cluster__seed-nodes__0", seedNodeString);
+        Environment.SetEnvironmentVariable("akka__remote__dot-netty__tcp__port", $"{PortFinder.FindFreeLocalPort()}");
+        Environment.SetEnvironmentVariable("akka__remote__dot-netty__tcp__public-hostname", "host.docker.internal");
         var pathfinderApplicationFactory = new PathfinderApplicationFactory();
         await pathfinderApplicationFactory.InitializeAsync();
 

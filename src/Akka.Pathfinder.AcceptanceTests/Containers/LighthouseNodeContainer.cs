@@ -9,10 +9,12 @@ namespace Akka.Pathfinder.AcceptanceTests.Containers;
 public sealed class LighthouseNodeContainer : IAsyncLifetime
 {
     public const int Port = 42000;
-    public const string Hostname = "127.0.0.1";
+    public const string Hostname = "host.docker.internal";
+    public readonly string _actorSystem;
 
     public LighthouseNodeContainer(string actorSystem = "zeus")
     {
+        _actorSystem = actorSystem;
         Log.Information("[TEST][{LighthouseNodeContainer}] ctor", GetType().Name);
 
         // PetaBridge uses different tag for arm64
@@ -37,6 +39,11 @@ public sealed class LighthouseNodeContainer : IAsyncLifetime
     }
 
     public IContainer Container { get; }
+
+    public string GetSeedNodeString()
+    {
+        return $"akka.tcp://{_actorSystem}@{Hostname}:{Port}";
+    }
 
     public async Task InitializeAsync()
     {

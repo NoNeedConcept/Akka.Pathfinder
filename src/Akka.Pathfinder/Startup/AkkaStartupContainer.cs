@@ -7,19 +7,10 @@ using Akka.Pathfinder.Workers;
 using Akka.Persistence.Hosting;
 using Akka.Persistence.MongoDb.Hosting;
 using Akka.Remote.Hosting;
-using Microsoft.Extensions.Options;
 using moin.akka.endpoint;
 using Servus.Akka.Startup;
 
 namespace Akka.Pathfinder.Startup;
-
-public class ZeusClusterConfig
-{
-    public string Hostname { get; set; } = string.Empty;
-    public int Port { get; set; }
-    public List<string> SeedNodes { get; set; } = [];
-    public List<string> Roles { get; set; } = [];
-}
 
 public class AkkaStartupContainer : ActorSystemSetupContainer
 {
@@ -30,8 +21,23 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
 
     protected override void BuildSystem(AkkaConfigurationBuilder builder, IServiceProvider serviceProvider)
     {
-        var connectionString = serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("mongodb");
-        var clusterOptions = serviceProvider.GetRequiredService<IOptions<ZeusClusterConfig>>().Value;
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+        var connectionString = configuration.GetConnectionString("mongodb");
+        var remoteSection = configuration.GetSection("akka:remote:dot-netty:tcp");
+        var remoteOptions = new RemoteOptions
+        {
+            HostName = "0.0.0.0",
+            Port = remoteSection.GetSection("port").Get<int?>(),
+            PublicHostName = remoteSection.GetSection("public-hostname").Get<string>(),
+        };
+        var clusterSection = configuration.GetSection("akka:cluster");
+        var clusterOptions = new ClusterOptions
+        {
+            Roles = ["Pathfinder"],
+            SeedNodes = clusterSection.GetSection("seed-nodes").Get<string[]>(),
+        };
+
+
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
         var shardingJournalOptions = new MongoDbJournalOptions(true)
         {
@@ -57,7 +63,7 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
             {
                 // Clear all loggers
                 setup.ClearLoggers();
-
+            
                 // Add serilog logger
                 setup.AddLogger<SerilogLogger>();
                 setup.WithDefaultLogMessageFormatter<SerilogLogMessageFormatter>();
@@ -79,12 +85,11 @@ akka.actor.dispatchers.entity-dispatcher {
 ", HoconAddMode.Prepend)
             .WithActorSystemLivenessCheck()
             .WithAkkaClusterReadinessCheck()
-            .WithRemoting("0.0.0.0", clusterOptions.Port, clusterOptions.Hostname)
-            .WithClustering(new ClusterOptions
-            {
-                Roles = clusterOptions.Roles.ToArray(),
-                SeedNodes = clusterOptions.SeedNodes.ToArray(),
-            })
+            .WithMongoDbPersistence(string.Empty,
+                journalBuilder: journal => journal.WithHealthCheck(),
+                snapshotBuilder: snapshot => snapshot.WithHealthCheck())
+            .WithRemoting(remoteOptions)
+            .WithClustering(clusterOptions)
             .WithMongoDbPersistence(connectionString)
             .WithJournalAndSnapshot(shardingJournalOptions, shardingSnapshotOptions)
             .AddService<MapManager, Endpoint.MapManager>()

@@ -7,13 +7,13 @@ using moin.akka.endpoint;
 namespace Akka.Pathfinder.Workers;
 
 public record Timeout(Guid RequestId, Guid PathfinderId) : IPathfinderId;
+
 public record TimeoutPathFound(Guid RequestId, Guid PathfinderId, Guid PathId) : IPathfinderId;
+
 public record TimeoutPathFailed(Guid RequestId, Guid PathfinderId, Exception? Exception = default) : IPathfinderId;
 
 public partial class PathfinderWorker : ReceivePersistentActor, IWithTimers
 {
-
-
     private string _entityId;
 
     private readonly IPathReader _pathReader;
@@ -53,10 +53,12 @@ public partial class PathfinderWorker : ReceivePersistentActor, IWithTimers
             _entityId, reason.Message, message.GetType().Name, message);
 
     protected override void OnPersistFailure(Exception cause, object @event, long sequenceNr)
-        => _logger.Error("[{PathfinderId}] OnPersistFailure(): [{ExceptionMessage}] on [{MessageType}][{MessageData}][{SeqNr}]",
+        => _logger.Error(
+            "[{PathfinderId}] OnPersistFailure(): [{ExceptionMessage}] on [{MessageType}][{MessageData}][{SeqNr}]",
             _entityId, cause.Message, @event.GetType().Name, @event, sequenceNr);
 
     protected override void OnPersistRejected(Exception cause, object @event, long sequenceNr)
-        => _logger.Error("[{PathfinderId}] OnPersistRejected(): [{ExceptionMessage}] on [{MessageType}][{MessageData}][{SeqNr}]",
+        => _logger.Error(
+            "[{PathfinderId}] OnPersistRejected(): [{ExceptionMessage}] on [{MessageType}][{MessageData}][{SeqNr}]",
             _entityId, cause.Message, @event.GetType().Name, @event, sequenceNr);
 }

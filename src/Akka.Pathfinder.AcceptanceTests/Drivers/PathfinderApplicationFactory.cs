@@ -26,7 +26,7 @@ public sealed class PathfinderApplicationFactory : WebApplicationFactory<Program
             client.BaseAddress?.ToString());
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
-        var isReady = await IsUrlAsync(client, "/health/ready", 20, TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(1),
+        var isReady = await IsUrlAsync(client, "/health", 20, TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(1),
             cancellationToken: cts.Token);
         if (!isReady)
         {
