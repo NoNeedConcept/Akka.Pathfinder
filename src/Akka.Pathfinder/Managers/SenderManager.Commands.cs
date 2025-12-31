@@ -1,5 +1,6 @@
-﻿using Akka.Actor;
+﻿using Akka.Event;
 using Akka.Pathfinder.Core.Messages;
+using Servus.Akka.Diagnostics;
 
 namespace Akka.Pathfinder.Managers;
 
@@ -16,7 +17,7 @@ public partial class SenderManager
         _logger.Verbose("[SenderManager][{MessageType}] received", msg.GetType().Name);
         if (_pathfinderSender.TryGetValue(msg.PathfinderId, out var sender))
         {
-            sender.Forward(msg.Message);
+            sender.ForwardTraced(msg.Message);
             _pathfinderSender.Remove(msg.PathfinderId);
         }
     }

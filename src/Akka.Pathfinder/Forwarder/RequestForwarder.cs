@@ -23,8 +23,7 @@ public class RequestForwarder : ReceiveActor
     {
         _logger.Verbose("[RequestForwarder][PreStart]");
         _queue = Source
-                .Channel<RequestItem>(256, false)
-                .Buffer(256, OverflowStrategy.Backpressure)
+                .Channel<RequestItem>(256)
                 .AskTransform(item => item.Request, new Func<IResponse, RequestItem, ResponseItem>((response, item) => new ResponseItem(item.Sender, response)), item => GetActorRef(item.Request), parallelism: 128)
                 .Select(response =>
                 {

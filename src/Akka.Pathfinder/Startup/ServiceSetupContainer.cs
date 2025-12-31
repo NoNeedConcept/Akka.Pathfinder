@@ -1,5 +1,6 @@
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Driver;
 using Servus.Core.Application.Startup;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
@@ -10,10 +11,11 @@ public class ServiceSetupContainer : ApplicationSetupContainer<WebApplication>, 
 {
     public void SetupServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddOptions<ZeusClusterConfig>().BindConfiguration("ClusterOptions");
-        
         var connectionString = configuration.GetConnectionString("mongodb")!;
-        services.AddHealthChecks();
+        services
+            .AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+
         services.AddGrpc(options => { options.MaxReceiveMessageSize = null; });
         services.AddTransient<IMapManagerGatewayService, MapManagerGatewayService>();
         services.AddTransient<IPathfinderGatewayService, PathfinderGatewayService>();

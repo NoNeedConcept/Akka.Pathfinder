@@ -12,6 +12,7 @@ public partial class MapManager
 {
     private async Task LoadMapHandler(LoadMap msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name);
         _logger.Verbose("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
         Become(Waiting);
 
@@ -37,6 +38,7 @@ public partial class MapManager
 
     private async Task UpdateMapHandler(UpdateMap msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name);
         _logger.Verbose("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
         _state = MapManagerState.FromRequest(msg.MapId);
         await Task.CompletedTask;
@@ -45,6 +47,7 @@ public partial class MapManager
 
     private void FindPathRequestHandler(FindPathRequest msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name);
         _logger.Verbose("[{ActorName}][{MessageType}] received", GetType().Name, msg.GetType().Name);
         if (!_state.IsMapReady)
         {

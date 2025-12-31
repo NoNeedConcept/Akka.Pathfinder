@@ -11,6 +11,7 @@ public partial class PathfinderWorker
 {
     public void PathfinderRequestHandler(PathfinderRequest msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)!.SetTag("EntityId", _entityId);
         _logger.Debug("[{PathfinderId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         _state = PathfinderWorkerState.FromRequest(msg);
@@ -29,6 +30,7 @@ public partial class PathfinderWorker
 
     public void FoundPathHandler(PathFound msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)!.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PathfinderId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         switch (msg.Result)
@@ -37,14 +39,12 @@ public partial class PathfinderWorker
                 _logger.Information("[{PathfinderId}] I found a path [{PathId}][{TotalSeconds}]", _entityId, msg.PathId, (DateTime.UtcNow - _state.StartTime).TotalSeconds);
                 _state.IncrementFoundPathCounter();
                 break;
-            default:
-                _logger.Debug("[{PathfinderId}] Jan wanted a log here with the reason {Result}", _entityId, msg.Result);
-                break;
         }
     }
 
     public void TimeoutHandler(Timeout msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)!.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PathfinderId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         if (!_state.HasPathFound)

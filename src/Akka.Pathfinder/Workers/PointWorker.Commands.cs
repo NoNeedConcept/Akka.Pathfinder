@@ -1,4 +1,5 @@
-﻿using Akka.Pathfinder.Core.Messages;
+﻿using System.Diagnostics;
+using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Pathfinder.Core;
 using Akka.Persistence;
@@ -12,6 +13,7 @@ public partial class PointWorker
 {
     private void PathfinderDeactivatedHandler(PathfinderDeactivated msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)?.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}][{PathfinderId}] received", _entityId, msg.GetType().Name,
             msg.PathfinderId);
         _state.AddInactivePathfinder(msg.PathfinderId);
@@ -21,6 +23,7 @@ public partial class PointWorker
 
     private void LocalPointConfigHandler(LocalPointConfig msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)?.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}] received", _entityId, msg.GetType().Name);
         if (msg is LocalPointConfigFailed item)
         {
@@ -35,6 +38,7 @@ public partial class PointWorker
 
     private void InitializePointHandler(InitializePoint msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)?.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}] received", _entityId, msg.GetType().Name);
         _state = PointWorkerState.FromInitialize(msg.PointId, msg.CollectionId);
         Persist(new PersistedInitializedPointState(msg.PointId, msg.CollectionId), _ => { });
@@ -44,6 +48,7 @@ public partial class PointWorker
 
     private void UpdatePointDirectionHandler(UpdatePointDirection msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)?.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}] received", _entityId, msg.GetType().Name);
         Become(Update);
         var updatedConfig = msg.Config with
@@ -57,6 +62,7 @@ public partial class PointWorker
 
     private void ReloadPointHandler(ReloadPoint msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)?.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}] received", _entityId, msg.GetType().Name);
         Become(Configure);
         Sender.Tell(new PointReloaded(msg.RequestId, msg.PointId));
@@ -64,6 +70,7 @@ public partial class PointWorker
 
     private void CostRequestHandler(CostRequest msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)?.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         var success = msg switch
@@ -78,6 +85,7 @@ public partial class PointWorker
 
     private void PointCommandRequestHandler(PointCommandRequest msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)?.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         _ = msg switch
@@ -90,6 +98,7 @@ public partial class PointWorker
 
     private void FindPathRequestHandler(FindPathRequest msg)
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)?.SetTag("EntityId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         if (_state.TryIsInactivePathfinder(msg.PathfinderId)) return;
