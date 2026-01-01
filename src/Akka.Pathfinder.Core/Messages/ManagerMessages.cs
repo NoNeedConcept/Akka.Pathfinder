@@ -2,6 +2,9 @@ using Servus.Core.Diagnostics;
 
 namespace Akka.Pathfinder.Core.Messages;
 
+
+public record GetMapState(Guid MapId) : MapRequestBase<MapStateResponse>;
+public record MapStateResponse(Guid RequestId, Guid MapId, bool IsReady) : ResponseBase(RequestId); 
 public record LoadMap(Guid MapId) : MapRequestBase<MapLoaded>;
 public record MapLoaded(Guid RequestId, Guid MapId) : ResponseBase(RequestId);
 public record UpdateMap(Guid MapId) : MapRequestBase<MapUpdated>;

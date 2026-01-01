@@ -16,9 +16,12 @@ internal class MapManagerGatewayService : IMapManagerGatewayService
         _mapManagerClient = actorRegistry.Get<RequestForwarder>();
     }
 
-    public async Task<MapLoaded> LoadAsync(LoadMap request, CancellationToken cancellationToken = default)
-        => await _mapManagerClient.AskTraced<MapLoaded>(request);
+    public Task<MapStateResponse> GetMapState(GetMapState request, CancellationToken cancellationToken)
+        => _mapManagerClient.AskTraced<MapStateResponse>(request);
 
-    public async Task<MapUpdated> UpdateAsync(UpdateMap request, CancellationToken cancellationToken = default)
-        => await _mapManagerClient.AskTraced<MapUpdated>(request);
+    public Task<MapLoaded> LoadAsync(LoadMap request, CancellationToken cancellationToken = default)
+        => _mapManagerClient.AskTraced<MapLoaded>(request);
+
+    public Task<MapUpdated> UpdateAsync(UpdateMap request, CancellationToken cancellationToken = default)
+        => _mapManagerClient.AskTraced<MapUpdated>(request);
 }

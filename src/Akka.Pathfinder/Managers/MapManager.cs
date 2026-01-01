@@ -26,7 +26,8 @@ public partial class MapManager : ReceivePersistentActor
         _registry = Context.System.GetRegistry();
 
         CommandAsync<LoadMap>(LoadMapHandler);
-        CommandAsync<UpdateMap>(UpdateMapHandler);
+        Command<UpdateMap>(UpdateMapHandler);
+        Command<GetMapState>(GetMapStateHandler);
         Command<FindPathRequest>(FindPathRequestHandler);
         CommandAny(msg => Stash.Stash());
     }

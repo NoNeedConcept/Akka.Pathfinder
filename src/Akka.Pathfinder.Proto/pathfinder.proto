@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";  
 import "google/protobuf/timestamp.proto";
-import "Protos/common.proto";
+import "common.proto";
 
 package Akka.Pathfinder;
 option csharp_namespace = "Akka.Pathfinder.Grpc";

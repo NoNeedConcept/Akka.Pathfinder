@@ -1,5 +1,6 @@
 using Akka.Pathfinder;
 using Akka.Pathfinder.Startup;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Serilog;
 using Servus.Core.Application.Startup;
 
@@ -9,7 +10,11 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .CreateBootstrapLogger();
 
-var runner = AppBuilder.Create(WebApplication.CreateBuilder(args), b => b.Build())
+var runner = AppBuilder.Create(WebApplication.CreateBuilder(args), b =>
+    {
+        b.WebHost.ConfigureKestrel(options => options.ConfigureEndpointDefaults(listenOptions => listenOptions.Protocols = HttpProtocols.Http1AndHttp2));
+        return b.Build();
+    })
     .WithSetup<ConfigurationSetupContaine>()
     .WithSetup<LoggingSetupContainer>()
     .WithSetup<ServiceSetupContainer>()
