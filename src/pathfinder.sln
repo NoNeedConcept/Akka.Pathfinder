@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Service", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Client", "Akka.Pathfinder.Client\Akka.Pathfinder.Client.csproj", "{428008ED-16C7-4F9E-BEBB-6717519CB86D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Pathfinder.Proto", "Akka.Pathfinder.Proto\Akka.Pathfinder.Proto.csproj", "{C0D45D82-3C93-43D4-9319-297174498DBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{428008ED-16C7-4F9E-BEBB-6717519CB86D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{428008ED-16C7-4F9E-BEBB-6717519CB86D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{428008ED-16C7-4F9E-BEBB-6717519CB86D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0D45D82-3C93-43D4-9319-297174498DBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0D45D82-3C93-43D4-9319-297174498DBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0D45D82-3C93-43D4-9319-297174498DBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0D45D82-3C93-43D4-9319-297174498DBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

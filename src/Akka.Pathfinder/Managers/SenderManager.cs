@@ -1,10 +1,9 @@
 ﻿using Akka.Actor;
 using Akka.Pathfinder.Core.Messages;
-using Servus.Akka.Diagnostics;
 
 namespace Akka.Pathfinder.Managers;
 
-public partial class SenderManager : TracedMessageActor
+public partial class SenderManager : ReceiveActor
 {
     private readonly Serilog.ILogger _logger;
     private readonly Dictionary<Guid, IActorRef> _pathfinderSender = [];

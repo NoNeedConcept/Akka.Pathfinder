@@ -8,7 +8,7 @@ public partial class MapManager
     {   
         _logger.Information("[MapManager][READY]");
         CommandAsync<LoadMap>(LoadMapHandler);
-        CommandAsync<UpdateMap>(UpdateMapHandler);
+        Command<UpdateMap>(UpdateMapHandler);
         Command<FindPathRequest>(FindPathRequestHandler);
         CommandAny(msg => Stash.Stash());
         Stash.UnstashAll();

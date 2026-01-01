@@ -8,16 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Google.Protobuf"/>
-        <PackageReference Include="Grpc.Net.Client"/>
-        <PackageReference Include="Grpc.Tools">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-
-        <Protobuf Include="Protos\pathfinder.proto" GrpcServices="Client"/>
-        <Protobuf Include="Protos\mapmanager.proto" GrpcServices="Client"/>
-        <Protobuf Include="Protos\common.proto" GrpcServices="Client"/>
+      <ProjectReference Include="..\Akka.Pathfinder.Proto\Akka.Pathfinder.Proto.csproj" />
     </ItemGroup>
 
 </Project>
