@@ -1,4 +1,5 @@
-﻿using Akka.Pathfinder.Core.Configs;
+﻿using System.Collections.Immutable;
+using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Persistence.Data;
 
 namespace Akka.Pathfinder.Core.Messages;
@@ -62,7 +63,7 @@ public record FindPathRequest(
     Guid PathId,
     int NextPointId,
     int TargetPointId,
-    IReadOnlyList<PathPoint> Directions) : FindPathRequestBase(RequestId, NextPointId);
+    ImmutableList<PathPoint> Directions) : FindPathRequestBase(RequestId, NextPointId);
 
 public record DeletePoint(int PointId) : PointRequest<PointDeleted>(PointId);
 

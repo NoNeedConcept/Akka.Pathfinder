@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Actor;
@@ -19,7 +20,7 @@ public partial class PathfinderWorker
         _state = PathfinderWorkerState.FromRequest(msg);
         _senderManagerClient.ForwardTraced(new SavePathfinderSender(msg.PathfinderId));
 
-        IReadOnlyList<PathPoint> startPointList =
+        ImmutableList<PathPoint> startPointList =
         [
             new(_state.SourcePointId, 0, _state.StartDirection)
         ];
