@@ -7,6 +7,7 @@ using Akka.Streams;
 using Akka.Streams.Dsl;
 using moin.akka.endpoint;
 using MongoDB.Driver.Linq;
+using Servus.Akka.Diagnostics;
 using Servus.Core.Diagnostics;
 
 namespace Akka.Pathfinder.Managers;
@@ -62,13 +63,13 @@ public partial class MapManager
         Command<DeleteSnapshotsSuccess>(msg =>
         {
             var response = new MapDeleted(request.RequestId, request.MapId, true);
-            deleteSender.Tell(response);
+            deleteSender?.TellTraced(response);
             Become(Ready);
         });
         Command<DeleteSnapshotFailure>(msg =>
         {
             var response = new MapDeleted(request.RequestId, request.MapId, false, msg.Cause);
-            deleteSender.Tell(response);
+            deleteSender?.TellTraced(response);
         });
     }
 }

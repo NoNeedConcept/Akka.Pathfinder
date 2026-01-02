@@ -17,7 +17,7 @@ public partial class MapManager
     {
         using var activity = ActivitySourceRegistry.StartActivity(GetType(), msg.GetType().Name, msg);
         var mapId = _state.MapId != msg.MapId ? Guid.Empty : msg.MapId;
-        Sender.Tell(new MapStateResponse(msg.RequestId, mapId, _state.IsMapReady));
+        Sender.TellTraced(new MapStateResponse(msg.RequestId, mapId, _state.IsMapReady));
     }
 
     private async Task LoadMapHandler(LoadMap msg)
@@ -42,7 +42,7 @@ public partial class MapManager
         _logger.Information("[{ActorName}][{MapId}] Map loaded TotalSeconds [{TotalSeconds}]", GetType().Name, msg.MapId,
             (endTime - startTime).TotalSeconds);
         _state.SetMapIsReady();
-        Sender.Tell(new MapLoaded(msg.RequestId, msg.MapId));
+        Sender.TellTraced(new MapLoaded(msg.RequestId, msg.MapId));
         PersistState();
         Become(Ready);
     }

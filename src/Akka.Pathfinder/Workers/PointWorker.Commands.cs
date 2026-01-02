@@ -58,7 +58,7 @@ public partial class PointWorker
         };
 
         Sender.TellTraced(new PointDirectionUpdated(msg.RequestId, msg.Config.Id));
-        Self.Forward(new LocalPointConfigSuccess(updatedConfig));
+        Self.ForwardTraced(new LocalPointConfigSuccess(updatedConfig));
     }
 
     private void CostRequestHandler(CostRequest msg)
@@ -73,7 +73,7 @@ public partial class PointWorker
             _ => throw new NotImplementedException(),
         };
 
-        Sender.Tell(new UpdateCostResponse(msg.RequestId, msg.PointId, success));
+        Sender.TellTraced(new UpdateCostResponse(msg.RequestId, msg.PointId, success));
     }
 
     private void PointCommandRequestHandler(PointCommandRequest msg)

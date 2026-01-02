@@ -2,6 +2,7 @@
 using Akka.Cluster.Sharding;
 using Akka.Actor;
 using Akka.Persistence;
+using Servus.Akka.Diagnostics;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -43,12 +44,12 @@ public partial class PathfinderWorker
         Command<DeleteSnapshotsSuccess>(msg =>
         {
             var response = new PathfinderDeleted(request.RequestId, request.PathfinderId, true);
-            deleteSender.Tell(response);
+            deleteSender?.TellTraced(response);
         });
         Command<DeleteSnapshotFailure>(msg =>
         {
             var response = new PathfinderDeleted(request.RequestId, request.PathfinderId, false, msg.Cause);
-            deleteSender.Tell(response);
+            deleteSender?.TellTraced(response);
         });
         CommandAny(msg =>
         {
