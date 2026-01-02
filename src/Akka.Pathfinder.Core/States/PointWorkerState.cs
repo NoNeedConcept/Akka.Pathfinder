@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Persistence;
@@ -144,7 +145,7 @@ public record PointWorkerState
         pathList[PointId] = pointInfo with { Cost = Cost + pointInfo.Cost };
         findPathRequest = request with
         {
-            Directions = pathList.Select(x => x.Value).ToList(),
+            Directions = pathList.Select(x => x.Value).ToImmutableList(),
         };
 
         return false;
@@ -154,7 +155,7 @@ public record PointWorkerState
     {
         response = null!;
         if (!request.TargetPointId.Equals(PointId)) return false;
-        var paths = request.Directions.ToList();
+        var paths = request.Directions.ToImmutableList();
         var path = new Path(request.PathId, request.PathfinderId, request.RequestId, paths);
         var success = writer(path);
         if (!success)
@@ -185,7 +186,7 @@ public record PointWorkerState
 
         foreach (var (key, value) in _directionConfigs.ExceptBy(infoIds, x => x.Value.TargetPointId))
         {
-            var directions = request.Directions.AsEnumerable().Append(new PathPoint(value.TargetPointId, value.Cost, key)).ToList();
+            var directions = request.Directions.AsEnumerable().Append(new PathPoint(value.TargetPointId, value.Cost, key)).ToImmutableList();
             yield return new FindPathRequest(request.RequestId, request.PathfinderId, Guid.NewGuid(), value.TargetPointId, request.TargetPointId, directions);
         }
     }
