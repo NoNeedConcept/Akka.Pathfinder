@@ -7,6 +7,7 @@ public interface IPointConfigWriter : IPointConfigReader
 {
     public Task AddPointConfigsAsync(Guid collectionId, List<PointConfig> pointConfigs, CancellationToken cancellationToken = default);
     public Task AddPointConfigAsync(Guid collectionId, PointConfig pointConfig, CancellationToken cancellationToken = default);
+    public Task DeleteCollectionAsync(Guid collectionId, CancellationToken cancellationToken = default);
 }
 
 public class PointConfigWriter : PointConfigReader, IPointConfigWriter
@@ -28,5 +29,10 @@ public class PointConfigWriter : PointConfigReader, IPointConfigWriter
 
         collection.CreateIndex(builder => builder.Ascending(item => item.Id), $"PointConfig_{collectionId}_Id");
         await collection.InsertOneAsync(pointConfig, cancellationToken: cancellationToken);
+    }
+
+    public async Task DeleteCollectionAsync(Guid collectionId, CancellationToken cancellationToken = default)
+    {
+        await Database.DropCollectionAsync(collectionId.ToString(), cancellationToken);
     }
 }

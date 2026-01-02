@@ -24,7 +24,11 @@ public static class PointStateExtensions
 
     public static Dictionary<Direction, DirectionConfig> MergeDirectionConfigs(this PointWorkerState state, IDictionary<Direction, DirectionConfig> configs)
     {
-        var newDirectionConfigs = configs.ExceptBy(state.DirectionConfigs.Keys, x => x.Key).ToDictionary(x => x.Key, x => x.Value);
-        return state.DirectionConfigs.Union(newDirectionConfigs).ToDictionary(x => x.Key, x => x.Value);
+        var mergedConfigs = state.DirectionConfigs.ToDictionary(x => x.Key, x => x.Value);
+        foreach (var config in configs)
+        {
+            mergedConfigs[config.Key] = config.Value;
+        }
+        return mergedConfigs;
     }
 }

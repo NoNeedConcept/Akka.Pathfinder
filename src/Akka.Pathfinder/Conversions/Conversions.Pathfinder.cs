@@ -10,6 +10,12 @@ public static partial class Conversions
     public static PathfinderRequest To(this Grpc.FindPathRequest value)
         => new(value.PathfinderId.To(), value.SourcePointId, value.TargetPointId, value.Direction.To(), new PathfinderOptions(AlgoMode.Timeout, value.Duration.ToTimeSpan()));
 
+    public static DeletePathfinder To(this DeletePathfinderRequest value)
+        => new(Guid.NewGuid(), value.PathfinderId.To());
+
+    public static DeletePathfinderResponse To(this PathfinderDeleted value)
+        => new() { Success = value.Success, ErrorMessage = value.Error?.Message ?? string.Empty };
+
     public static FindPathResponse To(this PathfinderResponse value, int pathCost = 0)
         => new()
         {
@@ -22,9 +28,6 @@ public static partial class Conversions
 
     public static Point To(this PathPoint value)
         => new() { Id = value.PointId, Cost = value.Cost, Direction = value.Direction.To() };
-
-    public static PathPoint To(this Point value)
-        => new(value.Id, value.Cost, value.Direction.To());
 
     public static Guid To(this string value)
         => Guid.Parse(value);

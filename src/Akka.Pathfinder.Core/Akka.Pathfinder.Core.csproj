@@ -7,12 +7,12 @@
         <IsPackable>false</IsPackable>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Akka.Hosting"/>
         <PackageReference Include="Akka.Cluster.Sharding"/>
         <PackageReference Include="Akka.Cluster.Hosting"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
         <PackageReference Include="MongoDB.Driver"/>
         <PackageReference Include="Akka.Persistence.MongoDb.Hosting"/>
+        <PackageReference Include="Servus.Akka" />
         <PackageReference Include="Servus.Core" />
     </ItemGroup>
 

@@ -4,7 +4,6 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Reqnroll;
 using Reqnroll.BoDi;
-using Serilog;
 
 namespace Akka.Pathfinder.AcceptanceTests.StepDefinitions;
 

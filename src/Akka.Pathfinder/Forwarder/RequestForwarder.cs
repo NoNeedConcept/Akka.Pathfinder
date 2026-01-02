@@ -53,6 +53,5 @@ public class RequestForwarder : ReceiveActor
         };
 }
 
-internal record ExtendedRequestItem(IActorRef Sender, IActorRef Target, IRequest Request, CancellationToken CancellationToken = default);
 internal record RequestItem(IActorRef Sender, IRequest Request, CancellationToken CancellationToken = default);
 internal record ResponseItem(IActorRef Sender, IResponse Response, CancellationToken CancellationToken = default);

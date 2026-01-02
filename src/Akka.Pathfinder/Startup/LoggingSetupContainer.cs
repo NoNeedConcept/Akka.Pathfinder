@@ -11,11 +11,9 @@ public class LoggingSetupContainer : IHostBuilderSetupContainer
             .UseSerilog((context, _, configuration) =>
             {
                 configuration.ReadFrom.Configuration(context.Configuration).Enrich.FromLogContext();
-
-                var useOtlpExporter = !string.IsNullOrWhiteSpace(context.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
-                if (!useOtlpExporter) return;
+                var endpoint = context.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+                if (string.IsNullOrWhiteSpace(endpoint)) return;
                 configuration.WriteTo.OpenTelemetry();
             });
     }
-
 }

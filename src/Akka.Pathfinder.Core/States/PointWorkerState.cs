@@ -1,18 +1,11 @@
-using System.Collections.Immutable;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.Persistence;
 using Akka.Util.Internal;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
-using MongoDB.Driver.Linq;
 using Akka.Pathfinder.Core.Persistence.Data;
 
 namespace Akka.Pathfinder.Core.States;
-
-public class MongoConstantLengthForCollections
-{
-    public const int Length = 1500;
-}
 
 public record PointWorkerState
 {
@@ -62,19 +55,19 @@ public record PointWorkerState
         _directionConfigs = new Dictionary<Direction, DirectionConfig>(configs);
     }
 
-    public int PointId { get; internal set; } = 0;
+    public int PointId { get; private set; } = 0;
 
-    public Guid CollectionId { get; internal set; }
+    public Guid CollectionId { get; private set; }
 
-    public uint Cost { get; internal set; } = 0;
+    public uint Cost { get; private set; } = 0;
 
-    public bool Initialize { get; internal set; }
+    public bool Initialize { get; private set; }
 
-    public bool Loaded { get; internal set; }
+    public bool Loaded { get; private set; }
 
     public bool IsBlocked => State is PointState.Blocked;
 
-    public PointState State { get; internal set; }
+    public PointState State { get; private set; }
 
     public IDictionary<Direction, DirectionConfig> DirectionConfigs => _directionConfigs;
 
@@ -92,8 +85,6 @@ public record PointWorkerState
     {
         if (!_directionConfigs.TryGetValue(commit.Direction, out var directionConfig)) return false;
 
-        static DirectionConfig Update(uint value, DirectionConfig config, ChangeMethod changeMethod) => changeMethod is ChangeMethod.Increase ? config.Increase(value) : config.Decrease(value);
-
         var changeMethod = ((ICommit)commit).ChangeMethod;
         var newDirectionConfig = commit.Direction switch
         {
@@ -107,8 +98,10 @@ public record PointWorkerState
             _ => throw new NotImplementedException(),
         };
 
-        if (_directionConfigs.ContainsKey(commit.Direction)) _directionConfigs.Remove(commit.Direction);
+        _directionConfigs.Remove(commit.Direction);
         return _directionConfigs.TryAdd(commit.Direction, newDirectionConfig);
+
+        static DirectionConfig Update(uint value, DirectionConfig config, ChangeMethod changeMethod) => changeMethod is ChangeMethod.Increase ? config.Increase(value) : config.Decrease(value);
     }
 
     public bool Block() => (State = PointState.Blocked) is PointState.Blocked;
@@ -136,8 +129,7 @@ public record PointWorkerState
     public bool TryLoopDetection(FindPathRequest request)
     {
         var loopDetectionList = request.Directions.SkipLast(1);
-        if (loopDetectionList.Any(x => x.PointId.Equals(PointId))) return true;
-        return false;
+        return loopDetectionList.Any(x => x.PointId.Equals(PointId));
     }
 
     public bool TryIsInactivePathfinder(Guid pathfinderId) => _inactivePathfinders.ContainsKey(pathfinderId);
@@ -185,22 +177,6 @@ public record PointWorkerState
         return false;
     }
 
-    // public bool TrySavePartialPath(FindPathRequest request, Func<Path, (bool, Guid)> writer, out FindPathRequest findPathRequest)
-    // {
-    //     findPathRequest = request;
-    //     var success = false;
-    //     if (request.Directions.Count == MongoConstantLengthForCollections.Length)
-    //     {
-    //         var (updated, value) = writer.Invoke(new Path(Guid.NewGuid(), request.PathfinderId, request.Directions));
-    //         success = updated;
-    //         findPathRequest = request with
-    //         {
-    //             SubPathIds = new SortedSet<Guid>(request.SubPathIds) { value }
-    //         };
-    //     }
-    //     return success;
-    // }
-
     public IEnumerable<FindPathRequest> GetAllForwardMessages(FindPathRequest request)
     {
         var infoIds = request.Directions
@@ -234,5 +210,3 @@ public static class DictionaryExtensions
     public static void RemoveAll<TKey, TValue>(this IDictionary<TKey, TValue> dic, Func<TKey, TValue, bool> predicate)
         => dic.Where(pair => predicate(pair.Key, pair.Value)).ForEach(x => dic.Remove(x));
 }
-
-internal record PersistResult(bool Success, Guid PathId);

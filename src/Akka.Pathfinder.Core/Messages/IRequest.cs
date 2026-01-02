@@ -3,7 +3,7 @@ using Servus.Core.Diagnostics;
 
 namespace Akka.Pathfinder.Core;
 
-public interface IMessage
+public interface IMessage : IWithTracing
 {
     Guid MessageId { get; init; }
 }
@@ -11,6 +11,8 @@ public interface IMessage
 public abstract record MessageBase : IMessage
 {
     public Guid MessageId { get; init; } = Guid.NewGuid();
+    public string? TraceId { get; set; }
+    public string? SpanId { get; set; }
 }
 
 public interface IRequest : IMessage
@@ -35,16 +37,12 @@ public abstract record RequestBase<TResponse>(Guid RequestId) : MessageBase, IRe
     public Type ResponseType => typeof(TResponse);
 }
 
-public interface IResponse : IMessage, IWithTracing
+public interface IResponse : IMessage
 {
     Guid RequestId { get; init; }
 }
 
-public abstract record ResponseBase(Guid RequestId) : MessageBase, IResponse
-{
-    public string? TraceId { get; set; }
-    public string? SpanId { get; set; }
-}
+public abstract record ResponseBase(Guid RequestId) : MessageBase, IResponse;
 
 
 // Sharding entities

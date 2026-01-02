@@ -1,0 +1,77 @@
+﻿using Akka.Pathfinder.Core.Messages;
+using Akka.Pathfinder.Grpc;
+using Grpc.Core;
+
+namespace Akka.Pathfinder;
+
+public class PointService : Grpc.PointService.PointServiceBase
+{
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly Serilog.ILogger _logger;
+
+    public PointService(IServiceScopeFactory scopeFactory)
+    {
+        _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
+        _serviceScopeFactory = scopeFactory;
+    }
+
+    private async Task<Ack> Execute<TResponse>(Func<IPointGatewayService, CancellationToken, Task<TResponse>> action,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var gateway = scope.ServiceProvider.GetRequiredService<IPointGatewayService>();
+            var response = await action(gateway, cancellationToken);
+            return response switch
+            {
+                UpdateCostResponse r => new Ack { Success = r.Success },
+                PointCommandResponse r =>  new Ack { Success = r.Success },
+                PointDeleted r => new Ack { Success = r.Success },
+                _ => new Ack { Success = true }
+            };
+        }
+        catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
+        {
+            _logger.Error(ex, "[Error]][{ErrorMessage}]", ex.Message);
+            return new Ack { Success = false };
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.Error(ex, "[Canceled][{ErrorMessage}]", ex.Message);
+            return new Ack { Success = false };
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "[Error]][{ErrorMessage}]", ex.Message);
+            return new Ack { Success = false };
+        }
+    }
+
+    public override Task<Ack> Occupy(PointRequest request, ServerCallContext context)
+        => Execute((g, c) => g.OccupyAsync(request.ToOccupied(), c), context.CancellationToken);
+
+    public override Task<Ack> Release(PointRequest request, ServerCallContext context)
+        => Execute((g, c) => g.ReleaseAsync(request.ToReleased(), c), context.CancellationToken);
+
+    public override Task<Ack> Block(PointRequest request, ServerCallContext context)
+        => Execute((g, c) => g.BlockAsync(request.ToBlock(), c), context.CancellationToken);
+
+    public override Task<Ack> Unblock(PointRequest request, ServerCallContext context)
+        => Execute((g, c) => g.UnblockAsync(request.ToUnblock(), c), context.CancellationToken);
+
+    public override Task<Ack> UpdateDirection(PointConfig request, ServerCallContext context)
+        => Execute((g, c) => g.UpdateDirectionAsync(request.ToUpdateDirection(), c), context.CancellationToken);
+
+    public override Task<Ack> IncreaseCost(UpdateCostRequest request, ServerCallContext context)
+        => Execute((g, c) => g.IncreaseCostAsync(request.ToIncrease(), c), context.CancellationToken);
+
+    public override Task<Ack> DecreaseCost(UpdateCostRequest request, ServerCallContext context)
+        => Execute((g, c) => g.DecreaseCostAsync(request.ToDecrease(), c), context.CancellationToken);
+
+    public override Task<Ack> IncreaseDirectionCost(UpdateDirectionCostRequest request, ServerCallContext context)
+        => Execute((g, c) => g.IncreaseDirectionCostAsync(request.ToIncrease(), c), context.CancellationToken);
+
+    public override Task<Ack> DecreaseDirectionCost(UpdateDirectionCostRequest request, ServerCallContext context)
+        => Execute((g, c) => g.DecreaseDirectionCostAsync(request.ToDecrease(), c), context.CancellationToken);
+}

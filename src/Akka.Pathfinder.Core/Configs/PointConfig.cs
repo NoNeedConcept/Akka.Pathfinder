@@ -4,8 +4,8 @@ public record PointConfig(int Id, uint Cost, Dictionary<Direction, DirectionConf
 
 public record DirectionConfig(int TargetPointId, uint Cost)
 {
-    internal DirectionConfig Increase(uint Value) => this with { Cost = Cost + Value };
-    internal DirectionConfig Decrease(uint Value) => this with { Cost = Cost - Value };
+    internal DirectionConfig Increase(uint value) => this with { Cost = Cost + value };
+    internal DirectionConfig Decrease(uint value) => this with { Cost = Cost - value };
 }
 
 [Flags]

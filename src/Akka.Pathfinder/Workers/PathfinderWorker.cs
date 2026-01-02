@@ -3,15 +3,13 @@ using Akka.Pathfinder.Core;
 using Akka.Persistence;
 using Akka.Actor;
 using moin.akka.endpoint;
+using Servus.Core.Diagnostics;
 
 namespace Akka.Pathfinder.Workers;
 
-public record Timeout(Guid RequestId, Guid PathfinderId) : IPathfinderId;
+public record Timeout(Guid RequestId, Guid PathfinderId, IMessage Request) : IPathfinderId;
 
-public record TimeoutPathFound(Guid RequestId, Guid PathfinderId, Guid PathId) : IPathfinderId;
-
-public record TimeoutPathFailed(Guid RequestId, Guid PathfinderId, Exception? Exception = default) : IPathfinderId;
-
+[ActivitySourceName("Pathfinder")]
 public partial class PathfinderWorker : ReceivePersistentActor, IWithTimers
 {
     private string _entityId;

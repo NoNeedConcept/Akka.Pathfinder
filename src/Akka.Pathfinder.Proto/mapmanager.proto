@@ -9,10 +9,10 @@ package Akka.Pathfinder;
 option csharp_namespace = "Akka.Pathfinder.Grpc";
 
 service MapManager {
-  rpc GetMapState(MapRequest) returns (MapStateResponse);
-      rpc Load(MapRequest) returns(Ack);
-  rpc UpdateMap(MapRequest) returns(Ack);
   rpc CreateMap(CreateMapRequest) returns (CreateMapResponse);
+  rpc Load(MapRequest) returns(Ack);
+  rpc GetMapState(MapRequest) returns (MapStateResponse);
+  rpc Delete(MapRequest) returns (DeleteMapResponse);
 }
 
 message MapRequest {
@@ -34,5 +34,12 @@ message CreateMapResponse {
 
 message MapStateResponse {
   string map_id = 1;
-  bool is_ready = 2;
+  bool success = 2;
+  string error_message = 3;
+  bool is_ready = 4;
+}
+
+message DeleteMapResponse {
+  bool success = 1;
+  string error_message = 2;
 }

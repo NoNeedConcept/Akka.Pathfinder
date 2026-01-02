@@ -5,14 +5,20 @@ using Akka.Persistence;
 using Akka.Actor;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Persistence;
+using Servus.Core.Diagnostics;
 
 namespace Akka.Pathfinder.Workers;
 
-public abstract record LocalPointConfig(PointConfig? Config = default);
+public abstract record LocalPointConfig(PointConfig? Config = null) : IWithTracing
+{
+    public string? TraceId { get; set; }
+    public string? SpanId { get; set; }
+}
 
 public record LocalPointConfigSuccess(PointConfig Config) : LocalPointConfig(Config);
 public record LocalPointConfigFailed(Exception Exception) : LocalPointConfig;
 
+[ActivitySourceName("Pathfinder")]
 public partial class PointWorker : ReceivePersistentActor
 {
     public override string PersistenceId => $"PointWorker_{_entityId}";
@@ -26,9 +32,8 @@ public partial class PointWorker : ReceivePersistentActor
     {
         _entityId = entityId;
         _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
-        var provider = serviceProvider;
-        _pointConfigReader = provider.GetRequiredService<IPointConfigReader>();
-        _pathWriter = provider.GetRequiredService<IPathWriter>();
+        _pointConfigReader = serviceProvider.GetRequiredService<IPointConfigReader>();
+        _pathWriter = serviceProvider.GetRequiredService<IPathWriter>();
 
         var result = Context.System.EventStream.Subscribe(Self, typeof(PathfinderDeactivated));
         if (!result)

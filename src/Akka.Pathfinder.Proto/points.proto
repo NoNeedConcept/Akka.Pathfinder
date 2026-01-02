@@ -1,0 +1,41 @@
+﻿syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "common.proto";
+
+package Akka.Pathfinder;
+option csharp_namespace = "Akka.Pathfinder.Grpc";
+
+service PointService {
+  rpc Occupy(PointRequest) returns (Ack);
+  rpc Release(PointRequest) returns (Ack);
+  rpc Block(PointRequest) returns (Ack);
+  rpc Unblock(PointRequest) returns (Ack);
+  rpc UpdateDirection(PointConfig) returns (Ack);
+  
+  rpc IncreaseCost(UpdateCostRequest) returns (Ack);
+  rpc DecreaseCost(UpdateCostRequest) returns (Ack);
+  
+  rpc IncreaseDirectionCost(UpdateDirectionCostRequest) returns (Ack);
+  rpc DecreaseDirectionCost(UpdateDirectionCostRequest) returns (Ack);
+}
+
+message PointRequest {
+  int32 point_id = 1;
+}
+
+message InitializePointRequest {
+  int32 point_id = 1;
+  string collection_id = 2;
+}
+
+message UpdateCostRequest {
+  int32 point_id = 1;
+  uint32 value = 2;
+}
+
+message UpdateDirectionCostRequest {
+  int32 point_id = 1;
+  uint32 value = 2;
+  Direction direction = 3;
+}

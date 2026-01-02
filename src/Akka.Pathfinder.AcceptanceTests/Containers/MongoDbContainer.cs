@@ -1,5 +1,4 @@
-﻿using Akka.Pathfinder.AcceptanceTests.Drivers;
-using DotNet.Testcontainers.Builders;
+﻿using DotNet.Testcontainers.Builders;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Serilog;

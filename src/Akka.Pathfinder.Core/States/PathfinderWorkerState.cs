@@ -45,10 +45,10 @@ public class PathfinderWorkerState
     public TimeSpan Timeout { get; init; }
     public AlgoMode Mode { get; init; }
     public bool IsFinished => _isFinished;
-
     public int Count => _counter;
     public bool HasPathFound => _counter != 0;
     public void IncrementFoundPathCounter() => ++_counter;
+
     public PersistedPathfinderWorkerState GetPersistenceState()
         => new(PathfinderId, StartDirection, SourcePointId, TargetPointId, Timeout, _counter, StartTime);
 }
