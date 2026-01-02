@@ -17,9 +17,6 @@ public class ServiceSetupContainer : ApplicationSetupContainer<WebApplication>, 
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
         services.AddGrpc(options => { options.MaxReceiveMessageSize = null; });
-        services.AddTransient<IMapManagerGatewayService, MapManagerGatewayService>();
-        services.AddTransient<IPathfinderGatewayService, PathfinderGatewayService>();
-        services.AddTransient<IPointGatewayService, PointGatewayService>();
         services
             .AddSingleton<IMongoClient>(_ => new MongoClient(connectionString))
             .AddTransient(x => x.GetRequiredService<IMongoClient>().GetDatabase("pathfinder"))

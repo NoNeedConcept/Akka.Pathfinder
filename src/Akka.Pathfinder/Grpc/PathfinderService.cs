@@ -1,6 +1,11 @@
+using Akka.Hosting;
 using Akka.Pathfinder.Core;
+using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Grpc;
 using Grpc.Core;
+using moin.akka.endpoint;
+using Servus.Akka.Diagnostics;
+using FindPathRequest = Akka.Pathfinder.Grpc.FindPathRequest;
 
 namespace Akka.Pathfinder;
 
@@ -21,11 +26,12 @@ public class PathfinderService : Grpc.Pathfinder.PathfinderBase
         try
         {
             using var scope = _serviceScopeFactory.CreateScope();
-            var gateway = scope.ServiceProvider.GetRequiredService<IPathfinderGatewayService>();
+            var pathfinderWorkerClient = scope.ServiceProvider.GetRequiredService<IActorRegistry>()
+                .GetClient<Endpoint.PathfinderWorker>();
             await foreach (var item in requestStream.ReadAllAsync(context.CancellationToken).ConfigureAwait(false))
             {
                 var request = item.To();
-                var response = await gateway.FindPathAsync(request, context.CancellationToken);
+                var response = await pathfinderWorkerClient.AskTraced<PathfinderResponse>(request);
                 await responseStream.WriteAsync(response.To(), context.CancellationToken);
             }
         }
@@ -79,8 +85,10 @@ public class PathfinderService : Grpc.Pathfinder.PathfinderBase
         try
         {
             using var scope = _serviceScopeFactory.CreateScope();
-            var gateway = scope.ServiceProvider.GetRequiredService<IPathfinderGatewayService>();
-            var response = await gateway.DeleteAsync(request.To(), context.CancellationToken);
+            var pathfinderWorkerClient = scope.ServiceProvider.GetRequiredService<IActorRegistry>()
+                .GetClient<Endpoint.PathfinderWorker>();
+
+            var response = await pathfinderWorkerClient.AskTraced<PathfinderDeleted>(request.To());
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)

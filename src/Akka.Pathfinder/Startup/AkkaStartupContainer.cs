@@ -63,7 +63,7 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
             {
                 // Clear all loggers
                 setup.ClearLoggers();
-            
+
                 // Add serilog logger
                 setup.AddLogger<SerilogLogger>();
                 setup.WithDefaultLogMessageFormatter<SerilogLogMessageFormatter>();
@@ -111,10 +111,6 @@ akka.actor.dispatchers.entity-dispatcher {
                 {
                     Role = "Pathfinder",
                     RememberEntities = false
-                })
-            .WithActors((system, registry, resolver) =>
-            {
-                registry.Register<RequestForwarder>(system.ActorOf(resolver.Props<RequestForwarder>()));
-            });
+                });
     }
 }

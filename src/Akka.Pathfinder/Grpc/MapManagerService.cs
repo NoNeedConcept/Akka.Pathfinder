@@ -1,7 +1,11 @@
-﻿using Akka.Pathfinder.Core;
+﻿using Akka.Actor;
+using Akka.Hosting;
+using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Grpc;
 using Grpc.Core;
+using moin.akka.endpoint;
+using Servus.Akka.Diagnostics;
 
 namespace Akka.Pathfinder;
 
@@ -12,7 +16,7 @@ public static class MongoConstantLengthForCollections
 
 public class MapManagerService : MapManager.MapManagerBase
 {
-    private readonly IMapManagerGatewayService _gatewayService;
+    private readonly IActorRef _mapManagerClient;
     private readonly IMapConfigWriter _mapConfigWriter;
     private readonly IPointConfigWriter _pointConfigWriter;
 
@@ -22,7 +26,7 @@ public class MapManagerService : MapManager.MapManagerBase
     {
         _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
         using var scope = scopeFactory.CreateScope();
-        _gatewayService = scope.ServiceProvider.GetRequiredService<IMapManagerGatewayService>();
+        _mapManagerClient = scope.ServiceProvider.GetRequiredService<IActorRegistry>().GetClient<Endpoint.MapManager>();
         _mapConfigWriter = scope.ServiceProvider.GetRequiredService<IMapConfigWriter>();
         _pointConfigWriter = scope.ServiceProvider.GetRequiredService<IPointConfigWriter>();
     }
@@ -33,7 +37,7 @@ public class MapManagerService : MapManager.MapManagerBase
         try
         {
             var requestItem = request.ToGetMapState();
-            var response = await _gatewayService.GetMapState(requestItem, context.CancellationToken);
+            var response = await _mapManagerClient.AskTraced<Core.Messages.MapStateResponse>(requestItem);
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
@@ -54,7 +58,7 @@ public class MapManagerService : MapManager.MapManagerBase
         try
         {
             var requestItem = request.ToLoadMap();
-            var response = await _gatewayService.LoadAsync(requestItem, context.CancellationToken);
+            var response = await _mapManagerClient.AskTraced<Core.Messages.MapLoaded>(requestItem);
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
@@ -75,7 +79,7 @@ public class MapManagerService : MapManager.MapManagerBase
         try
         {
             var requestItem = request.ToDeleteMap();
-            var response = await _gatewayService.DeleteAsync(requestItem, context.CancellationToken);
+            var response = await _mapManagerClient.AskTraced<Core.Messages.MapDeleted>(requestItem);
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
