@@ -20,6 +20,7 @@
         <Protobuf Include="pathfinder.proto"/>
         <Protobuf Include="mapmanager.proto"/>
         <Protobuf Include="common.proto"/>
+        <Protobuf Include="points.proto"/>
     </ItemGroup>
 
 </Project>

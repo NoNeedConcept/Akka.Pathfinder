@@ -16,6 +16,9 @@
     <PackageVersion Include="Akka.Logger.Serilog" Version="1.5.25" />
     <PackageVersion Include="Akka.Persistence.Mongodb.Hosting" Version="1.5.55.1" />
     <PackageVersion Include="moin.akka.endpoint" Version="0.1.1" />
+    <PackageVersion Include="Servus.Core" Version="0.33.2" />
+    <PackageVersion Include="Servus.Akka" Version="0.3.5" />
+    <PackageVersion Include="MongoDB.Driver.Core.Extensions.DiagnosticSources" Version="3.0.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.14.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.14.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.14.0" />
@@ -25,13 +28,11 @@
     <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageVersion Include="MongoDB.Driver" Version="3.5.2" />
     <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
-    <PackageVersion Include="Servus.Akka" Version="0.3.5" />
     <!-- TESTING UTILS-->
     <PackageVersion Include="Akka.Hosting.TestKit" Version="1.5.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.20" />
     <PackageVersion Include="Polly" Version="8.0.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
-    <PackageVersion Include="Servus.Core" Version="0.33.2" />
     <PackageVersion Include="Testcontainers" Version="4.9.0" />
     <PackageVersion Include="Reqnroll.xUnit" Version="3.3.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />

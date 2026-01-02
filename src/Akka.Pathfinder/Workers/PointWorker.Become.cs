@@ -37,30 +37,7 @@ public partial class PointWorker
     private void Failure()
     {
         _logger.Verbose("[{PointId}][FAILURE]", _entityId);
-        var deleteSender = ActorRefs.NoSender;
-        DeletePointRequest request = null!;
-        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
-        Command<DeletePointRequest>(msg =>
-        {
-            deleteSender = Sender;
-            request = msg;
-            DeleteSnapshots(new SnapshotSelectionCriteria(SnapshotSequenceNr, DateTime.Now));
-        });
-        Command<DeleteSnapshotsSuccess>(msg =>
-        {
-            var response = new DeletePointResponse(request.RequestId, request.PointId, true);
-            deleteSender.Tell(response);
-        });
-        Command<DeleteSnapshotFailure>(msg =>
-        {
-            var response = new DeletePointResponse(request.RequestId, request.PointId, false, msg.Cause);
-            deleteSender.Tell(response);
-        });
-        CommandAny(msg =>
-        {
-            _logger.Debug("[{PointId}][{MessageType}] message received -> no action in failure state", _entityId,
-                msg.GetType().Name);
-        });
+        DeleteCommands();
     }
 
     private void Ready()
@@ -74,7 +51,6 @@ public partial class PointWorker
         Command<PointCommandRequest>(PointCommandRequestHandler);
         Command<InitializePoint>(msg => Sender.Tell(new PointInitialized(msg.RequestId, msg.PointId)));
         Command<UpdatePointDirection>(UpdatePointDirectionHandler);
-        Command<ReloadPoint>(ReloadPointHandler);
         // Sender -> SnapshotStore
         Command<SaveSnapshotSuccess>(SaveSnapshotSuccessHandler);
         Command<SaveSnapshotFailure>(SaveSnapshotFailureHandler);
@@ -83,6 +59,32 @@ public partial class PointWorker
             PersistState();
             Context.Parent.Tell(new Passivate(PoisonPill.Instance));
         });
+
+        DeleteCommands();
         Stash.UnstashAll();
+    }
+
+    private void DeleteCommands()
+    {
+        var deleteSender = ActorRefs.NoSender;
+        DeletePoint request = null!;
+        Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
+        Command<DeletePoint>(msg =>
+        {
+            deleteSender = Sender;
+            request = msg;
+            DeleteSnapshots(new SnapshotSelectionCriteria(SnapshotSequenceNr, DateTime.Now));
+        });
+        Command<DeleteSnapshotsSuccess>(msg =>
+        {
+            var response = new PointDeleted(request.RequestId, request.PointId, true);
+            deleteSender.Tell(response);
+            Become(Initialize);
+        });
+        Command<DeleteSnapshotFailure>(msg =>
+        {
+            var response = new PointDeleted(request.RequestId, request.PointId, false, msg.Cause);
+            deleteSender.Tell(response);
+        });
     }
 }

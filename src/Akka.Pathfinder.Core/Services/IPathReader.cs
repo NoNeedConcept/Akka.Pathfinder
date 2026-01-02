@@ -1,5 +1,4 @@
 ﻿using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 using Path = Akka.Pathfinder.Core.Persistence.Data.Path;
 
 namespace Akka.Pathfinder.Core;

@@ -22,6 +22,6 @@ internal class MapManagerGatewayService : IMapManagerGatewayService
     public Task<MapLoaded> LoadAsync(LoadMap request, CancellationToken cancellationToken = default)
         => _mapManagerClient.AskTraced<MapLoaded>(request);
 
-    public Task<MapUpdated> UpdateAsync(UpdateMap request, CancellationToken cancellationToken = default)
-        => _mapManagerClient.AskTraced<MapUpdated>(request);
+    public Task<MapDeleted> DeleteAsync(DeleteMap request, CancellationToken cancellationToken = default)
+        => _mapManagerClient.AskTraced<MapDeleted>(request);
 }

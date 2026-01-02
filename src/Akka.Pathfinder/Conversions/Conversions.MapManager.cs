@@ -9,10 +9,10 @@ public static partial class Conversions
     public static LoadMap ToLoadMap(this MapRequest mapRequest)
         => new(mapRequest.MapId.To());
 
-    public static UpdateMap ToUpdateMap(this MapRequest mapRequest)
+    public static GetMapState ToGetMapState(this MapRequest mapRequest)
         => new(mapRequest.MapId.To());
 
-    public static GetMapState ToGetMapState(this MapRequest mapRequest)
+    public static DeleteMap ToDeleteMap(this MapRequest mapRequest)
         => new(mapRequest.MapId.To());
 
     public static Core.Configs.PointConfig To(this PointConfig point)
@@ -25,9 +25,9 @@ public static partial class Conversions
     public static MapStateResponse To(this Core.Messages.MapStateResponse response)
         => new() { MapId = response.MapId.ToString(), IsReady = response.IsReady };
 
-    public static Ack To(this MapLoaded _)
-        => new() { Success = true };
+    public static DeleteMapResponse To(this MapDeleted response)
+        => new() { Success = response.Success, ErrorMessage = response.Error?.Message ?? string.Empty };
 
-    public static Ack To(this MapUpdated _)
+    public static Ack To(this MapLoaded _)
         => new() { Success = true };
 }

@@ -9,6 +9,7 @@ public class HostConfigurationSetupContainer : ApplicationSetupContainer<WebAppl
     {
         app.MapGrpcService<MapManagerService>();
         app.MapGrpcService<PathfinderService>();
+        app.MapGrpcService<PointService>();
 
         app.UseHealthChecks("/health/alive",
             new HealthCheckOptions { AllowCachingResponses = false, Predicate = r => r.Tags.Contains("live") });

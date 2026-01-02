@@ -239,7 +239,7 @@ public class MapFactory : IMapFactory
         return new MapConfigWithPoints(Guid.NewGuid(), result);
     }
 
-    private static IDictionary<int, int[,]> InitializeMap(MapSettings settings, Random? random = default, bool intergalacticDummyMode = false)
+    private static IDictionary<int, int[,]> InitializeMap(MapSettings settings, Random? random = null, bool intergalacticDummyMode = false)
     {
         var result = new Dictionary<int, int[,]>();
         for (int depth = 0; depth < settings.MapSize.Depth; depth++)

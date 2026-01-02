@@ -4,6 +4,8 @@ using Akka.Actor;
 using Akka.Persistence;
 using Akka.Pathfinder.Core.Persistence.Data;
 using Akka.Cluster.Sharding;
+using Servus.Akka.Diagnostics;
+using Servus.Core.Diagnostics;
 
 namespace Akka.Pathfinder.Workers;
 
@@ -11,32 +13,34 @@ public partial class PathfinderWorker
 {
     public void PathfinderRequestHandler(PathfinderRequest msg)
     {
-        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)!.SetTag("EntityId", _entityId);
+        using var activity = ActivitySourceRegistry.StartActivity(GetType(), msg.GetType().Name, msg);
         _logger.Debug("[{PathfinderId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         _state = PathfinderWorkerState.FromRequest(msg);
-        _senderManagerClient.Forward(new SavePathfinderSender(msg.PathfinderId));
+        _senderManagerClient.ForwardTraced(new SavePathfinderSender(msg.PathfinderId));
 
         IReadOnlyList<PathPoint> startPointList =
         [
             new(_state.SourcePointId, 0, _state.StartDirection)
         ];
 
-        var findPathRequest = new FindPathRequest(msg.RequestId, msg.PathfinderId, Guid.NewGuid(), _state.SourcePointId, _state.TargetPointId, startPointList);
-        _mapManagerClient.Tell(findPathRequest, Self);
-        Timers!.StartSingleTimer("timeout", new Timeout(msg.RequestId, _state.PathfinderId), _state.Timeout);
+        var findPathRequest = new FindPathRequest(msg.RequestId, msg.PathfinderId, Guid.NewGuid(), _state.SourcePointId,
+            _state.TargetPointId, startPointList);
+        _mapManagerClient.TellTraced(findPathRequest, Self);
+        Timers!.StartSingleTimer("timeout", new Timeout(msg.RequestId, _state.PathfinderId, msg), _state.Timeout);
         SnapshotState();
     }
 
     public void FoundPathHandler(PathFound msg)
     {
-        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)!.SetTag("EntityId", _entityId);
+        using var activity = ActivitySourceRegistry.StartActivity(GetType(), msg.GetType().Name, msg);
         _logger.Verbose("[{PathfinderId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         switch (msg.Result)
         {
             case PathfinderResult.Success:
-                _logger.Information("[{PathfinderId}] I found a path [{PathId}][{TotalSeconds}]", _entityId, msg.PathId, (DateTime.UtcNow - _state.StartTime).TotalSeconds);
+                _logger.Information("[{PathfinderId}] I found a path [{PathId}][{TotalSeconds}]", _entityId, msg.PathId,
+                    (DateTime.UtcNow - _state.StartTime).TotalSeconds);
                 _state.IncrementFoundPathCounter();
                 break;
         }
@@ -44,20 +48,24 @@ public partial class PathfinderWorker
 
     public void TimeoutHandler(Timeout msg)
     {
-        using var activity = Telemetry.ActivitySource.StartActivity(msg.GetType().Name)!.SetTag("EntityId", _entityId);
+        using var activity = ActivitySourceRegistry.StartActivity(GetType(), msg.GetType().Name, msg.Request);
         _logger.Verbose("[{PathfinderId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         if (!_state.HasPathFound)
         {
-            _logger.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", _entityId, _state.SourcePointId, _state.TargetPointId);
-            ForwardToPathfinderSender(new PathfinderResponse(msg.RequestId, msg.PathfinderId, false, null, "Frag mich doch nicht"));
+            _logger.Debug("[{PathfinderId}] No Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", _entityId,
+                _state.SourcePointId, _state.TargetPointId);
+            ForwardToPathfinderSender(new PathfinderResponse(msg.RequestId, msg.PathfinderId, false, null,
+                "Frag mich doch nicht"));
             _logger.Information("[{PathfinderId}] -> job is done.... 🦥 mode activated", _entityId);
             Become(Void);
             Shutdown();
             return;
         }
 
-        _logger.Information("[{PathfinderId}] {PathsCount} Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", _entityId, _state.Count, _state.SourcePointId, _state.TargetPointId);
+        _logger.Information(
+            "[{PathfinderId}] {PathsCount} Paths found for Path: [{SourcePointId}] -> [{TargetPointId}]", _entityId,
+            _state.Count, _state.SourcePointId, _state.TargetPointId);
 
         var result = _pathReader.GetByPathfinderId(msg.PathfinderId);
         try
@@ -85,7 +93,9 @@ public partial class PathfinderWorker
         Context.System.EventStream.Publish(new PathfinderDeactivated(_state.PathfinderId));
         Context.Parent.Tell(new Passivate(PoisonPill.Instance));
     }
-    private void ForwardToPathfinderSender(PathfinderResponse message) => _senderManagerClient.Tell(new ForwardToPathfinderSender(message.PathfinderId, message));
+
+    private void ForwardToPathfinderSender(PathfinderResponse message) =>
+        _senderManagerClient.TellTraced(new ForwardToPathfinderSender(message.PathfinderId, message));
 
     private void SaveSnapshotFailureHandler(SaveSnapshotFailure msg)
         => _logger.Error(msg.Cause, "[{PointId}][SNAPSHOTFAILURE][{SequenceNr}]", _entityId, msg.Metadata.SequenceNr);

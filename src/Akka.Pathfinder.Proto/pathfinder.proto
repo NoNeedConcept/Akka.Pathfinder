@@ -11,6 +11,7 @@ option csharp_namespace = "Akka.Pathfinder.Grpc";
 service Pathfinder {
   rpc FindPath (stream FindPathRequest) returns (stream FindPathResponse);
   rpc GetPath(GetPathRequest) returns (GetPathResponse);
+  rpc Delete(DeletePathfinderRequest) returns (DeletePathfinderResponse);
 }
 
 message FindPathRequest {
@@ -38,4 +39,13 @@ message GetPathResponse{
     bool success = 1;
     string error_message = 2;
     repeated Point path = 3;
+}
+
+message DeletePathfinderRequest {
+    string pathfinder_id = 1;
+}
+
+message DeletePathfinderResponse {
+    bool success = 1;
+    string error_message = 2;
 }

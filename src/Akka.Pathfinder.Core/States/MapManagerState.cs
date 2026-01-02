@@ -1,9 +1,9 @@
-﻿namespace Akka.Pathfinder.Core.States;
+﻿using Akka.Pathfinder.Core.Persistence;
+
+namespace Akka.Pathfinder.Core.States;
 
 public class MapManagerState
 {
-    private readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext<MapManagerState>();
-
     public static MapManagerState FromRequest(Guid mapId)
         => new()
         {
@@ -11,9 +11,16 @@ public class MapManagerState
             MapId = mapId
         };
 
-    public MapManagerState() { }
+    public static MapManagerState FromSnapshot(PersistedMapManagerState msg)
+        => new()
+        {
+            MapId = msg.MapId,
+            IsMapReady = msg.IsMapReady,
+        };
 
-    public Guid MapId { get; internal set; }
-    public bool IsMapReady { get; internal set; } = false;
+    public Guid MapId { get; private set; }
+    public bool IsMapReady { get; private set; }
     public void SetMapIsReady() => IsMapReady = true;
+
+    public PersistedMapManagerState GetPersistenceState() => new(MapId, IsMapReady);
 }

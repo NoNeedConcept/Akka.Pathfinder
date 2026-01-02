@@ -68,24 +68,24 @@ public class MapManagerService : MapManager.MapManagerBase
         }
     }
 
-    public override async Task<Ack> UpdateMap(MapRequest request, ServerCallContext context)
+    public override async Task<DeleteMapResponse> Delete(MapRequest request, ServerCallContext context)
     {
         _logger.Verbose("[{RequestType}][{@Context}]", request.GetType().Name, context);
 
         try
         {
-            var requestItem = request.ToUpdateMap();
-            var response = await _gatewayService.UpdateAsync(requestItem, context.CancellationToken);
+            var requestItem = request.ToDeleteMap();
+            var response = await _gatewayService.DeleteAsync(requestItem, context.CancellationToken);
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
         {
             _logger.Error(ex, "[{RequestType}][{@Context}]", request.GetType(), context);
-            return new Ack { Success = false };
+            return new DeleteMapResponse { Success = false, ErrorMessage = ex.Message };
         }
         catch (OperationCanceledException)
         {
-            return new Ack { Success = false };
+            return new DeleteMapResponse { Success = false, ErrorMessage = "Canceled" };
         }
     }
 

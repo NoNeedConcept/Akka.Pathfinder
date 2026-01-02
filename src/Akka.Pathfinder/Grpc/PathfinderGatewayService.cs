@@ -1,6 +1,7 @@
 using Akka.Actor;
 using Akka.Hosting;
 using Akka.Pathfinder.Core.Messages;
+using Servus.Akka.Diagnostics;
 
 namespace Akka.Pathfinder;
 
@@ -14,6 +15,9 @@ internal class PathfinderGatewayService : IPathfinderGatewayService
         _pathfinderClient = actorRegistry.Get<RequestForwarder>();
     }
 
-    public async Task<PathfinderResponse> FindPathAsync(PathfinderRequest request, CancellationToken cancellationToken = default)
-        => await _pathfinderClient.Ask<PathfinderResponse>(request, cancellationToken);
+    public Task<PathfinderResponse> FindPathAsync(PathfinderRequest request, CancellationToken cancellationToken = default)
+        => _pathfinderClient.AskTraced<PathfinderResponse>(request);
+
+    public Task<PathfinderDeleted> DeleteAsync(DeletePathfinder request, CancellationToken cancellationToken = default)
+        => _pathfinderClient.AskTraced<PathfinderDeleted>(request);
 }

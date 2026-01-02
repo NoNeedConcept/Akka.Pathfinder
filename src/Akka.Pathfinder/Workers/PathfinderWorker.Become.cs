@@ -32,9 +32,9 @@ public partial class PathfinderWorker
     {
         _logger.Warning("[{PathfinderId}][FAILURE]", _entityId);
         var deleteSender = ActorRefs.NoSender;
-        DeletePathfinderRequest request = null!;
+        DeletePathfinder request = null!;
         Command<ReceiveTimeout>(msg => Context.Parent.Tell(new Passivate(PoisonPill.Instance)));
-        Command<DeletePathfinderRequest>(msg =>
+        Command<DeletePathfinder>(msg =>
         {
             deleteSender = Sender;
             request = msg;
@@ -42,12 +42,12 @@ public partial class PathfinderWorker
         });
         Command<DeleteSnapshotsSuccess>(msg =>
         {
-            var response = new DeletePathfinderResponse(request.RequestId, request.PathfinderId, true);
+            var response = new PathfinderDeleted(request.RequestId, request.PathfinderId, true);
             deleteSender.Tell(response);
         });
         Command<DeleteSnapshotFailure>(msg =>
         {
-            var response = new DeletePathfinderResponse(request.RequestId, request.PathfinderId, false, msg.Cause);
+            var response = new PathfinderDeleted(request.RequestId, request.PathfinderId, false, msg.Cause);
             deleteSender.Tell(response);
         });
         CommandAny(msg =>
