@@ -1,6 +1,5 @@
 ﻿using Akka.Actor;
 using Akka.Streams.Dsl;
-using Servus.Akka.Diagnostics;
 using Servus.Core.Diagnostics;
 
 namespace Akka.Pathfinder.Core;
@@ -26,12 +25,12 @@ public static class StreamsExtensions
     }
 
     public static Source<TOut2, TMat> AskTraced<TOut, TOut2, TMat>(this Source<TOut, TMat> source, IActorRef actorRef,
-        int parallelism = 2) where TOut : IWithTracing
+        int parallelism = 2, CancellationToken cancellationToken = default) where TOut : IWithTracing
     {
         var flow = Flow.Create<TOut>()
             .SelectAsync(parallelism, async e =>
             {
-                var reply = await actorRef.AskTraced<TOut2>(e);
+                var reply = await actorRef.AskTraced<TOut2>(e, cancellationToken);
                 return reply switch
                 {
                     { } a => a,

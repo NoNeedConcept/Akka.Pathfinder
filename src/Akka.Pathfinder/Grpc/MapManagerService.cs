@@ -5,7 +5,6 @@ using Akka.Pathfinder.Core.Configs;
 using Akka.Pathfinder.Grpc;
 using Grpc.Core;
 using moin.akka.endpoint;
-using Servus.Akka.Diagnostics;
 
 namespace Akka.Pathfinder;
 
@@ -37,7 +36,7 @@ public class MapManagerService : MapManager.MapManagerBase
         try
         {
             var requestItem = request.ToGetMapState();
-            var response = await _mapManagerClient.AskTraced<Core.Messages.MapStateResponse>(requestItem);
+            var response = await _mapManagerClient.AskTraced<Core.Messages.MapStateResponse>(requestItem, context.CancellationToken);
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
@@ -58,7 +57,7 @@ public class MapManagerService : MapManager.MapManagerBase
         try
         {
             var requestItem = request.ToLoadMap();
-            var response = await _mapManagerClient.AskTraced<Core.Messages.MapLoaded>(requestItem);
+            var response = await _mapManagerClient.AskTraced<Core.Messages.MapLoaded>(requestItem, context.CancellationToken);
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
@@ -79,7 +78,7 @@ public class MapManagerService : MapManager.MapManagerBase
         try
         {
             var requestItem = request.ToDeleteMap();
-            var response = await _mapManagerClient.AskTraced<Core.Messages.MapDeleted>(requestItem);
+            var response = await _mapManagerClient.AskTraced<Core.Messages.MapDeleted>(requestItem, context.CancellationToken);
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
@@ -102,14 +101,15 @@ public class MapManagerService : MapManager.MapManagerBase
             List<Guid> collectionIds = [];
             var listOfListOfPoints = request.Points.Select(x => x.To()).Chunk(MongoConstantLengthForCollections.Length)
                 .Select(x => x.ToList());
-            foreach (var listOfPoints in listOfListOfPoints)
+            var ofListOfPoints = listOfListOfPoints.ToArray();
+            foreach (var listOfPoints in ofListOfPoints)
             {
                 var collectionId = Guid.NewGuid();
                 await _pointConfigWriter.AddPointConfigsAsync(collectionId, listOfPoints, context.CancellationToken);
                 collectionIds.Add(collectionId);
             }
 
-            var pointCount = listOfListOfPoints.Sum(x => x.Count);
+            var pointCount = ofListOfPoints.Sum(x => x.Count);
             await _mapConfigWriter.WriteAsync(new MapConfig(mapId, collectionIds, pointCount));
             CreateMapResponse response = new()
                 { MapId = request.MapId, Success = true, ErrorMessage = "", PointCount = (uint)pointCount };

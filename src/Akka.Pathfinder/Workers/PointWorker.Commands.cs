@@ -1,4 +1,5 @@
-﻿using Akka.Pathfinder.Core.Messages;
+﻿using System.Diagnostics;
+using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Core.States;
 using Akka.Pathfinder.Core;
 using Akka.Persistence;
@@ -94,6 +95,7 @@ public partial class PointWorker
     private void FindPathRequestHandler(FindPathRequest msg)
     {
         using var activity = ActivitySourceRegistry.StartActivity(GetType(), msg.GetType().Name, msg);
+        activity?.AddTag("PointId", _entityId);
         _logger.Verbose("[{PointId}][{MessageType}] received", _entityId, msg.GetType().Name);
 
         if (_state.TryIsInactivePathfinder(msg.PathfinderId)) return;

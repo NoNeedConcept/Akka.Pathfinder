@@ -10,7 +10,7 @@ namespace Akka.Pathfinder.Managers;
 [ActivitySourceName("Pathfinder")]
 public partial class MapManager : ReceivePersistentActor
 {
-    public override string PersistenceId => $"MapManager";
+    public override string PersistenceId => "MapManager";
     private readonly Serilog.ILogger _logger;
     private readonly IReadOnlyActorRegistry _registry;
     private readonly IMapConfigWriter _mapConfigWriter;

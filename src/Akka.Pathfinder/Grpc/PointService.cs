@@ -1,10 +1,10 @@
 ﻿using Akka.Actor;
 using Akka.Hosting;
+using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Grpc;
 using Grpc.Core;
 using moin.akka.endpoint;
-using Servus.Akka.Diagnostics;
 
 namespace Akka.Pathfinder;
 
@@ -53,29 +53,29 @@ public class PointService : Grpc.PointService.PointServiceBase
     }
 
     public override Task<Ack> Occupy(PointRequest request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToOccupied()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToOccupied(), context.CancellationToken), context.CancellationToken);
 
     public override Task<Ack> Release(PointRequest request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToReleased()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToReleased(), context.CancellationToken), context.CancellationToken);
 
     public override Task<Ack> Block(PointRequest request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<PointCommandResponse>(request.ToBlock()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<PointCommandResponse>(request.ToBlock(), context.CancellationToken), context.CancellationToken);
 
     public override Task<Ack> Unblock(PointRequest request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<PointCommandResponse>(request.ToUnblock()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<PointCommandResponse>(request.ToUnblock(), context.CancellationToken), context.CancellationToken);
 
     public override Task<Ack> UpdateDirection(PointConfig request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<PointDirectionUpdated>(request.ToUpdateDirection()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<PointDirectionUpdated>(request.ToUpdateDirection(), context.CancellationToken), context.CancellationToken);
 
     public override Task<Ack> IncreaseCost(UpdateCostRequest request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToIncrease()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToIncrease(), context.CancellationToken), context.CancellationToken);
 
     public override Task<Ack> DecreaseCost(UpdateCostRequest request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToDecrease()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToDecrease(), context.CancellationToken), context.CancellationToken);
 
     public override Task<Ack> IncreaseDirectionCost(UpdateDirectionCostRequest request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToIncrease()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToIncrease(), context.CancellationToken), context.CancellationToken);
 
     public override Task<Ack> DecreaseDirectionCost(UpdateDirectionCostRequest request, ServerCallContext context)
-        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToDecrease()), context.CancellationToken);
+        => Execute((g, c) => g.AskTraced<UpdateCostResponse>(request.ToDecrease(), context.CancellationToken), context.CancellationToken);
 }

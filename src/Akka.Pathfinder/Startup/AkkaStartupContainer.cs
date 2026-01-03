@@ -9,6 +9,7 @@ using Akka.Persistence.MongoDb.Hosting;
 using Akka.Remote.Hosting;
 using moin.akka.endpoint;
 using Servus.Akka.Startup;
+using LogLevel = Akka.Event.LogLevel;
 
 namespace Akka.Pathfinder.Startup;
 
@@ -37,8 +38,6 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
             SeedNodes = clusterSection.GetSection("seed-nodes").Get<string[]>(),
         };
 
-
-        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
         var shardingJournalOptions = new MongoDbJournalOptions(true)
         {
             ConnectionString = connectionString,
@@ -66,23 +65,25 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
 
                 // Add serilog logger
                 setup.AddLogger<SerilogLogger>();
-                setup.WithDefaultLogMessageFormatter<SerilogLogMessageFormatter>();
+                setup.LogConfigOnStart = true;
+                setup.LogLevel = LogLevel.InfoLevel;
+                setup.DebugOptions = new DebugOptions { Unhandled = true, AutoReceive = true };
             })
             .AddHocon(hocon: "akka.remote.dot-netty.tcp.maximum-frame-size = 256000b", addMode: HoconAddMode.Prepend)
-            .AddHocon(@"
-akka.actor.dispatchers.entity-dispatcher {
-  type = Dispatcher
-  executor = fork-join-executor
-
-  fork-join-executor {
-    parallelism-min = 4
-    parallelism-max = 16
-    parallelism-factor = 2.0
-  }
-
-  throughput = 20
-}
-", HoconAddMode.Prepend)
+//             .AddHocon(@"
+// akka.actor.dispatchers.entity-dispatcher {
+//   type = Dispatcher
+//   executor = fork-join-executor
+//
+//   fork-join-executor {
+//     parallelism-min = 4
+//     parallelism-max = 16
+//     parallelism-factor = 2.0
+//   }
+//
+//   throughput = 20
+// }
+// ", HoconAddMode.Prepend)
             .WithActorSystemLivenessCheck()
             .WithAkkaClusterReadinessCheck()
             .WithMongoDbPersistence(string.Empty,
@@ -103,8 +104,8 @@ akka.actor.dispatchers.entity-dispatcher {
             .WithShardRegion<PointWorker>("Pathfinder-Point",
                 entityPropsFactory: (_, _, resolver) =>
                 {
-                    return nttId => resolver.Props<PointWorker>(nttId)
-                        .WithDispatcher("akka.actor.dispatchers.entity-dispatcher");
+                    return nttId => resolver.Props<PointWorker>(nttId);
+                    //.WithDispatcher("akka.actor.dispatchers.entity-dispatcher");
                 },
                 new MessageExtractor(25),
                 new ShardOptions

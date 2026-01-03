@@ -1,4 +1,5 @@
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Servus.Core.Application.Startup;
@@ -41,7 +42,8 @@ public class OpenTelemetryContainer : ILoggingSetupContainer, IHostApplicationBu
                             && !context.Request.Path.StartsWithSegments("/health/alive")
                     )
                     .AddHttpClientInstrumentation()
-                    .SetSampler(new AlwaysOnSampler());
+                    .SetSampler(new AlwaysOnSampler())
+                    .AddConsoleExporter();
             });
 
         var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);

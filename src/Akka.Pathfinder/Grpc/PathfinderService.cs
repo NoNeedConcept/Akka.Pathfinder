@@ -4,6 +4,7 @@ using Akka.Pathfinder.Core.Messages;
 using Akka.Pathfinder.Grpc;
 using Grpc.Core;
 using moin.akka.endpoint;
+using MongoDB.Driver.Linq;
 using Servus.Akka.Diagnostics;
 using FindPathRequest = Akka.Pathfinder.Grpc.FindPathRequest;
 
@@ -28,12 +29,25 @@ public class PathfinderService : Grpc.Pathfinder.PathfinderBase
             using var scope = _serviceScopeFactory.CreateScope();
             var pathfinderWorkerClient = scope.ServiceProvider.GetRequiredService<IActorRegistry>()
                 .GetClient<Endpoint.PathfinderWorker>();
-            await foreach (var item in requestStream.ReadAllAsync(context.CancellationToken).ConfigureAwait(false))
-            {
-                var request = item.To();
-                var response = await pathfinderWorkerClient.AskTraced<PathfinderResponse>(request);
-                await responseStream.WriteAsync(response.To(), context.CancellationToken);
-            }
+
+            var responseLock = new SemaphoreSlim(1, 1);
+            await Parallel.ForEachAsync(requestStream.ReadAllAsync(context.CancellationToken),
+                context.CancellationToken,
+                async (item, token) =>
+                {
+                    var request = item.To();
+                    var response = await pathfinderWorkerClient.AskTraced<PathfinderResponse>(request, context.CancellationToken);
+
+                    await responseLock.WaitAsync(token);
+                    try
+                    {
+                        await responseStream.WriteAsync(response.To(), token);
+                    }
+                    finally
+                    {
+                        responseLock.Release();
+                    }
+                }).ConfigureAwait(false);
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
         {
@@ -58,13 +72,13 @@ public class PathfinderService : Grpc.Pathfinder.PathfinderBase
                     { Success = false, ErrorMessage = "path id or pathfinder id guid parse failed" };
             }
 
-            var path = pathReader.Get().FirstOrDefault(item => item.Id == pathId && item.PathfinderId == pathfinderId);
+            var path = await pathReader.Get()
+                .FirstOrDefaultAsync(item => item.Id == pathId && item.PathfinderId == pathfinderId);
             if (path is null)
             {
                 return new GetPathResponse { Success = false, ErrorMessage = "no path found in db" };
             }
 
-            await Task.CompletedTask;
             return new GetPathResponse { Success = true, Path = { path.Directions.Select(item => item.To()) } };
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
@@ -88,7 +102,7 @@ public class PathfinderService : Grpc.Pathfinder.PathfinderBase
             var pathfinderWorkerClient = scope.ServiceProvider.GetRequiredService<IActorRegistry>()
                 .GetClient<Endpoint.PathfinderWorker>();
 
-            var response = await pathfinderWorkerClient.AskTraced<PathfinderDeleted>(request.To());
+            var response = await pathfinderWorkerClient.AskTraced<PathfinderDeleted>(request.To(), context.CancellationToken);
             return response.To();
         }
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)

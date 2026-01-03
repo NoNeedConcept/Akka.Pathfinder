@@ -16,6 +16,7 @@
         <PackageReference Include="Akka.Logger.Serilog"/>
         <PackageReference Include="Akka.Persistence.Mongodb.Hosting"/>
         <PackageReference Include="moin.akka.endpoint" />
+        <PackageReference Include="OpenTelemetry.Exporter.Console" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
         <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
         <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />

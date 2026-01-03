@@ -16,6 +16,7 @@
     <PackageVersion Include="Akka.Logger.Serilog" Version="1.5.25" />
     <PackageVersion Include="Akka.Persistence.Mongodb.Hosting" Version="1.5.55.1" />
     <PackageVersion Include="moin.akka.endpoint" Version="0.1.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.14.0" />
     <PackageVersion Include="Servus.Core" Version="0.33.2" />
     <PackageVersion Include="Servus.Akka" Version="0.3.5" />
     <PackageVersion Include="MongoDB.Driver.Core.Extensions.DiagnosticSources" Version="3.0.0" />
