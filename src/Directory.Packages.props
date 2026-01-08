@@ -15,6 +15,7 @@
     <PackageVersion Include="Akka.Hosting" Version="1.5.57" />
     <PackageVersion Include="Akka.Logger.Serilog" Version="1.5.25" />
     <PackageVersion Include="Akka.Persistence.Mongodb.Hosting" Version="1.5.55.1" />
+    <PackageVersion Include="Akka.Persistence.Redis.Hosting" Version="1.5.55.1" />
     <PackageVersion Include="moin.akka.endpoint" Version="0.1.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.14.0" />
     <PackageVersion Include="Servus.Core" Version="0.33.2" />
@@ -34,6 +35,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.20" />
     <PackageVersion Include="Polly" Version="8.0.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.10.1" />
     <PackageVersion Include="Testcontainers" Version="4.9.0" />
     <PackageVersion Include="Reqnroll.xUnit" Version="3.3.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />

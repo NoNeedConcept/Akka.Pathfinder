@@ -1,4 +1,5 @@
 @Acceptance
+@RedisActive
 Feature: Map3
  15*15*15 Points map... basic function test for pathfinder
 

@@ -15,6 +15,7 @@
         <PackageReference Include="Akka.Hosting"/>
         <PackageReference Include="Akka.Logger.Serilog"/>
         <PackageReference Include="Akka.Persistence.Mongodb.Hosting"/>
+        <PackageReference Include="Akka.Persistence.Redis.Hosting"/>
     </ItemGroup>
 
     <ItemGroup>

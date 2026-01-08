@@ -1,5 +1,4 @@
 ﻿using DotNet.Testcontainers.Builders;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using Serilog;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;

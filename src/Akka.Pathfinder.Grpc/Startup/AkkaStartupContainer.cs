@@ -31,7 +31,7 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
         var clusterSection = configuration.GetSection("akka:cluster");
         var clusterOptions = new ClusterOptions
         {
-            Roles = ["Pathfinder"],
+            Roles = ["Pathfinder.Grpc"],
             SeedNodes = clusterSection.GetSection("seed-nodes").Get<string[]>()
         };
 

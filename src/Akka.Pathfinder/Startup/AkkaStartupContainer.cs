@@ -4,10 +4,11 @@ using Akka.Logger.Serilog;
 using Akka.Pathfinder.Core;
 using Akka.Pathfinder.Managers;
 using Akka.Pathfinder.Workers;
-using Akka.Persistence.Hosting;
+using Akka.Persistence.Redis.Hosting;
 using Akka.Persistence.MongoDb.Hosting;
 using Akka.Remote.Hosting;
 using moin.akka.endpoint;
+using Serilog;
 using Servus.Akka.Startup;
 using Endpoint = Akka.Pathfinder.Core.Endpoint;
 
@@ -23,7 +24,8 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
     protected override void BuildSystem(AkkaConfigurationBuilder builder, IServiceProvider serviceProvider)
     {
         var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-        var connectionString = configuration.GetConnectionString("mongodb");
+        var redisConnectionString = configuration.GetConnectionString("redis");
+        var mongodbConnectionString = configuration.GetConnectionString("mongodb");
         var remoteSection = configuration.GetSection("akka:remote:dot-netty:tcp");
         var remoteOptions = new RemoteOptions
         {
@@ -38,11 +40,11 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
             SeedNodes = clusterSection.GetSection("seed-nodes").Get<string[]>()
         };
 
-        var useTransactions = connectionString?.Contains("replicaSet=") ?? false;
+        var useTransactions = mongodbConnectionString?.Contains("replicaSet=") ?? false;
 
         var shardingJournalOptions = new MongoDbJournalOptions(true)
         {
-            ConnectionString = connectionString!,
+            ConnectionString = mongodbConnectionString!,
             Collection = "events",
             MetadataCollection = "metadatas",
             UseWriteTransaction = useTransactions,
@@ -52,7 +54,7 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
 
         var shardingSnapshotOptions = new MongoDbSnapshotOptions(true)
         {
-            ConnectionString = connectionString!,
+            ConnectionString = mongodbConnectionString!,
             Collection = "snapshots",
             UseWriteTransaction = useTransactions,
             UseReadTransaction = useTransactions,
@@ -92,11 +94,6 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
 }", HoconAddMode.Prepend)
             .WithActorSystemLivenessCheck()
             .WithAkkaClusterReadinessCheck()
-            .WithMongoDbPersistence(
-                journalOptions: shardingJournalOptions,
-                snapshotOptions: shardingSnapshotOptions,
-                journalBuilder: journal => journal.WithHealthCheck(),
-                snapshotBuilder: snapshot => snapshot.WithHealthCheck())
             .WithRemoting(remoteOptions)
             .WithClustering(clusterOptions)
             .AddService<MapManager, Endpoint.MapManager>()
@@ -119,5 +116,23 @@ public class AkkaStartupContainer : ActorSystemSetupContainer
                     Role = "Pathfinder",
                     PassivateIdleEntityAfter = TimeSpan.FromMinutes(1),
                 });
+
+        if (!string.IsNullOrEmpty(redisConnectionString))
+        {
+            Log.Information("Use Redis for akka persistence");
+            builder.WithRedisPersistence(redisConnectionString,
+                journalBuilder: journalBuilder => journalBuilder.WithHealthCheck(),
+                snapshotBuilder: snapshotBuilder => snapshotBuilder.WithHealthCheck());
+        }
+        else
+        {
+            Log.Information("Use MongoDb for akka persistence");
+            builder
+                .WithMongoDbPersistence(
+                    journalOptions: shardingJournalOptions,
+                    snapshotOptions: shardingSnapshotOptions,
+                    journalBuilder: journal => journal.WithHealthCheck(),
+                    snapshotBuilder: snapshot => snapshot.WithHealthCheck());
+        }
     }
 }
