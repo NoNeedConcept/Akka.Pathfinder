@@ -51,9 +51,11 @@ public class GrpcApplicationFactory : WebApplicationFactory<Akka.Pathfinder.Grpc
     public GrpcChannel GetGrpcChannel() => GrpcChannel.ForAddress(Server.BaseAddress,
         new GrpcChannelOptions { HttpHandler = Server.CreateHandler() });
 
-    public MapManager.MapManagerClient GetMapManagerClient() => new(GetGrpcChannel());
+    public MapService.MapServiceClient GetMapManagerClient() => new(GetGrpcChannel());
 
-    public Grpc.Pathfinder.PathfinderClient GetPathfinderClient() => new(GetGrpcChannel());
+    public PathService.PathServiceClient GetPathfinderClient() => new(GetGrpcChannel());
+
+    public PointService.PointServiceClient GetPointServiceClient() => new(GetGrpcChannel());
 
     public static async Task<bool> IsUrlAsync(HttpClient client, string relativeUri, int retry = 5,
         TimeSpan? delay = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)

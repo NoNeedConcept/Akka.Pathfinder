@@ -20,12 +20,12 @@ public static partial class Conversions
     public static Core.Configs.DirectionConfig To(this DirectionConfig direction)
         => new(direction.TargetPointId, direction.Cost);
 
-    public static MapStateResponse To(this Core.Messages.MapStateResponse response)
+    public static StateResponse To(this MapStateResponse response)
         => new() { MapId = response.MapId.ToString(), IsReady = response.IsReady };
 
-    public static DeleteMapResponse To(this MapDeleted response)
-        => new() { Success = response.Success, ErrorMessage = response.Error?.Message ?? string.Empty };
+    public static DeleteResponse To(this MapDeleted response)
+        => new() { Success = response.Success, ErrorMessage = response.ErrorMessage ?? string.Empty };
 
-    public static Ack To(this MapLoaded _)
-        => new() { Success = true };
+    public static Ack To(this MapLoaded response)
+        => new() { Success = response.Success };
 }

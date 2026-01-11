@@ -19,11 +19,11 @@ public class ConcurrencySteps
     }
 
     [When(@"I send (.*) requests simultaneously on one stream with timeout (.*) seconds")]
-    public async Task WhenISendRequestsSimultaneously(int count, int seconds)
+    public async Task WhenISendRequestsSimultaneouslyOnOneStreamWithTimeoutSeconds(int count, int seconds)
     {
-        var pathfinderClient = _applicationFactory.GetPathfinderClient();
+        var pathService = _applicationFactory.GetPathfinderClient();
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        var call = pathfinderClient.FindPath(cancellationToken: cts.Token);
+        var call = pathService.FindPath(cancellationToken: cts.Token);
 
         var sw = Stopwatch.StartNew();
         for (var i = 0; i < count; i++)

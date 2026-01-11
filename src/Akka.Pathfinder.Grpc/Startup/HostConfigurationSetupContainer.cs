@@ -7,8 +7,8 @@ public class HostConfigurationSetupContainer : ApplicationSetupContainer<WebAppl
 {
     protected override void SetupApplication(WebApplication app)
     {
-        app.MapGrpcService<Services.MapManagerService>();
-        app.MapGrpcService<Services.PathfinderService>();
+        app.MapGrpcService<Services.MapService>();
+        app.MapGrpcService<Services.PathService>();
         app.MapGrpcService<Services.PointService>();
 
         app.UseHealthChecks("/health/alive",

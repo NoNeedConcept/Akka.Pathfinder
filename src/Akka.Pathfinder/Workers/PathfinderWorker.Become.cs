@@ -17,6 +17,7 @@ public partial class PathfinderWorker
         // Sender -> SnapshotStore
         Command<SaveSnapshotSuccess>(SaveSnapshotSuccessHandler);
         Command<SaveSnapshotFailure>(SaveSnapshotFailureHandler);
+        DeleteCommands();
         Stash.UnstashAll();
     }
 
@@ -26,9 +27,8 @@ public partial class PathfinderWorker
         CommandAny(msg => _logger.Debug("[{PathfinderId}][{MessageType}] message received -> VOID", _entityId, msg.GetType().Name));
     }
 
-    private void Failure()
+    private void DeleteCommands()
     {
-        _logger.Warning("[{PathfinderId}][FAILURE]", _entityId);
         var deleteSender = ActorRefs.NoSender;
         DeletePathfinder request = null!;
         Command<DeletePathfinder>(msg =>

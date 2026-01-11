@@ -12,7 +12,7 @@ public partial class PointWorker
     {
         _logger.Verbose("[{PointId}][INITIALIZE]", _entityId);
         Command<InitializePoint>(InitializePointHandler);
-        CommandAny(msg => Stash.Stash());
+        DeleteCommands();
     }
 
     private void Configure()
@@ -87,5 +87,6 @@ public partial class PointWorker
             };
             deleteSender?.TellTraced(response);
         });
+        CommandAny(msg => Stash.Stash());
     }
 }

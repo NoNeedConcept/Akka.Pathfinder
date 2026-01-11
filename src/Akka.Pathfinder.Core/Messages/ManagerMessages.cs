@@ -6,11 +6,11 @@ public record MapStateResponse(Guid RequestId, Guid MapId, bool IsReady) : Respo
 
 public record LoadMap(Guid MapId) : MapRequestBase<MapLoaded>;
 
-public record MapLoaded(Guid RequestId, Guid MapId) : ResponseBase(RequestId);
+public record MapLoaded(Guid RequestId, Guid MapId, bool Success = true) : ResponseBase(RequestId);
 
 public record DeleteMap(Guid MapId) : MapRequestBase<MapDeleted>;
 
-public record MapDeleted(Guid RequestId, Guid MapId, bool Success = false, Exception? Error = null)
+public record MapDeleted(Guid RequestId, Guid MapId, bool Success = false, string? ErrorMessage = null)
     : ResponseBase(RequestId);
 
 public abstract record MapRequestBase<TRequest>()

@@ -7,10 +7,11 @@ namespace Akka.Pathfinder.Grpc.Conversions;
 public static partial class Conversions
 {
     public static PathfinderRequest To(this Grpc.FindPathRequest value)
-        => new(value.PathfinderId.To(), value.SourcePointId, value.TargetPointId, value.Direction.To(), new PathfinderOptions(AlgoMode.Timeout, value.Duration.ToTimeSpan()));
+        => new(value.PathfinderId.To(), value.SourcePointId, value.TargetPointId, value.Direction.To(),
+            new PathfinderOptions(AlgoMode.Timeout, value.Duration.ToTimeSpan()));
 
     public static DeletePathfinder To(this DeletePathfinderRequest value)
-        => new(Guid.NewGuid(), value.PathfinderId.To());
+        => new(value.PathfinderId.To());
 
     public static DeletePathfinderResponse To(this PathfinderDeleted value)
         => new() { Success = value.Success, ErrorMessage = value.Error?.Message ?? string.Empty };

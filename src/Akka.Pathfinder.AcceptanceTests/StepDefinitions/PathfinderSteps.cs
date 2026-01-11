@@ -24,39 +24,68 @@ public class PathfinderSteps
     }
 
     [Then(@"the path for PathfinderId (.*) should cost (.*)")]
-    public void ThenThePathShouldCost(string pathfinderId, int expectedCost)
+    public void ThenThePathForPathfinderIdShouldCost(string pathfinderId, int expectedCost)
     {
-        var pathFound = _context.Get<Grpc.FindPathResponse>($"Result_{pathfinderId}");
+        var contextKey = $"Result_{pathfinderId}";
+        Assert.True(_context.ContainsKey(contextKey),
+            $"Path result for PathfinderId '{pathfinderId}' not found in context");
+
+        var pathFound = _context.Get<Grpc.FindPathResponse>(contextKey);
         Assert.NotNull(pathFound);
-        Assert.Equal(pathfinderId.ToLower(), pathFound.PathfinderId);
-        Assert.True(pathFound.Success);
+        Assert.Equal(pathfinderId.ToLower(), pathFound.PathfinderId.ToLower(), ignoreCase: true);
+        Assert.True(pathFound.Success,
+            $"FindPath failed for PathfinderId {pathfinderId}: {pathFound.ErrorMessage}");
 
         var pathReader = _databaseDriver.CreatePathReader();
-        Assert.True(Guid.TryParse(pathFound.PathId, out var pathId));
-        var result = pathReader.Get(pathId).Single();
+        Assert.True(Guid.TryParse(pathFound.PathId, out var pathId),
+            $"Invalid path ID format: {pathFound.PathId}");
+
+        var results = pathReader.Get(pathId).ToList();
+        Assert.NotEmpty(results);
+        Assert.Single(results);
+
+        var result = results[0];
         Assert.NotNull(result);
         if (expectedCost == 0) return;
+
         var actualCost = result.Directions.Select(p => (int)p.Cost).Sum();
         Assert.Equal(expectedCost, actualCost);
+        _logger.Information("[TEST][PathfinderSteps] Path cost validated: PathfinderId={PathfinderId}, Cost={Cost}",
+            pathfinderId, actualCost);
     }
 
     [Then(@"the path for PathfinderId (.*) should cost more than (.*)")]
-    public void ThenThePathShouldCostMoreThan(string pathfinderId, int minCost)
+    public void ThenThePathForPathfinderIdShouldCostMoreThan(string pathfinderId, int minCost)
     {
-        var pathFound = _context.Get<Grpc.FindPathResponse>($"Result_{pathfinderId}");
+        var contextKey = $"Result_{pathfinderId}";
+        Assert.True(_context.ContainsKey(contextKey),
+            $"Path result for PathfinderId '{pathfinderId}' not found");
+
+        var pathFound = _context.Get<Grpc.FindPathResponse>(contextKey);
         Assert.NotNull(pathFound);
-        Assert.True(pathFound.Success);
+        Assert.True(pathFound.Success,
+            $"FindPath failed: {pathFound.ErrorMessage}");
 
         var pathReader = _databaseDriver.CreatePathReader();
         Assert.True(Guid.TryParse(pathFound.PathId, out var pathId));
-        var result = pathReader.Get(pathId).Single();
+
+        var results = pathReader.Get(pathId).ToList();
+        Assert.NotEmpty(results);
+        Assert.Single(results);
+
+        var result = results[0];
         Assert.NotNull(result);
+
         var actualCost = result.Directions.Select(p => (int)p.Cost).Sum();
-        Assert.True(actualCost > minCost, $"Expected cost > {minCost}, but was {actualCost}");
+        Assert.True(actualCost > minCost,
+            $"Expected cost > {minCost}, but was {actualCost}");
+        _logger.Information(
+            "[TEST][PathfinderSteps] Path cost validated: PathfinderId={PathfinderId}, MinCost={MinCost}, ActualCost={ActualCost}",
+            pathfinderId, minCost, actualCost);
     }
 
     [Then(@"the path for PathfinderId (.*) should not be found")]
-    public void ThenThePathShouldNotBeFound(string pathfinderId)
+    public void ThenThePathForPathfinderIdShouldNotBeFound(string pathfinderId)
     {
         var pathFound = _context.Get<Grpc.FindPathResponse>($"Result_{pathfinderId}");
 
@@ -65,9 +94,15 @@ public class PathfinderSteps
         Assert.Equal(pathfinderId, pathFound.PathfinderId);
     }
 
-    [When(@"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*) Seconds (.*)")]
-    public async Task WhenYouAreOnPointWantToFindAPathToPoint(int startPointId, Directions direction, int targetPointId, string pathfinderId, int seconds)
+    [When(
+        @"You are on Point (.*) and have the direction (.*) want to find a Path to Point (.*) PathfinderId (.*) Seconds (.*)")]
+    public async Task WhenYouAreOnPointAndHaveTheDirectionWantToFindAPathToPointPathfinderIdSeconds(int startPointId,
+        Directions direction, int targetPointId, string pathfinderId, int seconds)
     {
+        _logger.Information(
+            "[TEST][PathfinderSteps] Starting pathfinding: Start={StartPoint}, Target={TargetPoint}, Duration={Seconds}s",
+            startPointId, targetPointId, seconds);
+
         using var source = new CancellationTokenSource(TimeSpan.FromMinutes(15));
         var request = new Grpc.FindPathRequest
         {
@@ -80,19 +115,35 @@ public class PathfinderSteps
 
         var pathfinderClient = _applicationFactory.GetPathfinderClient();
         var result = pathfinderClient.FindPath(cancellationToken: source.Token);
+
         try
         {
             await result.RequestStream.WriteAsync(request, source.Token);
             await result.RequestStream.CompleteAsync();
+
             await foreach (var response in result.ResponseStream.ReadAllAsync(cancellationToken: source.Token))
             {
                 _context.Add($"Result_{pathfinderId}", response!);
+                _logger.Information(
+                    "[TEST][PathfinderSteps] Path found: PathfinderId={PathfinderId}, Cost={Cost}, Success={Success}",
+                    response.PathfinderId, response.PathCost, response.Success);
             }
-
         }
-        catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+        catch (RpcException ex)
         {
-            Assert.Fail(ex.Message);
+            _logger.Error("[TEST][PathfinderSteps] gRPC Error: {StatusCode} - {Message}",
+                ex.StatusCode, ex.Message);
+            Assert.Fail($"gRPC call failed with status {ex.StatusCode}: {ex.Message}");
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.Error("[TEST][PathfinderSteps] Operation cancelled: {Message}", ex.Message);
+            Assert.Fail($"Operation cancelled after 15 minutes: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("[TEST][PathfinderSteps] Unexpected error in pathfinding: {Exception}", ex);
+            throw;
         }
     }
 }

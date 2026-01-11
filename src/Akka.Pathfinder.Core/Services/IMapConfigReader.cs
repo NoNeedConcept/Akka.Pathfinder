@@ -7,7 +7,7 @@ namespace Akka.Pathfinder.Core.Services;
 public interface IMapConfigReader
 {
     IQueryable<MapConfig> Get();
-    Task<MapConfig> GetAsync(Guid mapId, CancellationToken cancellationToken = default);
+    MapConfig? Get(Guid mapId);
 }
 
 public class MapConfigReader : IMapConfigReader
@@ -20,6 +20,6 @@ public class MapConfigReader : IMapConfigReader
     public IQueryable<MapConfig> Get()
         => Collection.AsQueryable();
 
-    public Task<MapConfig> GetAsync(Guid mapId, CancellationToken cancellationToken = default)
-        => Get().Where(x => x.Id == mapId).SingleOrDefaultAsync(cancellationToken);
+    public MapConfig? Get(Guid mapId)
+        => Get().Where(x => x.Id == mapId).SingleOrDefault();
 }

@@ -8,7 +8,7 @@ import "common.proto";
 package Akka.Pathfinder;
 option csharp_namespace = "Akka.Pathfinder.Grpc";
  
-service Pathfinder {
+service PathService {
   rpc FindPath (stream FindPathRequest) returns (stream FindPathResponse);
   rpc GetPath(GetPathRequest) returns (GetPathResponse);
   rpc Delete(DeletePathfinderRequest) returns (DeletePathfinderResponse);

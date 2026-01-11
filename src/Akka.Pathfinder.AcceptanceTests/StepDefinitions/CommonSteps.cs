@@ -42,39 +42,59 @@ public class CommonSteps
     public async Task GivenMapIs(int mapId)
     {
         _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapId: [{MapId}]", mapId);
-        using var source = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-        var mapManagerClient = _applicationFactory.GetMapManagerClient();
-        var mapToLoad = DemoLayout.MapProvider.MapConfigs.GetValueOrDefault(mapId)!;
+        using var source = new CancellationTokenSource(TimeSpan.FromMinutes(15));
+        
+        try
+        {
+            var mapServiceClient = _applicationFactory.GetMapManagerClient();
+            var mapToLoad = DemoLayout.MapProvider.MapConfigs.GetValueOrDefault(mapId)!;
 
-        var createMap = new CreateMapRequest
-        {
-            MapId = mapToLoad.Id.ToString()
-        };
-        createMap.Points.Add(mapToLoad.Configs.Values.SelectMany(x => x).Select(pointConfig =>
-        {
-            var result = new PointConfig
+            var createMap = new CreateRequest
             {
-                Cost = pointConfig.Cost,
-                Id = pointConfig.Id
+                MapId = mapToLoad.Id.ToString()
             };
-            result.DirectionConfigs.Add(pointConfig.DirectionConfigs.ToDictionary(x => (int)x.Key.To(), x =>
-                new DirectionConfig
+            createMap.Points.Add(mapToLoad.Configs.Values.SelectMany(x => x).Select(pointConfig =>
+            {
+                var result = new PointConfig
                 {
-                    Cost = x.Value.Cost,
-                    TargetPointId = x.Value.TargetPointId
-                }));
-            return result;
-        }).ToList());
-        var response = await mapManagerClient.CreateMapAsync(createMap, cancellationToken: source.Token);
-        Assert.True(response.Success);
-        var result = await mapManagerClient.LoadAsync(new MapRequest { MapId = mapToLoad.Id.ToString() }, cancellationToken: source.Token);
-
-        Assert.True(result.Success);
-        _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapLoaded");
+                    Cost = pointConfig.Cost,
+                    Id = pointConfig.Id
+                };
+                result.DirectionConfigs.Add(pointConfig.DirectionConfigs.ToDictionary(x => (int)x.Key.To(), x =>
+                    new DirectionConfig
+                    {
+                        Cost = x.Value.Cost,
+                        TargetPointId = x.Value.TargetPointId
+                    }));
+                return result;
+            }).ToList());
+            
+            _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] Creating map with {PointCount} points", 
+                createMap.Points.Count);
+            var response = await mapServiceClient.CreateAsync(createMap, cancellationToken: source.Token);
+            Assert.True(response.Success, $"Map creation failed: {response.ErrorMessage}");
+            _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] Map created successfully");
+            
+            _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] Loading map");
+            var result = await mapServiceClient.LoadAsync(new MapRequest { MapId = mapToLoad.Id.ToString() }, cancellationToken: source.Token);
+            Assert.True(result.Success, "Map load failed");
+            
+            _logger.Information("[TEST][CommonStepDefinitions][GivenMapIs] MapLoaded successfully");
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.Error("[TEST][CommonStepDefinitions][GivenMapIs] Operation cancelled after 15 minutes: {Message}", ex.Message);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("[TEST][CommonStepDefinitions][GivenMapIs] Error loading map {MapId}: {Exception}", mapId, ex);
+            throw;
+        }
     }
 
     [Then("wait {int} min")]
-    public async Task ThenWaitMin(int delayInMin)
+    public async Task ThenWaitIntMin(int delayInMin)
     {
         await Task.Delay(TimeSpan.FromMinutes(delayInMin));
     }

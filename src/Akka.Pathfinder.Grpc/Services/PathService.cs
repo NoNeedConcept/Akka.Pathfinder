@@ -13,14 +13,14 @@ using MongoDB.Driver.Linq;
 
 namespace Akka.Pathfinder.Grpc.Services;
 
-public class PathfinderService : Grpc.Pathfinder.PathfinderBase
+public class PathService : Grpc.PathService.PathServiceBase
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IActorRegistry _actorRegistry;
     private readonly IPathReader _pathReader;
     private readonly Serilog.ILogger _logger;
 
-    public PathfinderService(IServiceProvider serviceProvider)
+    public PathService(IServiceProvider serviceProvider)
     {
         _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
         _serviceProvider = serviceProvider;

@@ -14,7 +14,7 @@ public static class MongoConstantLengthForCollections
     public const int Length = 1500000;
 }
 
-public class MapManagerService : MapManager.MapManagerBase
+public class MapService : Grpc.MapService.MapServiceBase
 {
     private readonly IActorRef _requestForwarder;
     private readonly IMapConfigWriter _mapConfigWriter;
@@ -22,7 +22,7 @@ public class MapManagerService : MapManager.MapManagerBase
 
     private readonly Serilog.ILogger _logger;
 
-    public MapManagerService(IServiceProvider serviceProvider)
+    public MapService(IServiceProvider serviceProvider)
     {
         _logger = Serilog.Log.Logger.ForContext("SourceContext", GetType().Name);
         _requestForwarder = serviceProvider.GetRequiredService<IActorRegistry>().Get<RequestForwarder>();
@@ -30,7 +30,7 @@ public class MapManagerService : MapManager.MapManagerBase
         _pointConfigWriter = serviceProvider.GetRequiredService<IPointConfigWriter>();
     }
 
-    public override async Task<MapStateResponse> GetMapState(MapRequest request, ServerCallContext context)
+    public override async Task<StateResponse> GetState(MapRequest request, ServerCallContext context)
     {
         _logger.Verbose("[{RequestType}][{@Context}]", request.GetType().Name, context);
         try
@@ -42,11 +42,11 @@ public class MapManagerService : MapManager.MapManagerBase
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
         {
             _logger.Error(ex, "[{RequestType}][{@Context}]", request.GetType(), context);
-            return new MapStateResponse { MapId = Guid.Empty.ToString(), IsReady = false };
+            return new StateResponse { MapId = Guid.Empty.ToString(), IsReady = false };
         }
         catch (OperationCanceledException)
         {
-            return new MapStateResponse { MapId = Guid.Empty.ToString(), IsReady = false };
+            return new StateResponse { MapId = Guid.Empty.ToString(), IsReady = false };
         }
     }
 
@@ -71,7 +71,7 @@ public class MapManagerService : MapManager.MapManagerBase
         }
     }
 
-    public override async Task<DeleteMapResponse> Delete(MapRequest request, ServerCallContext context)
+    public override async Task<DeleteResponse> Delete(MapRequest request, ServerCallContext context)
     {
         _logger.Verbose("[{RequestType}][{@Context}]", request.GetType().Name, context);
 
@@ -84,15 +84,15 @@ public class MapManagerService : MapManager.MapManagerBase
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
         {
             _logger.Error(ex, "[{RequestType}][{@Context}]", request.GetType(), context);
-            return new DeleteMapResponse { Success = false, ErrorMessage = ex.Message };
+            return new DeleteResponse { Success = false, ErrorMessage = ex.Message };
         }
         catch (OperationCanceledException)
         {
-            return new DeleteMapResponse { Success = false, ErrorMessage = "Canceled" };
+            return new DeleteResponse { Success = false, ErrorMessage = "Canceled" };
         }
     }
 
-    public override async Task<CreateMapResponse> CreateMap(CreateMapRequest request, ServerCallContext context)
+    public override async Task<CreateResponse> Create(CreateRequest request, ServerCallContext context)
     {
         _logger.Verbose("[{RequestType}][{@Context}]", request.GetType().Name, context);
         try
@@ -111,7 +111,7 @@ public class MapManagerService : MapManager.MapManagerBase
 
             var pointCount = ofListOfPoints.Sum(x => x.Count);
             await _mapConfigWriter.WriteAsync(new MapConfig(mapId, collectionIds, pointCount));
-            CreateMapResponse response = new()
+            CreateResponse response = new()
                 { MapId = request.MapId, Success = true, ErrorMessage = "", PointCount = (uint)pointCount };
             response.CollectionIds.AddRange(collectionIds.Select(x => x.ToString()));
             return response;
@@ -119,11 +119,11 @@ public class MapManagerService : MapManager.MapManagerBase
         catch (RpcException ex) when (ex.StatusCode != StatusCode.Cancelled)
         {
             _logger.Error(ex, "[{RequestType}][{@Context}]", request.GetType(), context);
-            return new CreateMapResponse { Success = false, ErrorMessage = ex.Message };
+            return new CreateResponse { Success = false, ErrorMessage = ex.Message };
         }
         catch (OperationCanceledException)
         {
-            return new CreateMapResponse { Success = false, ErrorMessage = "Canceled" };
+            return new CreateResponse { Success = false, ErrorMessage = "Canceled" };
         }
     }
 }

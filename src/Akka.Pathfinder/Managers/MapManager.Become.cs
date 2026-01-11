@@ -36,8 +36,13 @@ public partial class MapManager
             using var activity = ActivitySourceRegistry.StartActivity(GetType(), msg.GetType().Name, msg);
             deleteSender = Sender;
             request = msg;
-            var mapConfig = await _mapConfigWriter.GetAsync(msg.MapId);
-            
+            var mapConfig = _mapConfigWriter.Get(msg.MapId);
+            if (mapConfig == null)
+            {
+                deleteSender?.TellTraced(new MapDeleted(request.RequestId, request.MapId));
+                return;
+            }
+
             var parentTraceId = activity?.TraceId.ToHexString();
             var parentSpanId = activity?.SpanId.ToHexString();
 
@@ -45,7 +50,8 @@ public partial class MapManager
             _ = await Source.From(mapConfig.CollectionIds)
                 .SelectAsync(4,
                     async collectionId => await _pointConfigWriter.Get(collectionId).Select(x => x.Id).ToListAsync())
-                .SelectMany(x => x.Select(pointId => new DeletePoint(pointId).WithTracing(parentTraceId, parentSpanId)).ToArray())
+                .SelectMany(x =>
+                    x.Select(pointId => new DeletePoint(pointId).WithTracing(parentTraceId, parentSpanId)).ToArray())
                 .Ask<DeletePoint, PointDeleted, NotUsed>(_registry.GetClient<Endpoint.PointWorker>(), 128)
                 .RunWith(Sink.Ignore<PointDeleted>(), Context.Materializer());
             var endTime = DateTime.UtcNow;
@@ -75,7 +81,7 @@ public partial class MapManager
         });
         Command<DeleteSnapshotFailure>(msg =>
         {
-            var response = new MapDeleted(request.RequestId, request.MapId, false, msg.Cause)
+            var response = new MapDeleted(request.RequestId, request.MapId, false, msg.Cause.Message)
             {
                 TraceId = request.TraceId,
                 SpanId = request.SpanId

@@ -24,7 +24,7 @@ public partial class PathfinderWorker
         catch (Exception ex)
         {
             _logger.Fatal(ex, "[{PathfinderId}][RECOVER][{MessageType}] Failed to recover", _entityId, msg.GetType().Name);
-            Become(Failure);
+            Become(DeleteCommands);
         }
     }
 }

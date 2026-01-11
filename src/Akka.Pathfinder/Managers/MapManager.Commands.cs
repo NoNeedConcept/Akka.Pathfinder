@@ -28,7 +28,12 @@ public partial class MapManager
         Become(Waiting);
 
         _state = MapManagerState.FromRequest(msg.MapId);
-        var mapConfig = await _mapConfigWriter.GetAsync(msg.MapId);
+        var mapConfig = _mapConfigWriter.Get(msg.MapId);
+        if (mapConfig == null)
+        {
+            Sender.TellTraced(new MapLoaded(msg.RequestId, msg.MapId, false));
+            return;
+        }
 
         var parentTraceId = activity?.TraceId.ToHexString();
         var parentSpanId = activity?.SpanId.ToHexString();
